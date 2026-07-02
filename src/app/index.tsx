@@ -1,5 +1,6 @@
-import { Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
+import { StyleSheet, Text, TextInput, View } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
+import { Button } from '@components/ui';
 import { ShoppingList, type ShoppingListData } from '@features/shopping-lists';
 
 const MOCK_DATA: ShoppingListData[] = [
@@ -15,15 +16,11 @@ export default function HomeScreen() {
       <Text style={styles.header}>Listas</Text>
 
       <View style={styles.searchRow}>
-        <TextInput
-          style={styles.searchInput}
-          placeholder="Buscar listas..."
-          placeholderTextColor="#999"
-        />
-        <Pressable style={styles.addButton}>
+        <TextInput style={styles.searchInput} placeholder="Buscar listas..." placeholderTextColor="#999" />
+        <Button>
           <Text style={styles.addButtonIcon}>+</Text>
           <Text style={styles.addButtonText}>Nueva</Text>
-        </Pressable>
+        </Button>
       </View>
 
       <ShoppingList data={MOCK_DATA} />
@@ -57,15 +54,6 @@ const styles = StyleSheet.create({
     borderRadius: 10,
     paddingHorizontal: 14,
     fontSize: 15,
-  },
-  addButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#007AFF',
-    borderRadius: 10,
-    paddingHorizontal: 14,
-    height: 44,
-    gap: 4,
   },
   addButtonIcon: {
     fontSize: 20,

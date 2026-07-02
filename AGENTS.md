@@ -83,3 +83,78 @@ function handleSubmit(event: EventHandler): number {
 	return 1
 }
 ```
+
+## Code Formatting & Line Breaks
+- **Single-Line Function Signatures:** Always keep the initial signature/declaration of a function (including its arguments/parameters) on a single line, regardless of how long it is. Do NOT split parameters into separate lines.
+- **Props in components signature:** For components declaration, Alwas preder to declara an interface for the props instead of declare them inline inside the function signature. Don't use "type" but "interface" unless it is structly necessary.
+```typescript
+// ❌ DO NOT DO THIS
+function Card({ className, ...props }: React.HTMLAttributes<HTMLDivElement>) {
+	return 1
+}
+
+// DO THIS INSTEAD
+interface CardProps extends React.HTMLAttributes<HTMLDivElement> {
+}
+
+function Card({ className, ...props}: CardProps) {
+	return 1
+}
+//
+```
+
+- **CRITICAL FORMATTING RULE (Single-Line Props):** You are STRICTLY FORBIDDEN from breaking component props or function arguments into multiple lines by default. Everything MUST remain on a single horizontal line, regardless of line length, unless it meets the explicit exception below.
+- **THE ONLY EXCEPTION (Multi-line Arrow Functions):** If, and ONLY if, a prop contains an inline arrow function that spans multiple lines, you MUST isolate **that single prop** on its own line. All other props before and after it MUST stay combined on single lines. Do not group them "predictably"; force them onto one line.
+
+```typescript
+/// ❌ DO NOT DO THIS (Unnecessary vertical stretching)
+<CustomInput 
+disabled="{false}" 
+label="Username" 
+onChange="{handleChange}" 
+placeholder="Enter here"/>
+
+// ❌ CRITICALLY FORBIDDEN (No vertical stretching allowed)
+<CustomInput disabled={false} label="Username" onChange={handleChange} placeholder="Enter here" />
+
+// ❌ CRITICALLY FORBIDDEN (Do not break props line-by-line)
+<CustomInput
+  disabled={false}
+  label="Username"
+  onChange={handleChange}
+  placeholder="Enter here"
+/>
+
+// ✅ MANDATORY STANDARD (Keep it strictly horizontal)
+<CustomInput disabled={false} label="Username" onChange={handleChange} placeholder="Enter here" />
+
+// ✅ MANDATORY EXCEPTION (Only break the multi-line prop)
+<Select
+  value={newPriceStore}
+  onValueChange={(value) => {
+    if (value === null) return;
+    setNewPriceStore(value);
+    setPriceError("");
+  }}
+  id="my-id"
+  onClick={handleOnClick}
+/>
+```
+- **CRITICAL NAMING RULE (Boolean State Variables):** All state variables (`useState`) that represent a boolean condition, flag, or current UI status (e.g., loading, editing, open/close, visibility, permissions) MUST be explicitly prefixed with a boolean indicator. 
+- **Allowed Prefixes:** `is`, `has`, `should`, `can`, or `did`. 
+- **Strictly Forbidden:** Never use raw nouns, verbs, or continuous verbs (gerunds) alone for boolean states. The name must read as a clear true/false question.
+
+```typescript
+// ❌ CRITICALLY FORBIDDEN (Ambiguous or missing prefix)
+const [priceListEditing, setPriceListEditing] = useState(false);
+const [loading, setLoading] = useState(false);
+const [showModal, setShowModal] = useState(false); // 'show' is a verb, use 'isOpen' or 'isVisible'
+const [userPremium, setUserPremium] = useState(false);
+
+// ✅ MANDATORY STANDARD (Explicit, predictable booleans)
+const [isPriceListEditing, setIsPriceListEditing] = useState(false);
+const [isLoading, setIsLoading] = useState(false);
+const [isModalOpen, setIsModalOpen] = useState(false);
+const [hasPremiumAccess, setHasPremiumAccess] = useState(false);
+const [shouldRenderDetails, setShouldRenderDetails] = useState(false);
+```

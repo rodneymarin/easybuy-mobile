@@ -1,5 +1,5 @@
 import { FlatList, StyleSheet } from 'react-native';
-import ShoppingListItem from './components/ShoppingListItem';
+import { ShoppingListItem } from '@features/shopping-lists/components';
 
 export interface ShoppingListData {
   id: string;
@@ -14,17 +14,10 @@ interface ShoppingListProps {
 
 export default function ShoppingList({ data }: ShoppingListProps) {
   return (
-    <FlatList
-      data={data}
-      keyExtractor={(item) => item.id}
+    <FlatList data={data} keyExtractor={(item) => item.id} contentContainerStyle={styles.list}
       renderItem={({ item }) => (
-        <ShoppingListItem
-          title={item.title}
-          itemCount={item.itemCount}
-          totalAmount={item.totalAmount}
-        />
+        <ShoppingListItem title={item.title} itemCount={item.itemCount} totalAmount={item.totalAmount} />
       )}
-      contentContainerStyle={styles.list}
     />
   );
 }

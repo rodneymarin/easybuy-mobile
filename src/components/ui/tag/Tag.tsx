@@ -1,15 +1,11 @@
-import { StyleSheet, Text, View } from 'react-native';
+import { StyleSheet, Text } from 'react-native';
 
 interface TagProps {
   label: string;
 }
 
 export default function Tag({ label }: TagProps) {
-  return (
-    <View style={styles.tag}>
-      <Text style={styles.label}>{label}</Text>
-    </View>
-  );
+  return <Text style={[styles.tag, styles.label]}>{label}</Text>;
 }
 
 const styles = StyleSheet.create({
