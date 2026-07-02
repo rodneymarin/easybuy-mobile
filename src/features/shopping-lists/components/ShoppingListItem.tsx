@@ -15,7 +15,7 @@ export default function ShoppingListItem({ title, itemCount, totalAmount }: Shop
 					<Text style={styles.title}>{title}</Text>
 					<View style={styles.tags}>
 						<Tag label={`${itemCount} items`} />
-						<Tag label={`S/ ${totalAmount.toFixed(2)}`} />
+						<Tag label={`Total: ${totalAmount.toFixed(2)}`} />
 					</View>
 				</View>
 				<Pressable style={styles.removeButton}>

@@ -1,4 +1,4 @@
-import type { Price } from "@/models/price.model.ts";
+import type { Price } from "@models/price.model";
 
 export const UNIT_OF_MEASUREMENT = [
 	{ id: "kg", label: "Kg" },

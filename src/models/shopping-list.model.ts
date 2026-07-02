@@ -1,5 +1,5 @@
-import type { Product } from "@/models/product.model";
-import type { ShoppingListItem } from "@/models/shopping-list-item.model";
+import type { Product } from "@models/product.model";
+import type { ShoppingListItem } from "@models/shopping-list-item.model";
 
 export interface ShoppingList {
 	id: string;

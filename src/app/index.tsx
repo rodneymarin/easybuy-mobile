@@ -1,14 +1,46 @@
-import { StyleSheet, Text, TextInput, View } from 'react-native';
+import { useEffect, useState } from 'react';
+import { ActivityIndicator, StyleSheet, Text, TextInput, View } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
 import { Button } from '@components/ui';
 import { ShoppingList, type ShoppingListData } from '@features/shopping-lists';
-
-const MOCK_DATA: ShoppingListData[] = [
-  { id: '1', title: 'Compra', itemCount: 12, totalAmount: 156.50 },
-  { id: '2', title: 'Delivery', itemCount: 5, totalAmount: 42.00 },
-];
+import { getAllShoppingLists } from '@lib/repositories/shopping-lists';
+import { getAllProducts } from '@lib/repositories/products';
+import { calcListTotalAmount } from '@models/shopping-list.model';
 
 export default function HomeScreen() {
+  const [isLoading, setIsLoading] = useState(true);
+  const [lists, setLists] = useState<ShoppingListData[]>([]);
+
+  useEffect(() => {
+    async function load() {
+      try {
+        const shoppingLists = await getAllShoppingLists();
+        const products = await getAllProducts();
+        const mapped = shoppingLists.map((list) => ({
+          id: list.id,
+          title: list.title,
+          itemCount: list.items.length,
+          totalAmount: calcListTotalAmount(list, products),
+        }));
+        setLists(mapped);
+      } catch (error) {
+        console.error("Failed to load shopping lists:", error);
+      } finally {
+        setIsLoading(false);
+      }
+    }
+    load();
+  }, []);
+
+  if (isLoading) {
+    return (
+      <View style={styles.container}>
+        <ActivityIndicator size="large" color="#000" />
+        <Text style={styles.loadingText}>Cargando...</Text>
+      </View>
+    );
+  }
+
   return (
     <View style={styles.container}>
       <StatusBar style="dark" />
@@ -23,7 +55,7 @@ export default function HomeScreen() {
         </Button>
       </View>
 
-      <ShoppingList data={MOCK_DATA} />
+      <ShoppingList data={lists} />
     </View>
   );
 }
@@ -39,6 +71,12 @@ const styles = StyleSheet.create({
     fontWeight: '700',
     textAlign: 'center',
     marginBottom: 20,
+  },
+  loadingText: {
+    textAlign: 'center',
+    marginTop: 16,
+    fontSize: 16,
+    color: '#666',
   },
   searchRow: {
     flexDirection: 'row',

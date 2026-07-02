@@ -18,6 +18,9 @@
         "backgroundColor": "#ffffff"
       },
       "package": "com.easybuy.mobile"
-    }
+    },
+    "plugins": [
+      "expo-sqlite"
+    ]
   }
 }

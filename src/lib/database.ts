@@ -1,0 +1,54 @@
+import * as SQLite from 'expo-sqlite';
+import type { SQLiteDatabase } from 'expo-sqlite';
+import { seedIfEmpty } from './seed';
+
+let db: SQLiteDatabase | null = null;
+
+export async function getDatabase(): Promise<SQLiteDatabase> {
+  if (db) return db;
+  db = await SQLite.openDatabaseAsync('easybuy.db');
+  await runMigrations(db);
+  await seedIfEmpty(db);
+  return db;
+}
+
+async function runMigrations(database: SQLiteDatabase): Promise<void> {
+  await database.execAsync(`
+    CREATE TABLE IF NOT EXISTS stores (
+      id TEXT PRIMARY KEY,
+      description TEXT NOT NULL
+    );
+
+    CREATE TABLE IF NOT EXISTS products (
+      id TEXT PRIMARY KEY,
+      product_name TEXT NOT NULL,
+      unit_of_measurement TEXT NOT NULL
+    );
+
+    CREATE TABLE IF NOT EXISTS product_prices (
+      product_id TEXT NOT NULL,
+      store_id TEXT NOT NULL,
+      value REAL NOT NULL,
+      PRIMARY KEY (product_id, store_id),
+      FOREIGN KEY (product_id) REFERENCES products(id),
+      FOREIGN KEY (store_id) REFERENCES stores(id)
+    );
+
+    CREATE TABLE IF NOT EXISTS shopping_lists (
+      id TEXT PRIMARY KEY,
+      title TEXT NOT NULL
+    );
+
+    CREATE TABLE IF NOT EXISTS shopping_list_items (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      shopping_list_id TEXT NOT NULL,
+      product_id TEXT NOT NULL,
+      store_id TEXT,
+      quantity REAL NOT NULL,
+      done INTEGER NOT NULL DEFAULT 0,
+      FOREIGN KEY (shopping_list_id) REFERENCES shopping_lists(id),
+      FOREIGN KEY (product_id) REFERENCES products(id),
+      FOREIGN KEY (store_id) REFERENCES stores(id)
+    );
+  `);
+}
