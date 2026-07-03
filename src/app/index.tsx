@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { ActivityIndicator, StyleSheet, Text, TextInput, View } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
+import { ScreenTitle } from '@components/common/screen-title';
 import { Button } from '@components/ui';
 import { ShoppingList, type ShoppingListData } from '@features/shopping-lists';
 import { getAllShoppingLists } from '@lib/repositories/shopping-lists';
@@ -45,7 +46,7 @@ export default function HomeScreen() {
     <View style={styles.container}>
       <StatusBar style="dark" />
 
-      <Text style={styles.header}>Listas</Text>
+      <ScreenTitle>Listas</ScreenTitle>
 
       <View style={styles.searchRow}>
         <TextInput style={styles.searchInput} placeholder="Buscar listas..." placeholderTextColor="#999" />
@@ -65,12 +66,6 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: '#fff',
     paddingTop: 60,
-  },
-  header: {
-    fontSize: 28,
-    fontWeight: '700',
-    textAlign: 'center',
-    marginBottom: 20,
   },
   loadingText: {
     textAlign: 'center',
