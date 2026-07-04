@@ -7,5 +7,6 @@ export {
   deleteShoppingList,
   addItemToList,
   toggleItemDone,
+  removeItemFromList,
 } from './shopping-lists';
 export { getSetting, setSetting } from './settings';

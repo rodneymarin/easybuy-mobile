@@ -9,14 +9,15 @@ interface ShoppingListItemProps {
 	title: string;
 	itemCount: number;
 	totalAmount: number;
+	onPress?: () => void;
 }
 
-export default function ShoppingListItem({ title, itemCount, totalAmount }: ShoppingListItemProps) {
+export default function ShoppingListItem({ title, itemCount, totalAmount, onPress }: ShoppingListItemProps) {
 	const { colors } = useTheme();
 	const { t } = useI18n();
 
 	return (
-		<PressableCard style={[styles.card, { borderColor: colors.border }]}>
+		<PressableCard onPress={onPress} style={[styles.card, { borderColor: colors.border }]}>
 			<View style={styles.cardContent}>
 				<View style={styles.cardLeft}>
 					<Text style={[styles.title, { color: colors.text }]}>{title}</Text>

@@ -1,8 +1,9 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { ActivityIndicator, StyleSheet, Text, View } from 'react-native';
+import { useFocusEffect } from '@react-navigation/native';
 import { ScreenTitle } from '@components/ui/screen-title';
 import { Button, SearchInput } from '@components/ui';
-import { ShoppingList, type ShoppingListData } from '@features/shopping-lists';
+import { ShoppingList, ShoppingListDetailScreen, type ShoppingListData } from '@features/shopping-lists';
 import { getAllShoppingLists } from '@lib/repositories/shopping-lists';
 import { getAllProducts } from '@lib/repositories/products';
 import { useDebounce } from '@lib/hooks';
@@ -16,28 +17,51 @@ export default function InicioScreen() {
   const [isLoading, setIsLoading] = useState(true);
   const [lists, setLists] = useState<ShoppingListData[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
+  const [isDetailOpen, setIsDetailOpen] = useState(false);
+  const [selectedListId, setSelectedListId] = useState<string | null>(null);
   const debouncedSearch = useDebounce(searchQuery, 300);
 
-  useEffect(() => {
-    async function load() {
-      try {
-        const shoppingLists = await getAllShoppingLists();
-        const products = await getAllProducts();
-        const mapped = shoppingLists.map((list) => ({
-          id: list.id,
-          title: list.title,
-          itemCount: list.items.length,
-          totalAmount: calcListTotalAmount(list, products),
-        }));
-        setLists(mapped);
-      } catch (error) {
-        console.error("Failed to load shopping lists:", error);
-      } finally {
-        setIsLoading(false);
-      }
+  async function loadLists() {
+    try {
+      const shoppingLists = await getAllShoppingLists();
+      const products = await getAllProducts();
+      const mapped = shoppingLists.map((list) => ({
+        id: list.id,
+        title: list.title,
+        itemCount: list.items.length,
+        totalAmount: calcListTotalAmount(list, products),
+      }));
+      setLists(mapped);
+    } catch (error) {
+      console.error("Failed to load shopping lists:", error);
+    } finally {
+      setIsLoading(false);
     }
-    load();
+  }
+
+  useEffect(() => {
+    loadLists();
   }, []);
+
+  useFocusEffect(
+    useCallback(() => {
+      return () => {
+        setIsDetailOpen(false);
+        setSelectedListId(null);
+      };
+    }, [])
+  );
+
+  function openDetail(listId: string) {
+    setSelectedListId(listId);
+    setIsDetailOpen(true);
+  }
+
+  function closeDetail() {
+    setIsDetailOpen(false);
+    setSelectedListId(null);
+    loadLists();
+  }
 
   const filteredLists = useMemo(() => {
     if (!debouncedSearch.trim()) return lists;
@@ -54,6 +78,10 @@ export default function InicioScreen() {
     );
   }
 
+  if (isDetailOpen && selectedListId) {
+    return <ShoppingListDetailScreen shoppingListId={selectedListId} onBack={closeDetail} />;
+  }
+
   return (
     <View style={[styles.container, { backgroundColor: colors.background }]}>
       <ScreenTitle>{t('tab.lists')}</ScreenTitle>
@@ -65,7 +93,7 @@ export default function InicioScreen() {
         </Button>
       </View>
       {filteredLists.length > 0 ? (
-        <ShoppingList data={filteredLists} />
+        <ShoppingList data={filteredLists} onListPress={openDetail} />
       ) : searchQuery !== debouncedSearch ? (
         <View style={styles.emptyContainer}>
           <ActivityIndicator size="large" color={colors.text} />

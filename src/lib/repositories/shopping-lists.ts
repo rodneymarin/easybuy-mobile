@@ -19,6 +19,7 @@ interface ItemRow {
 
 function mapItem(row: ItemRow): ShoppingListItem {
   return {
+    rowId: row.id,
     productId: row.product_id,
     quantity: row.quantity,
     storeId: row.store_id ?? undefined,
@@ -65,7 +66,7 @@ export async function deleteShoppingList(id: string): Promise<void> {
 
 export async function addItemToList(
   shoppingListId: string,
-  item: Omit<ShoppingListItem, "done"> & { done?: boolean }
+  item: Omit<ShoppingListItem, "done" | "rowId"> & { done?: boolean }
 ): Promise<void> {
   const db = await getDatabase();
   await db.runAsync(
@@ -80,4 +81,9 @@ export async function toggleItemDone(itemRowId: number): Promise<void> {
     "UPDATE shopping_list_items SET done = CASE WHEN done = 1 THEN 0 ELSE 1 END WHERE id = ?",
     [itemRowId]
   );
+}
+
+export async function removeItemFromList(itemRowId: number): Promise<void> {
+  const db = await getDatabase();
+  await db.runAsync("DELETE FROM shopping_list_items WHERE id = ?", [itemRowId]);
 }

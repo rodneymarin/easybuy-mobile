@@ -3,22 +3,33 @@ import { useTheme } from '@lib/theme';
 
 interface TagProps {
   label: string;
+  size?: 'sm' | 'md';
 }
 
-export default function Tag({ label }: TagProps) {
+export default function Tag({ label, size = 'md' }: TagProps) {
   const { colors } = useTheme();
+  const isSmall = size === 'sm';
 
-  return <Text style={[styles.tag, { backgroundColor: colors.surface }, styles.label, { color: colors.surfaceText }]}>{label}</Text>;
+  return <Text style={[styles.tag, isSmall ? styles.tagSm : styles.tagMd, { backgroundColor: colors.surface }, styles.label, isSmall ? styles.labelSm : styles.labelMd, { color: colors.surfaceText }]}>{label}</Text>;
 }
 
 const styles = StyleSheet.create({
   tag: {
     borderRadius: 999,
-    paddingHorizontal: 12,
-    paddingVertical: 5,
     alignSelf: 'flex-start',
   },
-  label: {
+  tagSm: {
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+  },
+  tagMd: {
+    paddingHorizontal: 12,
+    paddingVertical: 5,
+  },
+  labelSm: {
+    fontSize: 11,
+  },
+  labelMd: {
     fontSize: 13,
   },
 });
