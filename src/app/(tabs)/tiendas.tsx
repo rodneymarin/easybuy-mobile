@@ -1,15 +1,18 @@
-import { useEffect, useState } from 'react';
-import { ActivityIndicator, StyleSheet, Text, TextInput, View } from 'react-native';
+import { useEffect, useMemo, useState } from 'react';
+import { ActivityIndicator, StyleSheet, Text, View } from 'react-native';
 import { ScreenTitle } from '@components/common/screen-title';
-import { Button } from '@components/ui';
+import { Button, SearchInput } from '@components/ui';
 import { StoreList, type StoreListData } from '@features/stores';
 import { getAllStores } from '@lib/repositories/stores';
+import { useDebounce } from '@lib/hooks';
 import { useTheme } from '@lib/theme';
 
 export default function TiendasScreen() {
   const { colors } = useTheme();
   const [isLoading, setIsLoading] = useState(true);
   const [stores, setStores] = useState<StoreListData[]>([]);
+  const [searchQuery, setSearchQuery] = useState('');
+  const debouncedSearch = useDebounce(searchQuery, 300);
 
   useEffect(() => {
     async function load() {
@@ -29,6 +32,12 @@ export default function TiendasScreen() {
     load();
   }, []);
 
+  const filteredStores = useMemo(() => {
+    if (!debouncedSearch.trim()) return stores;
+    const query = debouncedSearch.toLowerCase();
+    return stores.filter((s) => s.description.toLowerCase().includes(query));
+  }, [stores, debouncedSearch]);
+
   if (isLoading) {
     return (
       <View style={[styles.container, { backgroundColor: colors.background }]}>
@@ -42,13 +51,23 @@ export default function TiendasScreen() {
     <View style={[styles.container, { backgroundColor: colors.background }]}>
       <ScreenTitle>Tiendas</ScreenTitle>
       <View style={styles.searchRow}>
-        <TextInput style={[styles.searchInput, { color: colors.text, borderColor: colors.border, backgroundColor: colors.background }]} placeholder="Buscar tiendas..." placeholderTextColor={colors.placeholderText} />
+        <SearchInput value={searchQuery} onChangeText={setSearchQuery} placeholder="Buscar tiendas..." />
         <Button>
           <Text style={styles.addButtonIcon}>+</Text>
           <Text style={styles.addButtonText}>Nueva</Text>
         </Button>
       </View>
-      <StoreList data={stores} />
+      {filteredStores.length > 0 ? (
+        <StoreList data={filteredStores} />
+      ) : searchQuery !== debouncedSearch ? (
+        <View style={styles.emptyContainer}>
+          <ActivityIndicator size="large" color={colors.text} />
+        </View>
+      ) : (
+        <View style={styles.emptyContainer}>
+          <Text style={[styles.emptyText, { color: colors.textSecondary }]}>{stores.length > 0 ? "No se encontraron resultados" : "No tienes Tiendas"}</Text>
+        </View>
+      )}
     </View>
   );
 }
@@ -69,14 +88,6 @@ const styles = StyleSheet.create({
     marginHorizontal: 16,
     gap: 10,
   },
-  searchInput: {
-    flex: 1,
-    height: 44,
-    borderWidth: 1,
-    borderRadius: 10,
-    paddingHorizontal: 14,
-    fontSize: 15,
-  },
   addButtonIcon: {
     fontSize: 20,
     color: '#fff',
@@ -86,5 +97,15 @@ const styles = StyleSheet.create({
     fontSize: 15,
     color: '#fff',
     fontWeight: '600',
+  },
+  emptyContainer: {
+    flex: 1,
+    justifyContent: 'flex-start',
+    alignItems: 'center',
+    paddingTop: 40,
+  },
+  emptyText: {
+    fontSize: 16,
+    textAlign: 'center',
   },
 });

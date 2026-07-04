@@ -1,15 +1,18 @@
-import { useEffect, useState } from 'react';
-import { ActivityIndicator, StyleSheet, Text, TextInput, View } from 'react-native';
+import { useEffect, useMemo, useState } from 'react';
+import { ActivityIndicator, StyleSheet, Text, View } from 'react-native';
 import { ScreenTitle } from '@components/common/screen-title';
-import { Button } from '@components/ui';
+import { Button, SearchInput } from '@components/ui';
 import { ProductList, type ProductListData } from '@features/products';
 import { getAllProducts } from '@lib/repositories/products';
+import { useDebounce } from '@lib/hooks';
 import { useTheme } from '@lib/theme';
 
 export default function ProductosScreen() {
   const { colors } = useTheme();
   const [isLoading, setIsLoading] = useState(true);
   const [products, setProducts] = useState<ProductListData[]>([]);
+  const [searchQuery, setSearchQuery] = useState('');
+  const debouncedSearch = useDebounce(searchQuery, 300);
 
   useEffect(() => {
     async function load() {
@@ -30,6 +33,12 @@ export default function ProductosScreen() {
     load();
   }, []);
 
+  const filteredProducts = useMemo(() => {
+    if (!debouncedSearch.trim()) return products;
+    const query = debouncedSearch.toLowerCase();
+    return products.filter((p) => p.productName.toLowerCase().includes(query));
+  }, [products, debouncedSearch]);
+
   if (isLoading) {
     return (
       <View style={[styles.container, { backgroundColor: colors.background }]}>
@@ -43,13 +52,23 @@ export default function ProductosScreen() {
     <View style={[styles.container, { backgroundColor: colors.background }]}>
       <ScreenTitle>Productos</ScreenTitle>
       <View style={styles.searchRow}>
-        <TextInput style={[styles.searchInput, { color: colors.text, borderColor: colors.border, backgroundColor: colors.background }]} placeholder="Buscar productos..." placeholderTextColor={colors.placeholderText} />
+        <SearchInput value={searchQuery} onChangeText={setSearchQuery} placeholder="Buscar productos..." />
         <Button>
           <Text style={styles.addButtonIcon}>+</Text>
           <Text style={styles.addButtonText}>Nuevo</Text>
         </Button>
       </View>
-      <ProductList data={products} />
+      {filteredProducts.length > 0 ? (
+        <ProductList data={filteredProducts} />
+      ) : searchQuery !== debouncedSearch ? (
+        <View style={styles.emptyContainer}>
+          <ActivityIndicator size="large" color={colors.text} />
+        </View>
+      ) : (
+        <View style={styles.emptyContainer}>
+          <Text style={[styles.emptyText, { color: colors.textSecondary }]}>{products.length > 0 ? "No se encontraron resultados" : "No tienes Productos"}</Text>
+        </View>
+      )}
     </View>
   );
 }
@@ -70,14 +89,6 @@ const styles = StyleSheet.create({
     marginHorizontal: 16,
     gap: 10,
   },
-  searchInput: {
-    flex: 1,
-    height: 44,
-    borderWidth: 1,
-    borderRadius: 10,
-    paddingHorizontal: 14,
-    fontSize: 15,
-  },
   addButtonIcon: {
     fontSize: 20,
     color: '#fff',
@@ -87,5 +98,15 @@ const styles = StyleSheet.create({
     fontSize: 15,
     color: '#fff',
     fontWeight: '600',
+  },
+  emptyContainer: {
+    flex: 1,
+    justifyContent: 'flex-start',
+    alignItems: 'center',
+    paddingTop: 40,
+  },
+  emptyText: {
+    fontSize: 16,
+    textAlign: 'center',
   },
 });

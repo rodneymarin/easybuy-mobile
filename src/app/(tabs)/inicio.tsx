@@ -1,10 +1,11 @@
-import { useEffect, useState } from 'react';
-import { ActivityIndicator, StyleSheet, Text, TextInput, View } from 'react-native';
+import { useEffect, useMemo, useState } from 'react';
+import { ActivityIndicator, StyleSheet, Text, View } from 'react-native';
 import { ScreenTitle } from '@components/common/screen-title';
-import { Button } from '@components/ui';
+import { Button, SearchInput } from '@components/ui';
 import { ShoppingList, type ShoppingListData } from '@features/shopping-lists';
 import { getAllShoppingLists } from '@lib/repositories/shopping-lists';
 import { getAllProducts } from '@lib/repositories/products';
+import { useDebounce } from '@lib/hooks';
 import { calcListTotalAmount } from '@models/shopping-list.model';
 import { useTheme } from '@lib/theme';
 
@@ -12,6 +13,8 @@ export default function InicioScreen() {
   const { colors } = useTheme();
   const [isLoading, setIsLoading] = useState(true);
   const [lists, setLists] = useState<ShoppingListData[]>([]);
+  const [searchQuery, setSearchQuery] = useState('');
+  const debouncedSearch = useDebounce(searchQuery, 300);
 
   useEffect(() => {
     async function load() {
@@ -34,6 +37,12 @@ export default function InicioScreen() {
     load();
   }, []);
 
+  const filteredLists = useMemo(() => {
+    if (!debouncedSearch.trim()) return lists;
+    const query = debouncedSearch.toLowerCase();
+    return lists.filter((l) => l.title.toLowerCase().includes(query));
+  }, [lists, debouncedSearch]);
+
   if (isLoading) {
     return (
       <View style={[styles.container, { backgroundColor: colors.background }]}>
@@ -47,13 +56,23 @@ export default function InicioScreen() {
     <View style={[styles.container, { backgroundColor: colors.background }]}>
       <ScreenTitle>Listas</ScreenTitle>
       <View style={styles.searchRow}>
-        <TextInput style={[styles.searchInput, { color: colors.text, borderColor: colors.border, backgroundColor: colors.background }]} placeholder="Buscar listas..." placeholderTextColor={colors.placeholderText} />
+        <SearchInput value={searchQuery} onChangeText={setSearchQuery} placeholder="Buscar listas..." />
         <Button>
           <Text style={styles.addButtonIcon}>+</Text>
           <Text style={styles.addButtonText}>Nueva</Text>
         </Button>
       </View>
-      <ShoppingList data={lists} />
+      {filteredLists.length > 0 ? (
+        <ShoppingList data={filteredLists} />
+      ) : searchQuery !== debouncedSearch ? (
+        <View style={styles.emptyContainer}>
+          <ActivityIndicator size="large" color={colors.text} />
+        </View>
+      ) : (
+        <View style={styles.emptyContainer}>
+          <Text style={[styles.emptyText, { color: colors.textSecondary }]}>{lists.length > 0 ? "No se encontraron resultados" : "No tienes Listas"}</Text>
+        </View>
+      )}
     </View>
   );
 }
@@ -74,14 +93,6 @@ const styles = StyleSheet.create({
     marginHorizontal: 16,
     gap: 10,
   },
-  searchInput: {
-    flex: 1,
-    height: 44,
-    borderWidth: 1,
-    borderRadius: 10,
-    paddingHorizontal: 14,
-    fontSize: 15,
-  },
   addButtonIcon: {
     fontSize: 20,
     color: '#fff',
@@ -91,5 +102,15 @@ const styles = StyleSheet.create({
     fontSize: 15,
     color: '#fff',
     fontWeight: '600',
+  },
+  emptyContainer: {
+    flex: 1,
+    justifyContent: 'flex-start',
+    alignItems: 'center',
+    paddingTop: 40,
+  },
+  emptyText: {
+    fontSize: 16,
+    textAlign: 'center',
   },
 });
