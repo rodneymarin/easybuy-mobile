@@ -48,8 +48,8 @@ const styles = StyleSheet.create({
 		flex: 1,
 	},
 	title: {
-		fontSize: 20,
-		fontWeight: '600',
+		fontSize: 17,
+		fontWeight: '500',
 		marginBottom: 8,
 	},
 	tags: {

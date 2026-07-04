@@ -43,7 +43,7 @@ const styles = StyleSheet.create({
 	},
 	title: {
 		flex: 1,
-		fontSize: 20,
-		fontWeight: '600',
+		fontSize: 17,
+		fontWeight: '500',
 	},
 });
