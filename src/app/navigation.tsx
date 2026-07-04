@@ -27,19 +27,16 @@ function TabBarIndicator({ state, ...rest }: BottomTabBarProps) {
   );
 }
 
-const CustomTabBar = (props: BottomTabBarProps) => <TabBarIndicator {...props} />;
+function CustomTabBar(props: BottomTabBarProps) {
+  return <TabBarIndicator {...props} />;
+}
 
 function TabNavigator() {
   const { colors } = useTheme();
   const { t } = useI18n();
 
   return (
-    <Tab.Navigator tabBar={CustomTabBar} screenOptions={{
-        headerShown: false,
-        tabBarActiveTintColor: colors.primary,
-        tabBarInactiveTintColor: colors.tabBarInactive,
-        tabBarStyle: { backgroundColor: colors.background, borderTopColor: colors.border },
-      }}>
+    <Tab.Navigator tabBar={CustomTabBar} screenOptions={{ headerShown: false, tabBarActiveTintColor: colors.primary, tabBarInactiveTintColor: colors.tabBarInactive, tabBarStyle: { backgroundColor: colors.background, borderTopColor: colors.border } }}>
       <Tab.Screen name="inicio" component={InicioScreen} options={{
           tabBarLabel: t('tab.lists'),
           tabBarIcon: ({ focused, color, size }) => (

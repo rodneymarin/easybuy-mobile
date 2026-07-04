@@ -1,7 +1,7 @@
 import type { SQLiteDatabase } from 'expo-sqlite';
 import type { ShoppingList } from '@models/shopping-list.model';
 import type { ShoppingListItem } from '@models/shopping-list-item.model';
-import { getDatabase } from '../database';
+import { getDatabase } from '@lib/database';
 
 interface ListRow {
   id: string;

@@ -1,4 +1,4 @@
-import { getDatabase } from '../database';
+import { getDatabase } from '@lib/database';
 
 export async function getSetting(key: string): Promise<string | null> {
   const db = await getDatabase();

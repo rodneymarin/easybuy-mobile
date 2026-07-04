@@ -55,9 +55,7 @@ export default function Button({ children, onPressIn, onPressOut, style, variant
   }
 
   return (
-    <AnimatedPressable onPressIn={handlePressIn} onPressOut={handlePressOut} {...props}
-      style={[styles.button, { backgroundColor, borderColor, borderWidth }, style]}
-    >
+    <AnimatedPressable onPressIn={handlePressIn} onPressOut={handlePressOut} {...props} style={[styles.button, { backgroundColor, borderColor, borderWidth }, style]}>
       {children}
     </AnimatedPressable>
   );

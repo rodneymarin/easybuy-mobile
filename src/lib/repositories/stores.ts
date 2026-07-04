@@ -1,6 +1,6 @@
 import type { SQLiteDatabase } from 'expo-sqlite';
 import type { Store } from '@models/store.model';
-import { getDatabase } from '../database';
+import { getDatabase } from '@lib/database';
 
 interface StoreRow {
   id: string;

@@ -1,7 +1,7 @@
 import type { SQLiteDatabase } from 'expo-sqlite';
 import type { Product } from '@models/product.model';
 import type { Price } from '@models/price.model';
-import { getDatabase } from '../database';
+import { getDatabase } from '@lib/database';
 
 interface ProductRow {
   id: string;

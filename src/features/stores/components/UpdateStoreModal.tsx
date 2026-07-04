@@ -55,8 +55,6 @@ export default function UpdateStoreModal({ isOpen, onClose, onSave, onUpdate, on
   }
 
   function handleClose() {
-    setDescription('');
-    setIsDeleteConfirming(false);
     onClose();
   }
 
@@ -82,9 +80,7 @@ export default function UpdateStoreModal({ isOpen, onClose, onSave, onUpdate, on
         <>
           <ModalTitle>{isEditMode ? t('stores.edit') : t('stores.add')}</ModalTitle>
           <ModalContent>
-            <Input value={description} onChangeText={setDescription}
-              placeholder={t('stores.addModal.placeholder')} autoFocus returnKeyType="done" onSubmitEditing={handleSave}
-            />
+            <Input value={description} onChangeText={setDescription} placeholder={t('stores.addModal.placeholder')} autoFocus returnKeyType="done" onSubmitEditing={handleSave} />
           </ModalContent>
           <ModalFooter>
             {isEditMode && (
@@ -95,9 +91,7 @@ export default function UpdateStoreModal({ isOpen, onClose, onSave, onUpdate, on
             <Button variant="secondary" style={styles.cancelButton} onPress={handleClose}>
               <Text style={[styles.buttonTextSecondary, { color: colors.text }]}>{t('stores.addModal.cancel')}</Text>
             </Button>
-            <Button variant="primary" style={[styles.saveButton, { opacity: description.trim() ? 1 : 0.5 }]}
-              onPress={handleSave} disabled={!description.trim()}
-            >
+            <Button variant="primary" style={[styles.saveButton, { opacity: description.trim() ? 1 : 0.5 }]} onPress={handleSave} disabled={!description.trim()}>
               <Text style={styles.buttonTextPrimary}>{t('stores.addModal.save')}</Text>
             </Button>
           </ModalFooter>

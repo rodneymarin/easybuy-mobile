@@ -49,10 +49,11 @@ export default function TiendasScreen() {
   }
 
   useEffect(() => {
-    (async () => {
+    async function init() {
       await loadStores();
       setIsLoading(false);
-    })();
+    }
+    init();
   }, []);
 
   function openAddModal() {
@@ -70,7 +71,6 @@ export default function TiendasScreen() {
 
   function closeModal() {
     setIsModalOpen(false);
-    setSelectedStore(undefined);
   }
 
   const handleAddStore = useCallback(async (description: string) => {
@@ -116,9 +116,7 @@ export default function TiendasScreen() {
           <Text style={styles.addButtonText}>{t('stores.add')}</Text>
         </Button>
       </View>
-      <UpdateStoreModal isOpen={isModalOpen} onClose={closeModal} onSave={handleAddStore}
-        onUpdate={handleUpdateStore} onDelete={handleDeleteStore} store={selectedStore}
-      />
+      <UpdateStoreModal isOpen={isModalOpen} onClose={closeModal} onSave={handleAddStore} onUpdate={handleUpdateStore} onDelete={handleDeleteStore} store={selectedStore} />
       {filteredStores.length > 0 ? (
         <StoreList data={filteredStores} onStorePress={openEditModal} />
       ) : searchQuery !== debouncedSearch ? (
