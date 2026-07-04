@@ -4,14 +4,17 @@
     "slug": "easybuy-mobile",
     "version": "1.0.0",
     "orientation": "portrait",
-    "userInterfaceStyle": "light",
+    "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
     "splash": {
       "backgroundColor": "#ffffff"
     },
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "com.easybuy.mobile"
+      "bundleIdentifier": "com.easybuy.mobile",
+      "infoPlist": {
+        "UIUserInterfaceStyle": "Automatic"
+      }
     },
     "android": {
       "adaptiveIcon": {

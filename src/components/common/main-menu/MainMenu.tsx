@@ -2,13 +2,25 @@ import { useEffect, useRef, useState } from 'react';
 import { Animated, Pressable, StyleSheet, Text, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useDrawer } from '@lib/drawer';
-import { useTheme } from '@lib/theme';
+import { useTheme, type ThemeMode } from '@lib/theme';
 
 const PANEL_WIDTH = 280;
 
+interface ThemeOption {
+  mode: ThemeMode;
+  icon: string;
+  label: string;
+}
+
+const themeOptions: ThemeOption[] = [
+  { mode: 'light', icon: 'sunny-outline', label: 'Claro' },
+  { mode: 'dark', icon: 'moon-outline', label: 'Oscuro' },
+  { mode: 'system', icon: 'phone-portrait-outline', label: 'Sistema' },
+];
+
 function MainMenu() {
   const { isDrawerOpen, closeDrawer } = useDrawer();
-  const { isDark, colors, toggleTheme } = useTheme();
+  const { themeMode, colors, setThemeMode } = useTheme();
   const [isEnglish, setIsEnglish] = useState(false);
   const translateX = useRef(new Animated.Value(PANEL_WIDTH)).current;
   const backdropOpacity = useRef(new Animated.Value(0)).current;
@@ -42,12 +54,24 @@ function MainMenu() {
           </Pressable>
         </View>
 
-        <Pressable style={styles.menuItem} onPress={() => { toggleTheme(); closeDrawer(); }}>
-          <Ionicons name={isDark ? 'sunny-outline' : 'moon-outline'} size={22} color={colors.panelText} />
-          <Text style={[styles.menuItemText, { color: colors.panelText }]}>
-            Usar tema {isDark ? 'Light' : 'Dark'}
-          </Text>
-        </Pressable>
+        <Text style={[styles.sectionLabel, { color: colors.textSecondary }]}>Tema</Text>
+
+        {themeOptions.map((option) => {
+          const isSelected = option.mode === themeMode;
+          return (
+            <Pressable
+              key={option.mode}
+              style={styles.menuItem}
+              onPress={() => { setThemeMode(option.mode); closeDrawer(); }}
+            >
+              <Ionicons name={option.icon as keyof typeof Ionicons.glyphMap} size={22} color={isSelected ? colors.primary : colors.panelText} />
+              <Text style={[styles.menuItemText, styles.menuItemTextFlex, { color: colors.panelText }]}>{option.label}</Text>
+              {isSelected && <Ionicons name="checkmark-circle" size={20} color={colors.primary} />}
+            </Pressable>
+          );
+        })}
+
+        <View style={[styles.divider, { backgroundColor: colors.panelBorder }]} />
 
         <Pressable style={styles.menuItem} onPress={() => { setIsEnglish(!isEnglish); closeDrawer(); }}>
           <Ionicons name="language-outline" size={22} color={colors.panelText} />
@@ -105,6 +129,13 @@ const styles = StyleSheet.create({
     fontSize: 22,
     fontWeight: '700',
   },
+  sectionLabel: {
+    fontSize: 13,
+    fontWeight: '600',
+    textTransform: 'uppercase',
+    letterSpacing: 1,
+    marginBottom: 4,
+  },
   menuItem: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -113,6 +144,9 @@ const styles = StyleSheet.create({
   },
   menuItemText: {
     fontSize: 16,
+  },
+  menuItemTextFlex: {
+    flex: 1,
   },
   divider: {
     height: 1,

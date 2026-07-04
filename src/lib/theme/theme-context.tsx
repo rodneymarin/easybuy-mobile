@@ -5,42 +5,47 @@ import { light, dark, type ThemeColors } from './colors';
 
 const THEME_SETTING_KEY = 'theme';
 
+type ThemeMode = 'light' | 'dark' | 'system';
+
 interface ThemeContextValue {
+  themeMode: ThemeMode;
   isDark: boolean;
   colors: ThemeColors;
-  toggleTheme: () => void;
+  setThemeMode: (mode: ThemeMode) => void;
 }
 
 const ThemeContext = createContext<ThemeContextValue | null>(null);
 
 function ThemeProvider({ children }: PropsWithChildren) {
   const systemScheme = useColorScheme();
-  const [isDark, setIsDark] = useState(false);
+  const [themeMode, setThemeModeState] = useState<ThemeMode>('system');
   const [isReady, setIsReady] = useState(false);
 
   useEffect(() => {
     async function init() {
-      const saved = await getSetting(THEME_SETTING_KEY);
-      if (saved !== null) {
-        setIsDark(saved === 'dark');
-      } else {
-        const detected = systemScheme === 'dark';
-        setIsDark(detected);
-        await setSetting(THEME_SETTING_KEY, detected ? 'dark' : 'light');
+      try {
+        const saved = await getSetting(THEME_SETTING_KEY);
+        if (saved !== null && (saved === 'light' || saved === 'dark' || saved === 'system')) {
+          setThemeModeState(saved);
+        } else {
+          setThemeModeState('system');
+          await setSetting(THEME_SETTING_KEY, 'system');
+        }
+      } catch {
+        setThemeModeState('system');
       }
       setIsReady(true);
     }
     init();
   }, []);
 
-  const toggleTheme = useCallback(async () => {
-    setIsDark((prev) => {
-      const next = !prev;
-      setSetting(THEME_SETTING_KEY, next ? 'dark' : 'light');
-      return next;
-    });
+  const setThemeMode = useCallback(async (mode: ThemeMode) => {
+    setThemeModeState(mode);
+    await setSetting(THEME_SETTING_KEY, mode);
   }, []);
 
+  const resolvedScheme = themeMode === 'system' ? (systemScheme ?? 'light') : themeMode;
+  const isDark = resolvedScheme === 'dark';
   const colors = isDark ? dark : light;
 
   if (!isReady) {
@@ -48,7 +53,7 @@ function ThemeProvider({ children }: PropsWithChildren) {
   }
 
   return (
-    <ThemeContext.Provider value={{ isDark, colors, toggleTheme }}>
+    <ThemeContext.Provider value={{ themeMode, isDark, colors, setThemeMode }}>
       {children}
     </ThemeContext.Provider>
   );
@@ -62,4 +67,4 @@ function useTheme(): ThemeContextValue {
   return context;
 }
 
-export { ThemeProvider, useTheme };
+export { ThemeProvider, useTheme, type ThemeMode };
