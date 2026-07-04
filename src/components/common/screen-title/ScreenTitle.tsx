@@ -3,7 +3,7 @@ import { StyleSheet, Text } from 'react-native';
 
 interface ScreenTitleProps extends PropsWithChildren {}
 
-function ScreenTitle({ children }: ScreenTitleProps) {
+export default function ScreenTitle({ children }: ScreenTitleProps) {
   return <Text style={styles.title}>{children}</Text>;
 }
 
@@ -15,5 +15,3 @@ const styles = StyleSheet.create({
     marginBottom: 20,
   },
 });
-
-export { ScreenTitle };
