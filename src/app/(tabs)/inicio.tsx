@@ -6,11 +6,13 @@ import { ShoppingList, type ShoppingListData } from '@features/shopping-lists';
 import { getAllShoppingLists } from '@lib/repositories/shopping-lists';
 import { getAllProducts } from '@lib/repositories/products';
 import { useDebounce } from '@lib/hooks';
+import { useI18n } from '@lib/i18n';
 import { calcListTotalAmount } from '@models/shopping-list.model';
 import { useTheme } from '@lib/theme';
 
 export default function InicioScreen() {
   const { colors } = useTheme();
+  const { t } = useI18n();
   const [isLoading, setIsLoading] = useState(true);
   const [lists, setLists] = useState<ShoppingListData[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
@@ -47,19 +49,19 @@ export default function InicioScreen() {
     return (
       <View style={[styles.container, { backgroundColor: colors.background }]}>
         <ActivityIndicator size="large" color={colors.text} />
-        <Text style={[styles.loadingText, { color: colors.textSecondary }]}>Cargando...</Text>
+        <Text style={[styles.loadingText, { color: colors.textSecondary }]}>{t('common.loading')}</Text>
       </View>
     );
   }
 
   return (
     <View style={[styles.container, { backgroundColor: colors.background }]}>
-      <ScreenTitle>Listas</ScreenTitle>
+      <ScreenTitle>{t('tab.lists')}</ScreenTitle>
       <View style={styles.searchRow}>
-        <SearchInput value={searchQuery} onChangeText={setSearchQuery} placeholder="Buscar listas..." />
+        <SearchInput value={searchQuery} onChangeText={setSearchQuery} placeholder={t('search.lists')} />
         <Button>
           <Text style={styles.addButtonIcon}>+</Text>
-          <Text style={styles.addButtonText}>Nueva</Text>
+          <Text style={styles.addButtonText}>{t('lists.add')}</Text>
         </Button>
       </View>
       {filteredLists.length > 0 ? (
@@ -70,7 +72,7 @@ export default function InicioScreen() {
         </View>
       ) : (
         <View style={styles.emptyContainer}>
-          <Text style={[styles.emptyText, { color: colors.textSecondary }]}>{lists.length > 0 ? "No se encontraron resultados" : "No tienes Listas"}</Text>
+          <Text style={[styles.emptyText, { color: colors.textSecondary }]}>{lists.length > 0 ? t('common.noResults') : t('lists.empty')}</Text>
         </View>
       )}
     </View>

@@ -1,7 +1,8 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef } from 'react';
 import { Animated, Pressable, StyleSheet, Text, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useDrawer } from '@lib/drawer';
+import { useI18n, type Language } from '@lib/i18n';
 import { useTheme, type ThemeMode } from '@lib/theme';
 
 const PANEL_WIDTH = 280;
@@ -9,19 +10,24 @@ const PANEL_WIDTH = 280;
 interface ThemeOption {
   mode: ThemeMode;
   icon: string;
-  label: string;
+  labelKey: string;
 }
 
 const themeOptions: ThemeOption[] = [
-  { mode: 'light', icon: 'sunny-outline', label: 'Claro' },
-  { mode: 'dark', icon: 'moon-outline', label: 'Oscuro' },
-  { mode: 'system', icon: 'phone-portrait-outline', label: 'Sistema' },
+  { mode: 'light', icon: 'sunny-outline', labelKey: 'menu.light' },
+  { mode: 'dark', icon: 'moon-outline', labelKey: 'menu.dark' },
+  { mode: 'system', icon: 'phone-portrait-outline', labelKey: 'menu.system' },
+];
+
+const languageOptions: { lang: Language; labelKey: string }[] = [
+  { lang: 'en', labelKey: 'menu.switchToEnglish' },
+  { lang: 'es', labelKey: 'menu.switchToSpanish' },
 ];
 
 function MainMenu() {
   const { isDrawerOpen, closeDrawer } = useDrawer();
   const { themeMode, colors, setThemeMode } = useTheme();
-  const [isEnglish, setIsEnglish] = useState(false);
+  const { language, setLanguage, t } = useI18n();
   const translateX = useRef(new Animated.Value(PANEL_WIDTH)).current;
   const backdropOpacity = useRef(new Animated.Value(0)).current;
 
@@ -54,18 +60,14 @@ function MainMenu() {
           </Pressable>
         </View>
 
-        <Text style={[styles.sectionLabel, { color: colors.textSecondary }]}>Tema</Text>
+        <Text style={[styles.sectionLabel, { color: colors.textSecondary }]}>{t('menu.theme')}</Text>
 
         {themeOptions.map((option) => {
           const isSelected = option.mode === themeMode;
           return (
-            <Pressable
-              key={option.mode}
-              style={styles.menuItem}
-              onPress={() => { setThemeMode(option.mode); closeDrawer(); }}
-            >
+            <Pressable key={option.mode} style={styles.menuItem} onPress={() => { setThemeMode(option.mode); closeDrawer(); }}>
               <Ionicons name={option.icon as keyof typeof Ionicons.glyphMap} size={22} color={isSelected ? colors.primary : colors.panelText} />
-              <Text style={[styles.menuItemText, styles.menuItemTextFlex, { color: colors.panelText }]}>{option.label}</Text>
+              <Text style={[styles.menuItemText, styles.menuItemTextFlex, { color: colors.panelText }]}>{t(option.labelKey)}</Text>
               {isSelected && <Ionicons name="checkmark-circle" size={20} color={colors.primary} />}
             </Pressable>
           );
@@ -73,23 +75,29 @@ function MainMenu() {
 
         <View style={[styles.divider, { backgroundColor: colors.panelBorder }]} />
 
-        <Pressable style={styles.menuItem} onPress={() => { setIsEnglish(!isEnglish); closeDrawer(); }}>
-          <Ionicons name="language-outline" size={22} color={colors.panelText} />
-          <Text style={[styles.menuItemText, { color: colors.panelText }]}>
-            Cambiar a idioma {isEnglish ? 'Español' : 'Inglés'}
-          </Text>
-        </Pressable>
+        <Text style={[styles.sectionLabel, { color: colors.textSecondary }]}>{t('menu.language')}</Text>
+
+        {languageOptions.map((option) => {
+          const isSelected = option.lang === language;
+          return (
+            <Pressable key={option.lang} style={styles.menuItem} onPress={async () => { await setLanguage(option.lang); closeDrawer(); }}>
+              <Ionicons name="language-outline" size={22} color={isSelected ? colors.primary : colors.panelText} />
+              <Text style={[styles.menuItemText, styles.menuItemTextFlex, { color: colors.panelText }]}>{t(option.labelKey)}</Text>
+              {isSelected && <Ionicons name="checkmark-circle" size={20} color={colors.primary} />}
+            </Pressable>
+          );
+        })}
 
         <View style={[styles.divider, { backgroundColor: colors.panelBorder }]} />
 
         <Pressable style={styles.menuItem} onPress={closeDrawer}>
           <Ionicons name="download-outline" size={22} color={colors.panelText} />
-          <Text style={[styles.menuItemText, { color: colors.panelText }]}>Exportar datos</Text>
+          <Text style={[styles.menuItemText, { color: colors.panelText }]}>{t('menu.exportData')}</Text>
         </Pressable>
 
         <Pressable style={styles.menuItem} onPress={closeDrawer}>
           <Ionicons name="cloud-upload-outline" size={22} color={colors.panelText} />
-          <Text style={[styles.menuItemText, { color: colors.panelText }]}>Importar datos</Text>
+          <Text style={[styles.menuItemText, { color: colors.panelText }]}>{t('menu.importData')}</Text>
         </Pressable>
       </Animated.View>
     </View>

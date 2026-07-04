@@ -5,10 +5,12 @@ import { Button, SearchInput } from '@components/ui';
 import { StoreList, type StoreListData } from '@features/stores';
 import { getAllStores } from '@lib/repositories/stores';
 import { useDebounce } from '@lib/hooks';
+import { useI18n } from '@lib/i18n';
 import { useTheme } from '@lib/theme';
 
 export default function TiendasScreen() {
   const { colors } = useTheme();
+  const { t } = useI18n();
   const [isLoading, setIsLoading] = useState(true);
   const [stores, setStores] = useState<StoreListData[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
@@ -42,19 +44,19 @@ export default function TiendasScreen() {
     return (
       <View style={[styles.container, { backgroundColor: colors.background }]}>
         <ActivityIndicator size="large" color={colors.text} />
-        <Text style={[styles.loadingText, { color: colors.textSecondary }]}>Cargando...</Text>
+        <Text style={[styles.loadingText, { color: colors.textSecondary }]}>{t('common.loading')}</Text>
       </View>
     );
   }
 
   return (
     <View style={[styles.container, { backgroundColor: colors.background }]}>
-      <ScreenTitle>Tiendas</ScreenTitle>
+      <ScreenTitle>{t('tab.stores')}</ScreenTitle>
       <View style={styles.searchRow}>
-        <SearchInput value={searchQuery} onChangeText={setSearchQuery} placeholder="Buscar tiendas..." />
+        <SearchInput value={searchQuery} onChangeText={setSearchQuery} placeholder={t('search.stores')} />
         <Button>
           <Text style={styles.addButtonIcon}>+</Text>
-          <Text style={styles.addButtonText}>Nueva</Text>
+          <Text style={styles.addButtonText}>{t('stores.add')}</Text>
         </Button>
       </View>
       {filteredStores.length > 0 ? (
@@ -65,7 +67,7 @@ export default function TiendasScreen() {
         </View>
       ) : (
         <View style={styles.emptyContainer}>
-          <Text style={[styles.emptyText, { color: colors.textSecondary }]}>{stores.length > 0 ? "No se encontraron resultados" : "No tienes Tiendas"}</Text>
+          <Text style={[styles.emptyText, { color: colors.textSecondary }]}>{stores.length > 0 ? t('common.noResults') : t('stores.empty')}</Text>
         </View>
       )}
     </View>

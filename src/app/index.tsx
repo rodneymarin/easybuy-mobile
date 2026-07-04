@@ -1,5 +1,6 @@
 import { useTheme, ThemeProvider } from '@lib/theme';
 import { DrawerProvider } from '@lib/drawer';
+import { I18nProvider } from '@lib/i18n';
 import { MainMenu } from '@components/common/main-menu';
 import { NavigationContainer } from '@react-navigation/native';
 import { StatusBar } from 'expo-status-bar';
@@ -21,8 +22,10 @@ function AppContent() {
 
 export default function App() {
   return (
-    <ThemeProvider>
-      <AppContent />
-    </ThemeProvider>
+    <I18nProvider>
+      <ThemeProvider>
+        <AppContent />
+      </ThemeProvider>
+    </I18nProvider>
   );
 }

@@ -2,6 +2,7 @@ import { BottomTabBar, type BottomTabBarProps } from '@react-navigation/bottom-t
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { Ionicons } from '@expo/vector-icons';
 import { StyleSheet, View } from 'react-native';
+import { useI18n } from '@lib/i18n';
 import { useTheme } from '@lib/theme';
 import InicioScreen from './(tabs)/inicio';
 import ProductosScreen from './(tabs)/productos';
@@ -30,6 +31,7 @@ const CustomTabBar = (props: BottomTabBarProps) => <TabBarIndicator {...props} /
 
 function TabNavigator() {
   const { colors } = useTheme();
+  const { t } = useI18n();
 
   return (
     <Tab.Navigator tabBar={CustomTabBar} screenOptions={{
@@ -39,19 +41,19 @@ function TabNavigator() {
         tabBarStyle: { backgroundColor: colors.background, borderTopColor: colors.border },
       }}>
       <Tab.Screen name="inicio" component={InicioScreen} options={{
-          tabBarLabel: 'Listas',
+          tabBarLabel: t('tab.lists'),
           tabBarIcon: ({ focused, color, size }) => (
             <Ionicons name={focused ? 'list' : 'list-outline'} size={size} color={color} />
           ),
         }} />
       <Tab.Screen name="productos" component={ProductosScreen} options={{
-          tabBarLabel: 'Productos',
+          tabBarLabel: t('tab.products'),
           tabBarIcon: ({ focused, color, size }) => (
             <Ionicons name={focused ? 'cube' : 'cube-outline'} size={size} color={color} />
           ),
         }} />
       <Tab.Screen name="tiendas" component={TiendasScreen} options={{
-          tabBarLabel: 'Tiendas',
+          tabBarLabel: t('tab.stores'),
           tabBarIcon: ({ focused, color, size }) => (
             <Ionicons name={focused ? 'storefront' : 'storefront-outline'} size={size} color={color} />
           ),
