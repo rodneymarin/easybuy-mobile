@@ -29,3 +29,27 @@ export async function getAllProducts(): Promise<Product[]> {
       .map((pr): Price => ({ storeId: pr.store_id, value: pr.value })),
   }));
 }
+
+export async function createProduct(id: string, productName: string, unitOfMeasurement: string, prices: Price[]): Promise<void> {
+  const db = await getDatabase();
+  await db.runAsync("INSERT INTO products (id, product_name, unit_of_measurement) VALUES (?, ?, ?)", [id, productName, unitOfMeasurement]);
+  for (const price of prices) {
+    await db.runAsync("INSERT INTO product_prices (product_id, store_id, value) VALUES (?, ?, ?)", [id, price.storeId, price.value]);
+  }
+}
+
+export async function updateProduct(id: string, productName: string, unitOfMeasurement: string, prices: Price[]): Promise<void> {
+  const db = await getDatabase();
+  await db.runAsync("UPDATE products SET product_name = ?, unit_of_measurement = ? WHERE id = ?", [productName, unitOfMeasurement, id]);
+  await db.runAsync("DELETE FROM product_prices WHERE product_id = ?", [id]);
+  for (const price of prices) {
+    await db.runAsync("INSERT INTO product_prices (product_id, store_id, value) VALUES (?, ?, ?)", [id, price.storeId, price.value]);
+  }
+}
+
+export async function deleteProduct(id: string): Promise<void> {
+  const db = await getDatabase();
+  await db.runAsync("DELETE FROM product_prices WHERE product_id = ?", [id]);
+  await db.runAsync("DELETE FROM shopping_list_items WHERE product_id = ?", [id]);
+  await db.runAsync("DELETE FROM products WHERE id = ?", [id]);
+}

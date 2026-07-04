@@ -1,44 +1,107 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { ActivityIndicator, StyleSheet, Text, View } from 'react-native';
 import { ScreenTitle } from '@components/ui/screen-title';
 import { Button, SearchInput } from '@components/ui';
 import { ProductList, type ProductListData } from '@features/products';
-import { getAllProducts } from '@lib/repositories/products';
+import { ProductFormScreen } from '@features/products';
+import { createProduct, deleteProduct, getAllProducts, updateProduct } from '@lib/repositories/products';
+import { getAllStores } from '@lib/repositories/stores';
 import { useDebounce } from '@lib/hooks';
 import { useI18n } from '@lib/i18n';
 import { useTheme } from '@lib/theme';
+import type { Product } from '@models/product.model';
+import type { Price } from '@models/price.model';
+import type { StoreListData } from '@features/stores';
+
+function generateUUID(): string {
+  let d = new Date().getTime();
+  let d2 = 0;
+  return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function (c) {
+    let r = Math.random() * 16;
+    if (d > 0) {
+      r = (d + r) % 16 | 0;
+      d = Math.floor(d / 16);
+    } else {
+      r = (d2 + r) % 16 | 0;
+      d2 = Math.floor(d2 / 16);
+    }
+    return (c === 'x' ? r : (r & 0x3) | 0x8).toString(16);
+  });
+}
 
 export default function ProductosScreen() {
   const { colors } = useTheme();
   const { t } = useI18n();
   const [isLoading, setIsLoading] = useState(true);
-  const [products, setProducts] = useState<ProductListData[]>([]);
+  const [products, setProducts] = useState<Product[]>([]);
+  const [stores, setStores] = useState<StoreListData[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
+  const [isFormOpen, setIsFormOpen] = useState(false);
+  const [selectedProduct, setSelectedProduct] = useState<Product | undefined>(undefined);
   const debouncedSearch = useDebounce(searchQuery, 300);
 
-  useEffect(() => {
-    async function load() {
-      try {
-        const allProducts = await getAllProducts();
-        const mapped = allProducts.map((p) => ({
-          id: p.id,
-          productName: p.productName,
-          unitOfMeasurement: p.unitOfMeasurement,
-        }));
-        setProducts(mapped);
-      } catch (error) {
-        console.error("Failed to load products:", error);
-      } finally {
-        setIsLoading(false);
-      }
+  async function loadData() {
+    try {
+      const [allProducts, allStores] = await Promise.all([getAllProducts(), getAllStores()]);
+      setProducts(allProducts);
+      setStores(allStores.map((s) => ({ id: s.id, description: s.description })));
+    } catch (error) {
+      console.error("Failed to load data:", error);
     }
-    load();
+  }
+
+  useEffect(() => {
+    async function init() {
+      await loadData();
+      setIsLoading(false);
+    }
+    init();
   }, []);
 
-  const filteredProducts = useMemo(() => {
-    if (!debouncedSearch.trim()) return products;
+  function openAddForm() {
+    setSelectedProduct(undefined);
+    setIsFormOpen(true);
+  }
+
+  function openEditForm(productId: string) {
+    const product = products.find((p) => p.id === productId);
+    if (product) {
+      setSelectedProduct(product);
+      setIsFormOpen(true);
+    }
+  }
+
+  function closeForm() {
+    setIsFormOpen(false);
+  }
+
+  const handleSave = useCallback(async (productName: string, unitOfMeasurement: string, prices: Price[]) => {
+    await createProduct(generateUUID(), productName, unitOfMeasurement, prices);
+    closeForm();
+    await loadData();
+  }, []);
+
+  const handleUpdate = useCallback(async (id: string, productName: string, unitOfMeasurement: string, prices: Price[]) => {
+    await updateProduct(id, productName, unitOfMeasurement, prices);
+    closeForm();
+    await loadData();
+  }, []);
+
+  async function handleDelete(productId: string) {
+    await deleteProduct(productId);
+    closeForm();
+    await loadData();
+  }
+
+  const filteredProducts: ProductListData[] = useMemo(() => {
+    const mapped = products.map((p) => ({
+      id: p.id,
+      productName: p.productName,
+      unitOfMeasurement: p.unitOfMeasurement,
+    }));
+    if (!debouncedSearch.trim()) return mapped;
     const query = debouncedSearch.toLowerCase();
-    return products.filter((p) => p.productName.toLowerCase().includes(query));
+    return mapped.filter((p) => p.productName.toLowerCase().includes(query));
   }, [products, debouncedSearch]);
 
   if (isLoading) {
@@ -50,18 +113,24 @@ export default function ProductosScreen() {
     );
   }
 
+  if (isFormOpen) {
+    return (
+      <ProductFormScreen product={selectedProduct} stores={stores} onBack={closeForm} onSave={handleSave} onUpdate={handleUpdate} onDelete={handleDelete} />
+    );
+  }
+
   return (
     <View style={[styles.container, { backgroundColor: colors.background }]}>
       <ScreenTitle>{t('tab.products')}</ScreenTitle>
       <View style={styles.searchRow}>
         <SearchInput value={searchQuery} onChangeText={setSearchQuery} placeholder={t('search.products')} />
-        <Button>
+        <Button onPress={openAddForm}>
           <Text style={styles.addButtonIcon}>+</Text>
           <Text style={styles.addButtonText}>{t('products.add')}</Text>
         </Button>
       </View>
       {filteredProducts.length > 0 ? (
-        <ProductList data={filteredProducts} />
+        <ProductList data={filteredProducts} onProductPress={openEditForm} />
       ) : searchQuery !== debouncedSearch ? (
         <View style={styles.emptyContainer}>
           <ActivityIndicator size="large" color={colors.text} />

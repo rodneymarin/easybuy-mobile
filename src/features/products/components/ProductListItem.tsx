@@ -7,9 +7,10 @@ import { useTheme } from '@lib/theme';
 interface ProductListItemProps {
 	productName: string;
 	unitOfMeasurement: string;
+	onPress?: () => void;
 }
 
-export default function ProductListItem({ productName, unitOfMeasurement }: ProductListItemProps) {
+export default function ProductListItem({ productName, unitOfMeasurement, onPress }: ProductListItemProps) {
 	const { colors } = useTheme();
 	const { t } = useI18n();
 
@@ -19,7 +20,7 @@ export default function ProductListItem({ productName, unitOfMeasurement }: Prod
 	})();
 
 	return (
-		<PressableCard style={[styles.card, { borderColor: colors.border }]}>
+		<PressableCard onPress={onPress} style={[styles.card, { borderColor: colors.border }]}>
 			<View style={styles.cardContent}>
 				<Text style={[styles.title, { color: colors.text }]} numberOfLines={1} ellipsizeMode="tail">{productName}</Text>
 				<Tag label={unitLabel} />

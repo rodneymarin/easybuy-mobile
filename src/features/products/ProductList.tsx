@@ -9,13 +9,16 @@ export interface ProductListData {
 
 interface ProductListProps {
   data: ProductListData[];
+  onProductPress?: (id: string) => void;
 }
 
-export default function ProductList({ data }: ProductListProps) {
+export default function ProductList({ data, onProductPress }: ProductListProps) {
   return (
     <FlatList data={data} keyExtractor={(item) => item.id} contentContainerStyle={styles.list}
       renderItem={({ item }) => (
-        <ProductListItem productName={item.productName} unitOfMeasurement={item.unitOfMeasurement} />
+        <ProductListItem productName={item.productName} unitOfMeasurement={item.unitOfMeasurement}
+          onPress={onProductPress ? () => onProductPress(item.id) : undefined}
+        />
       )}
     />
   );

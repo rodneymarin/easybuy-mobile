@@ -1,12 +1,12 @@
 import { type ReactNode, useRef } from 'react';
-import { Animated, type GestureResponderEvent, Pressable, type PressableProps, StyleSheet } from 'react-native';
+import { Animated, type GestureResponderEvent, Pressable, type PressableProps, StyleSheet, type StyleProp, type ViewStyle } from 'react-native';
 import { useTheme } from '@lib/theme';
 
 type ButtonVariant = 'primary' | 'secondary' | 'destructive';
 
-interface ButtonProps extends PressableProps {
+interface ButtonProps extends Omit<PressableProps, 'style'> {
   children: ReactNode;
-  style?: PressableProps['style'];
+  style?: StyleProp<ViewStyle>;
   variant?: ButtonVariant;
 }
 
