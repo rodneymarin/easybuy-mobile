@@ -1,5 +1,7 @@
+import { BottomTabBar, type BottomTabBarProps } from '@react-navigation/bottom-tabs';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { Ionicons } from '@expo/vector-icons';
+import { StyleSheet, View } from 'react-native';
 import { useTheme } from '@lib/theme';
 import InicioScreen from './(tabs)/inicio';
 import ProductosScreen from './(tabs)/productos';
@@ -7,11 +9,30 @@ import TiendasScreen from './(tabs)/tiendas';
 
 const Tab = createBottomTabNavigator();
 
-function TabNavigator() {
-  const { colors, isDark } = useTheme();
+function TabBarIndicator({ state, ...rest }: BottomTabBarProps) {
+  const { colors } = useTheme();
+  const tabCount = state.routes.length;
+  const tabWidth = 100 / tabCount;
+  const barWidth = tabWidth * 0.35;
+  const left = state.index * tabWidth + (tabWidth - barWidth) / 2;
 
   return (
-    <Tab.Navigator screenOptions={{
+    <View>
+      <View style={[styles.indicatorContainer, { backgroundColor: colors.background }]}>
+        <View style={[styles.indicator, { backgroundColor: colors.primary, width: `${barWidth}%`, left: `${left}%` }]} />
+      </View>
+      <BottomTabBar state={state} {...rest} />
+    </View>
+  );
+}
+
+const CustomTabBar = (props: BottomTabBarProps) => <TabBarIndicator {...props} />;
+
+function TabNavigator() {
+  const { colors } = useTheme();
+
+  return (
+    <Tab.Navigator tabBar={CustomTabBar} screenOptions={{
         headerShown: false,
         tabBarActiveTintColor: colors.primary,
         tabBarInactiveTintColor: colors.tabBarInactive,
@@ -38,5 +59,16 @@ function TabNavigator() {
     </Tab.Navigator>
   );
 }
+
+const styles = StyleSheet.create({
+  indicatorContainer: {
+    flexDirection: 'row',
+    height: 2,
+  },
+  indicator: {
+    height: 2,
+    position: 'absolute',
+  },
+});
 
 export { TabNavigator };
