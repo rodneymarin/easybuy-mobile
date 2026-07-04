@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { FlatList, Modal as RNModal, Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
 import { Button } from '@components/ui';
 import { useI18n } from '@lib/i18n';
 import { useTheme } from '@lib/theme';
@@ -55,6 +56,12 @@ export default function ProductPrices({ prices, stores, onPricesChange }: Produc
     setIsStoreSelectorOpen(false);
   }
 
+  const canConfirm = (() => {
+    if (!newStoreId || !newPriceText.trim()) return false;
+    const value = parseFloat(newPriceText.trim());
+    return !isNaN(value) && value >= 0;
+  })();
+
   const selectedStore = stores.find((s) => s.id === newStoreId);
 
   return (
@@ -72,7 +79,7 @@ export default function ProductPrices({ prices, stores, onPricesChange }: Produc
                 </Text>
                 <Text style={[styles.priceValue, { color: colors.text }]}>${price.value.toFixed(2)}</Text>
                 <Pressable onPress={() => handleRemovePrice(price.storeId)} style={styles.removeButton} hitSlop={8}>
-                  <Text style={[styles.removeButtonText, { color: colors.destructive }]}>X</Text>
+                  <Ionicons name="close" size={16} color={colors.textSecondary} />
                 </Pressable>
               </View>
             );
@@ -88,20 +95,20 @@ export default function ProductPrices({ prices, stores, onPricesChange }: Produc
             </Text>
             <Text style={[styles.dropdownArrow, { color: colors.text }]}>▼</Text>
           </Pressable>
-          <TextInput value={newPriceText} onChangeText={setNewPriceText} placeholder={t('products.addModal.pricePlaceholder')} keyboardType="decimal-pad"
+          <TextInput value={newPriceText} onChangeText={(text) => { const filtered = text.replace(/[^0-9.]/g, ''); if (filtered === '' || /^\d*\.?\d*$/.test(filtered)) setNewPriceText(filtered); }} placeholder={t('products.addModal.pricePlaceholder')} keyboardType="decimal-pad"
             placeholderTextColor={colors.placeholderText}
             style={[styles.priceInput, { color: colors.text, borderColor: colors.border, backgroundColor: colors.background }]}
           />
           <View style={styles.addActions}>
             <Button variant="primary" style={styles.addActionButton}
               onPress={handleConfirmAddPrice}
-              disabled={!newStoreId || !newPriceText.trim()}
+              disabled={!canConfirm}
             >
               <Text style={styles.confirmText}>✓</Text>
             </Button>
-            <Pressable onPress={handleCancelAddPrice} style={styles.cancelAddButton} hitSlop={8}>
-              <Text style={[styles.cancelAddText, { color: colors.textSecondary }]}>X</Text>
-            </Pressable>
+            <Button variant="secondary" style={styles.addActionButton} onPress={handleCancelAddPrice}>
+              <Ionicons name="close" size={18} color={colors.text} />
+            </Button>
           </View>
         </View>
       ) : (
@@ -179,10 +186,6 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
   },
-  removeButtonText: {
-    fontSize: 14,
-    fontWeight: '700',
-  },
   addPriceSection: {
     borderWidth: 1,
     borderRadius: 10,
@@ -224,18 +227,6 @@ const styles = StyleSheet.create({
   confirmText: {
     color: '#fff',
     fontSize: 16,
-    fontWeight: '600',
-  },
-  cancelAddButton: {
-    width: 44,
-    height: 44,
-    borderRadius: 10,
-    borderWidth: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  cancelAddText: {
-    fontSize: 14,
     fontWeight: '600',
   },
   addPriceButton: {

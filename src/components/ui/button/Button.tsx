@@ -24,7 +24,7 @@ function darkenColor(hex: string, amount: number): string {
 
 const AnimatedPressable = Animated.createAnimatedComponent(Pressable);
 
-export default function Button({ children, onPressIn, onPressOut, style, variant = 'primary', ...props }: ButtonProps) {
+export default function Button({ children, onPressIn, onPressOut, style, variant = 'primary', disabled, ...props }: ButtonProps) {
   const { colors } = useTheme();
   const darkAnim = useRef(new Animated.Value(0)).current;
 
@@ -36,8 +36,7 @@ export default function Button({ children, onPressIn, onPressOut, style, variant
     : variant === 'secondary' ? colors.border
     : colors.destructiveBorder;
 
-  const borderWidth = variant === 'primary' ? 0
-    : 1;
+  const borderWidth = 0;
 
   const backgroundColor = darkAnim.interpolate({
     inputRange: [0, 1],
@@ -45,17 +44,19 @@ export default function Button({ children, onPressIn, onPressOut, style, variant
   });
 
   function handlePressIn(event: GestureResponderEvent) {
+    if (disabled) return;
     Animated.timing(darkAnim, { toValue: 1, duration: 150, useNativeDriver: false }).start();
     onPressIn?.(event);
   }
 
   function handlePressOut(event: GestureResponderEvent) {
+    if (disabled) return;
     Animated.timing(darkAnim, { toValue: 0, duration: 150, useNativeDriver: false }).start();
     onPressOut?.(event);
   }
 
   return (
-    <AnimatedPressable onPressIn={handlePressIn} onPressOut={handlePressOut} {...props} style={[styles.button, { backgroundColor, borderColor, borderWidth }, style]}>
+    <AnimatedPressable onPressIn={handlePressIn} onPressOut={handlePressOut} disabled={disabled} {...props} style={[styles.button, { backgroundColor, borderColor, borderWidth, opacity: disabled ? 0.35 : 1 }, style]}>
       {children}
     </AnimatedPressable>
   );

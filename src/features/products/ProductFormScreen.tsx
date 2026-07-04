@@ -1,8 +1,7 @@
 import { useEffect, useState } from 'react';
 import { FlatList, KeyboardAvoidingView, Modal as RNModal, Platform, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { Button, Input } from '@components/ui';
-import { BottomSheet } from '@components/common';
+import { Button, Input, BottomSheet, ScreenTitle } from '@components/ui';
 import { ProductPrices } from '@features/products/components';
 import { useI18n } from '@lib/i18n';
 import { useTheme } from '@lib/theme';
@@ -59,12 +58,11 @@ export default function ProductFormScreen({ product, stores, onBack, onSave, onU
 
   return (
     <KeyboardAvoidingView style={[styles.container, { backgroundColor: colors.background }]} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
-      <View style={[styles.header, { borderBottomColor: colors.border }]}>
+      <View style={styles.headerWrapper}>
+        <ScreenTitle>{isEditMode ? t('products.editTitle') : t('products.addTitle')}</ScreenTitle>
         <Pressable onPress={onBack} style={styles.backButton} hitSlop={8}>
           <Ionicons name="arrow-back" size={24} color={colors.text} />
         </Pressable>
-        <Text style={[styles.headerTitle, { color: colors.text }]}>{isEditMode ? t('products.editTitle') : t('products.addTitle')}</Text>
-        <View style={styles.headerSpacer} />
       </View>
 
       <ScrollView style={styles.body} contentContainerStyle={styles.bodyContent} keyboardShouldPersistTaps="handled">
@@ -88,7 +86,7 @@ export default function ProductFormScreen({ product, stores, onBack, onSave, onU
         <Button variant="secondary" style={styles.actionButton} onPress={onBack}>
           <Text style={[styles.buttonTextSecondary, { color: colors.text }]}>{t('products.addModal.cancel')}</Text>
         </Button>
-        <Button variant="primary" style={[styles.actionButton, { opacity: isFormValid ? 1 : 0.5 }]} onPress={handleSave} disabled={!isFormValid}>
+        <Button variant="primary" style={styles.actionButton} onPress={handleSave} disabled={!isFormValid}>
           <Text style={styles.buttonTextPrimary}>{t('products.addModal.save')}</Text>
         </Button>
       </View>
@@ -125,28 +123,19 @@ const styles = StyleSheet.create({
     flex: 1,
     paddingTop: 60,
   },
-  header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingHorizontal: 16,
-    paddingBottom: 12,
-    borderBottomWidth: 1,
+  headerWrapper: {
+    position: 'relative',
   },
   backButton: {
+    position: 'absolute',
+    left: 16,
+    top: -6,
     width: 36,
     height: 36,
     borderRadius: 18,
     justifyContent: 'center',
     alignItems: 'center',
-  },
-  headerTitle: {
-    flex: 1,
-    fontSize: 18,
-    fontWeight: '700',
-    textAlign: 'center',
-  },
-  headerSpacer: {
-    width: 36,
+    zIndex: 1,
   },
   body: {
     flex: 1,

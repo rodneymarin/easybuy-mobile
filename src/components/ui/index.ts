@@ -6,3 +6,4 @@ export { Modal, ModalTitle, ModalContent, ModalFooter } from './modal';
 export { PressableCard } from './pressable-card';
 export { ScreenTitle } from './screen-title';
 export { MainMenu } from './main-menu';
+export { BottomSheet } from './bottom-sheet';

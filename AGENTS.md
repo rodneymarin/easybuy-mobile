@@ -42,9 +42,7 @@ No `.env` files or environment setup required.
 ## Folder Structure & Architecture (Expo / React Native)
 - Root Directory Isolation: All application code must reside inside the `src/` directory to separate app source files from root-level configuration files (e.g., package.json, expo configs).
 - File-Based Routing: All screens, routes, and layout configurations must live strictly within `src/app/` following Expo Router conventions. Do not place non-routing components or arbitrary utilities inside this folder to avoid generating invalid or accidental application routes.
-- Component Classification: Shared UI elements must be separated into two specific directories:
-  - `src/components/ui/` for core design system elements (e.g., Button, Card, Input).
-  - `src/components/common/` for shared generic components used across multiple sections.
+- Component Classification: All reusable UI elements must reside within `src/components/ui/` (e.g., Button, Card, Input, BottomSheet). Use subdirectories per component. There is no `src/components/common/` directory.
 - Feature-Driven Modularity: For scalable or medium-to-large projects, code must be organized by feature inside `src/features/[feature-name]/`. Each feature folder must encapsulate its own specific logic, components, local hooks, and API calls. Global definitions are restricted to application-wide shared logic.
 - Core Integration Layer: Global configurations, API clients, and third-party integrations (such as Axios clients, Supabase instances, or global state providers) must reside within `src/lib/`.
 - Development Standards & Conventions:

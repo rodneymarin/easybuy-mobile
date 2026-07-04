@@ -1,4 +1,5 @@
 import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
 import { PressableCard } from '@components/ui/pressable-card';
 import { Tag } from '@components/ui';
 import { useI18n } from '@lib/i18n';
@@ -25,7 +26,7 @@ export default function ShoppingListItem({ title, itemCount, totalAmount }: Shop
 					</View>
 				</View>
 				<Pressable style={styles.removeButton}>
-					<Text style={[styles.removeIcon, { color: colors.textSecondary }]}>×</Text>
+					<Ionicons name="close" size={18} color={colors.textSecondary} />
 				</Pressable>
 			</View>
 		</PressableCard>
@@ -61,8 +62,5 @@ const styles = StyleSheet.create({
 		height: 32,
 		justifyContent: 'center',
 		alignItems: 'center',
-	},
-	removeIcon: {
-		fontSize: 22,
 	},
 });

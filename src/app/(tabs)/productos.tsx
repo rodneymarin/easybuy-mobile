@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { ActivityIndicator, StyleSheet, Text, View } from 'react-native';
+import { useFocusEffect } from '@react-navigation/native';
 import { ScreenTitle } from '@components/ui/screen-title';
 import { Button, SearchInput } from '@components/ui';
 import { ProductList, type ProductListData } from '@features/products';
@@ -57,6 +58,15 @@ export default function ProductosScreen() {
     }
     init();
   }, []);
+
+  useFocusEffect(
+    useCallback(() => {
+      return () => {
+        setIsFormOpen(false);
+        setSelectedProduct(undefined);
+      };
+    }, [])
+  );
 
   function openAddForm() {
     setSelectedProduct(undefined);
