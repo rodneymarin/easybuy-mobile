@@ -1,5 +1,6 @@
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { Ionicons } from '@expo/vector-icons';
+import { useTheme } from '@lib/theme';
 import InicioScreen from './(tabs)/inicio';
 import ProductosScreen from './(tabs)/productos';
 import TiendasScreen from './(tabs)/tiendas';
@@ -7,8 +8,15 @@ import TiendasScreen from './(tabs)/tiendas';
 const Tab = createBottomTabNavigator();
 
 function TabNavigator() {
+  const { colors, isDark } = useTheme();
+
   return (
-    <Tab.Navigator screenOptions={{ headerShown: false, tabBarActiveTintColor: '#007AFF', tabBarInactiveTintColor: '#8e8e93' }}>
+    <Tab.Navigator screenOptions={{
+        headerShown: false,
+        tabBarActiveTintColor: colors.primary,
+        tabBarInactiveTintColor: colors.tabBarInactive,
+        tabBarStyle: { backgroundColor: colors.background, borderTopColor: colors.border },
+      }}>
       <Tab.Screen name="inicio" component={InicioScreen} options={{
           tabBarLabel: 'Listas',
           tabBarIcon: ({ focused, color, size }) => (

@@ -1,5 +1,6 @@
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { Tag } from '@components/ui';
+import { useTheme } from '@lib/theme';
 
 interface ShoppingListItemProps {
 	title: string;
@@ -8,18 +9,20 @@ interface ShoppingListItemProps {
 }
 
 export default function ShoppingListItem({ title, itemCount, totalAmount }: ShoppingListItemProps) {
+	const { colors } = useTheme();
+
 	return (
-		<View style={styles.card}>
+		<View style={[styles.card, { borderColor: colors.border, backgroundColor: colors.cardBackground }]}>
 			<View style={styles.cardContent}>
 				<View style={styles.cardLeft}>
-					<Text style={styles.title}>{title}</Text>
+					<Text style={[styles.title, { color: colors.text }]}>{title}</Text>
 					<View style={styles.tags}>
 						<Tag label={`${itemCount} items`} />
 						<Tag label={`Total: ${totalAmount.toFixed(2)}`} />
 					</View>
 				</View>
 				<Pressable style={styles.removeButton}>
-					<Text style={styles.removeIcon}>×</Text>
+					<Text style={[styles.removeIcon, { color: colors.textSecondary }]}>×</Text>
 				</Pressable>
 			</View>
 		</View>
@@ -29,12 +32,10 @@ export default function ShoppingListItem({ title, itemCount, totalAmount }: Shop
 const styles = StyleSheet.create({
 	card: {
 		borderWidth: 1,
-		borderColor: '#e0e0e0',
 		borderRadius: 12,
 		padding: 16,
 		marginHorizontal: 16,
 		marginBottom: 12,
-		backgroundColor: '#fff',
 	},
 	cardContent: {
 		flexDirection: 'row',
@@ -60,6 +61,5 @@ const styles = StyleSheet.create({
 	},
 	removeIcon: {
 		fontSize: 22,
-		color: '#999',
 	},
 });

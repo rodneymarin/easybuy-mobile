@@ -2,17 +2,19 @@ import { type PropsWithChildren } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useDrawer } from '@lib/drawer';
+import { useTheme } from '@lib/theme';
 
 interface ScreenTitleProps extends PropsWithChildren {}
 
 export default function ScreenTitle({ children }: ScreenTitleProps) {
   const { openDrawer } = useDrawer();
+  const { colors } = useTheme();
 
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>{children}</Text>
+      <Text style={[styles.title, { color: colors.text }]}>{children}</Text>
       <Pressable style={styles.hamburger} onPress={openDrawer}>
-        <Ionicons name="menu-outline" size={28} color="#000" />
+        <Ionicons name="menu-outline" size={28} color={colors.text} />
       </Pressable>
     </View>
   );

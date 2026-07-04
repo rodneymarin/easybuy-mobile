@@ -50,5 +50,10 @@ async function runMigrations(database: SQLiteDatabase): Promise<void> {
       FOREIGN KEY (product_id) REFERENCES products(id),
       FOREIGN KEY (store_id) REFERENCES stores(id)
     );
+
+    CREATE TABLE IF NOT EXISTS settings (
+      key TEXT PRIMARY KEY,
+      value TEXT NOT NULL
+    );
   `);
 }

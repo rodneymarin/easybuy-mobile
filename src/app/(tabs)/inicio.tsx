@@ -6,8 +6,10 @@ import { ShoppingList, type ShoppingListData } from '@features/shopping-lists';
 import { getAllShoppingLists } from '@lib/repositories/shopping-lists';
 import { getAllProducts } from '@lib/repositories/products';
 import { calcListTotalAmount } from '@models/shopping-list.model';
+import { useTheme } from '@lib/theme';
 
 export default function InicioScreen() {
+  const { colors } = useTheme();
   const [isLoading, setIsLoading] = useState(true);
   const [lists, setLists] = useState<ShoppingListData[]>([]);
 
@@ -34,18 +36,18 @@ export default function InicioScreen() {
 
   if (isLoading) {
     return (
-      <View style={styles.container}>
-        <ActivityIndicator size="large" color="#000" />
-        <Text style={styles.loadingText}>Cargando...</Text>
+      <View style={[styles.container, { backgroundColor: colors.background }]}>
+        <ActivityIndicator size="large" color={colors.text} />
+        <Text style={[styles.loadingText, { color: colors.textSecondary }]}>Cargando...</Text>
       </View>
     );
   }
 
   return (
-    <View style={styles.container}>
+    <View style={[styles.container, { backgroundColor: colors.background }]}>
       <ScreenTitle>Listas</ScreenTitle>
       <View style={styles.searchRow}>
-        <TextInput style={styles.searchInput} placeholder="Buscar listas..." placeholderTextColor="#999" />
+        <TextInput style={[styles.searchInput, { color: colors.text, borderColor: colors.border, backgroundColor: colors.background }]} placeholder="Buscar listas..." placeholderTextColor={colors.placeholderText} />
         <Button>
           <Text style={styles.addButtonIcon}>+</Text>
           <Text style={styles.addButtonText}>Nueva</Text>
@@ -59,14 +61,12 @@ export default function InicioScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#fff',
     paddingTop: 60,
   },
   loadingText: {
     textAlign: 'center',
     marginTop: 16,
     fontSize: 16,
-    color: '#666',
   },
   searchRow: {
     flexDirection: 'row',
@@ -78,7 +78,6 @@ const styles = StyleSheet.create({
     flex: 1,
     height: 44,
     borderWidth: 1,
-    borderColor: '#e0e0e0',
     borderRadius: 10,
     paddingHorizontal: 14,
     fontSize: 15,
