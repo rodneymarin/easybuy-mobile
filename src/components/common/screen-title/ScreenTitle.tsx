@@ -1,17 +1,36 @@
 import { type PropsWithChildren } from 'react';
-import { StyleSheet, Text } from 'react-native';
+import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
+import { useDrawer } from '@lib/drawer';
 
 interface ScreenTitleProps extends PropsWithChildren {}
 
 export default function ScreenTitle({ children }: ScreenTitleProps) {
-  return <Text style={styles.title}>{children}</Text>;
+  const { openDrawer } = useDrawer();
+
+  return (
+    <View style={styles.container}>
+      <Text style={styles.title}>{children}</Text>
+      <Pressable style={styles.hamburger} onPress={openDrawer}>
+        <Ionicons name="menu-outline" size={28} color="#000" />
+      </Pressable>
+    </View>
+  );
 }
 
 const styles = StyleSheet.create({
+  container: {
+    marginBottom: 20,
+  },
   title: {
     fontSize: 28,
     fontWeight: '700',
     textAlign: 'center',
-    marginBottom: 20,
+  },
+  hamburger: {
+    position: 'absolute',
+    right: 16,
+    top: -6,
+    padding: 4,
   },
 });
