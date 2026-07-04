@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { ActivityIndicator, StyleSheet, Text, View } from 'react-native';
-import { ScreenTitle } from '@components/common/screen-title';
+import { ScreenTitle } from '@components/ui/screen-title';
 import { Button, SearchInput } from '@components/ui';
 import { StoreList, type StoreListData } from '@features/stores';
 import { UpdateStoreModal } from '@features/stores/components';
@@ -8,6 +8,22 @@ import { createStore, deleteStore, getAllStores, updateStore } from '@lib/reposi
 import { useDebounce } from '@lib/hooks';
 import { useI18n } from '@lib/i18n';
 import { useTheme } from '@lib/theme';
+
+function generateUUID(): string {
+  let d = new Date().getTime();
+  let d2 = 0;
+  return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function (c) {
+    let r = Math.random() * 16;
+    if (d > 0) {
+      r = (d + r) % 16 | 0;
+      d = Math.floor(d / 16);
+    } else {
+      r = (d2 + r) % 16 | 0;
+      d2 = Math.floor(d2 / 16);
+    }
+    return (c === 'x' ? r : (r & 0x3) | 0x8).toString(16);
+  });
+}
 
 export default function TiendasScreen() {
   const { colors } = useTheme();
@@ -58,7 +74,7 @@ export default function TiendasScreen() {
   }
 
   const handleAddStore = useCallback(async (description: string) => {
-    await createStore(crypto.randomUUID(), description);
+    await createStore(generateUUID(), description);
     closeModal();
     await loadStores();
   }, []);
@@ -69,11 +85,11 @@ export default function TiendasScreen() {
     await loadStores();
   }, []);
 
-  const handleDeleteStore = useCallback(async (id: string) => {
-    await deleteStore(id);
+  async function handleDeleteStore(storeId: string) {
+    await deleteStore(storeId);
     closeModal();
     await loadStores();
-  }, []);
+  }
 
   const filteredStores = useMemo(() => {
     if (!debouncedSearch.trim()) return stores;

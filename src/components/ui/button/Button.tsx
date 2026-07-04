@@ -37,8 +37,7 @@ export default function Button({ children, onPressIn, onPressOut, style, variant
     : colors.destructiveBorder;
 
   const borderWidth = variant === 'primary' ? 0
-    : variant === 'secondary' ? 1
-    : 1.5;
+    : 1;
 
   const backgroundColor = darkAnim.interpolate({
     inputRange: [0, 1],

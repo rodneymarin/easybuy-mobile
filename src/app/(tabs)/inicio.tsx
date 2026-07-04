@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import { ActivityIndicator, StyleSheet, Text, View } from 'react-native';
-import { ScreenTitle } from '@components/common/screen-title';
+import { ScreenTitle } from '@components/ui/screen-title';
 import { Button, SearchInput } from '@components/ui';
 import { ShoppingList, type ShoppingListData } from '@features/shopping-lists';
 import { getAllShoppingLists } from '@lib/repositories/shopping-lists';

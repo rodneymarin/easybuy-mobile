@@ -25,5 +25,6 @@ export async function updateStore(id: string, description: string): Promise<void
 
 export async function deleteStore(id: string): Promise<void> {
   const db = await getDatabase();
+  await db.runAsync("DELETE FROM product_prices WHERE store_id = ?", [id]);
   await db.runAsync("DELETE FROM stores WHERE id = ?", [id]);
 }

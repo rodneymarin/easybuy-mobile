@@ -1,5 +1,5 @@
 import { StyleSheet, Text } from 'react-native';
-import { PressableCard } from '@components/common/pressable-card';
+import { PressableCard } from '@components/ui/pressable-card';
 import { useTheme } from '@lib/theme';
 
 interface StoreListItemProps {

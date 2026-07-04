@@ -1,5 +1,5 @@
 import { StyleSheet, Text, View } from 'react-native';
-import { PressableCard } from '@components/common/pressable-card';
+import { PressableCard } from '@components/ui/pressable-card';
 import { Tag } from '@components/ui';
 import { useI18n } from '@lib/i18n';
 import { useTheme } from '@lib/theme';
