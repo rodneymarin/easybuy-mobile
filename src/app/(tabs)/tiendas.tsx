@@ -1,9 +1,9 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { ActivityIndicator, StyleSheet, Text, View } from 'react-native';
+import { useFocusEffect } from '@react-navigation/native';
 import { ScreenTitle } from '@components/ui/screen-title';
 import { Button, SearchInput } from '@components/ui';
-import { StoreList, type StoreListData } from '@features/stores';
-import { UpdateStoreModal } from '@features/stores/components';
+import { StoreList, StoreFormScreen, type StoreListData } from '@features/stores';
 import { createStore, deleteStore, getAllStores, updateStore } from '@lib/repositories/stores';
 import { useDebounce } from '@lib/hooks';
 import { useI18n } from '@lib/i18n';
@@ -31,7 +31,7 @@ export default function TiendasScreen() {
   const [isLoading, setIsLoading] = useState(true);
   const [stores, setStores] = useState<StoreListData[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
-  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isFormOpen, setIsFormOpen] = useState(false);
   const [selectedStore, setSelectedStore] = useState<StoreListData | undefined>(undefined);
   const debouncedSearch = useDebounce(searchQuery, 300);
 
@@ -56,38 +56,47 @@ export default function TiendasScreen() {
     init();
   }, []);
 
-  function openAddModal() {
+  useFocusEffect(
+    useCallback(() => {
+      return () => {
+        setIsFormOpen(false);
+        setSelectedStore(undefined);
+      };
+    }, [])
+  );
+
+  function openAddForm() {
     setSelectedStore(undefined);
-    setIsModalOpen(true);
+    setIsFormOpen(true);
   }
 
-  function openEditModal(storeId: string) {
+  function openEditForm(storeId: string) {
     const store = stores.find((s) => s.id === storeId);
     if (store) {
       setSelectedStore(store);
-      setIsModalOpen(true);
+      setIsFormOpen(true);
     }
   }
 
-  function closeModal() {
-    setIsModalOpen(false);
+  function closeForm() {
+    setIsFormOpen(false);
   }
 
   const handleAddStore = useCallback(async (description: string) => {
     await createStore(generateUUID(), description);
-    closeModal();
+    closeForm();
     await loadStores();
   }, []);
 
   const handleUpdateStore = useCallback(async (id: string, description: string) => {
     await updateStore(id, description);
-    closeModal();
+    closeForm();
     await loadStores();
   }, []);
 
   async function handleDeleteStore(storeId: string) {
     await deleteStore(storeId);
-    closeModal();
+    closeForm();
     await loadStores();
   }
 
@@ -106,19 +115,24 @@ export default function TiendasScreen() {
     );
   }
 
+  if (isFormOpen) {
+    return (
+      <StoreFormScreen store={selectedStore} onBack={closeForm} onSave={handleAddStore} onUpdate={handleUpdateStore} onDelete={handleDeleteStore} />
+    );
+  }
+
   return (
     <View style={[styles.container, { backgroundColor: colors.background }]}>
       <ScreenTitle>{t('tab.stores')}</ScreenTitle>
       <View style={styles.searchRow}>
         <SearchInput value={searchQuery} onChangeText={setSearchQuery} placeholder={t('search.stores')} />
-        <Button onPress={openAddModal}>
+        <Button onPress={openAddForm}>
           <Text style={styles.addButtonIcon}>+</Text>
           <Text style={styles.addButtonText}>{t('stores.add')}</Text>
         </Button>
       </View>
-      <UpdateStoreModal isOpen={isModalOpen} onClose={closeModal} onSave={handleAddStore} onUpdate={handleUpdateStore} onDelete={handleDeleteStore} store={selectedStore} />
       {filteredStores.length > 0 ? (
-        <StoreList data={filteredStores} onStorePress={openEditModal} />
+        <StoreList data={filteredStores} onStorePress={openEditForm} />
       ) : searchQuery !== debouncedSearch ? (
         <View style={styles.emptyContainer}>
           <ActivityIndicator size="large" color={colors.text} />
