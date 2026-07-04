@@ -67,7 +67,7 @@ function MainMenu() {
           return (
             <Pressable key={option.mode} style={styles.menuItem} onPress={() => { setThemeMode(option.mode); closeDrawer(); }}>
               <Ionicons name={option.icon as keyof typeof Ionicons.glyphMap} size={22} color={isSelected ? colors.primary : colors.panelText} />
-              <Text style={[styles.menuItemText, styles.menuItemTextFlex, { color: colors.panelText }]}>{t(option.labelKey)}</Text>
+              <Text style={[styles.menuItemText, styles.menuItemTextFlex, { color: isSelected ? colors.primary : colors.panelText }]}>{t(option.labelKey)}</Text>
               {isSelected && <Ionicons name="checkmark-circle" size={20} color={colors.primary} />}
             </Pressable>
           );
@@ -82,7 +82,7 @@ function MainMenu() {
           return (
             <Pressable key={option.lang} style={styles.menuItem} onPress={async () => { await setLanguage(option.lang); closeDrawer(); }}>
               <Ionicons name="language-outline" size={22} color={isSelected ? colors.primary : colors.panelText} />
-              <Text style={[styles.menuItemText, styles.menuItemTextFlex, { color: colors.panelText }]}>{t(option.labelKey)}</Text>
+              <Text style={[styles.menuItemText, styles.menuItemTextFlex, { color: isSelected ? colors.primary : colors.panelText }]}>{t(option.labelKey)}</Text>
               {isSelected && <Ionicons name="checkmark-circle" size={20} color={colors.primary} />}
             </Pressable>
           );
@@ -121,6 +121,8 @@ const styles = StyleSheet.create({
     width: PANEL_WIDTH,
     paddingTop: 60,
     paddingHorizontal: 20,
+    borderTopLeftRadius: 16,
+    borderBottomLeftRadius: 16,
     shadowColor: '#000',
     shadowOffset: { width: -2, height: 0 },
     shadowOpacity: 0.15,
@@ -143,6 +145,7 @@ const styles = StyleSheet.create({
     textTransform: 'uppercase',
     letterSpacing: 1,
     marginBottom: 4,
+    opacity: 0.6,
   },
   menuItem: {
     flexDirection: 'row',
