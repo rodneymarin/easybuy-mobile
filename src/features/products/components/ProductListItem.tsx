@@ -1,4 +1,5 @@
 import { StyleSheet, Text, View } from 'react-native';
+import { PressableCard } from '@components/common/pressable-card';
 import { Tag } from '@components/ui';
 import { UNIT_OF_MEASUREMENT } from '@models/product.model';
 import { useTheme } from '@lib/theme';
@@ -17,12 +18,12 @@ export default function ProductListItem({ productName, unitOfMeasurement }: Prod
 	const { colors } = useTheme();
 
 	return (
-		<View style={[styles.card, { borderColor: colors.border, backgroundColor: colors.cardBackground }]}>
+		<PressableCard style={[styles.card, { borderColor: colors.border }]}>
 			<View style={styles.cardContent}>
 				<Text style={[styles.title, { color: colors.text }]} numberOfLines={1} ellipsizeMode="tail">{productName}</Text>
 				<Tag label={getUnitLabel(unitOfMeasurement)} />
 			</View>
-		</View>
+		</PressableCard>
 	);
 }
 

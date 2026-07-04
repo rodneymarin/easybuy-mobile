@@ -1,10 +1,6 @@
 import { type ReactNode, useRef } from 'react';
-import { Animated, type GestureResponderEvent, Pressable, type PressableProps, StyleSheet } from 'react-native';
+import { Animated, type GestureResponderEvent, Pressable, type PressableProps } from 'react-native';
 import { useTheme } from '@lib/theme';
-
-interface ButtonProps extends PressableProps {
-  children: ReactNode;
-}
 
 function darkenColor(hex: string, amount: number): string {
   let normalized = hex.replace('#', '');
@@ -20,13 +16,19 @@ function darkenColor(hex: string, amount: number): string {
 
 const AnimatedPressable = Animated.createAnimatedComponent(Pressable);
 
-export default function Button({ children, onPressIn, onPressOut, ...props }: ButtonProps) {
+interface PressableCardProps extends PressableProps {
+  children: ReactNode;
+  bgColor?: string;
+}
+
+export default function PressableCard({ children, onPressIn, onPressOut, bgColor, ...props }: PressableCardProps) {
   const { colors } = useTheme();
   const darkAnim = useRef(new Animated.Value(0)).current;
+  const baseColor = bgColor ?? colors.cardBackground;
 
   const backgroundColor = darkAnim.interpolate({
     inputRange: [0, 1],
-    outputRange: [colors.primary, darkenColor(colors.primary, 0.15)],
+    outputRange: [baseColor, darkenColor(baseColor, 0.1)],
   });
 
   function handlePressIn(event: GestureResponderEvent) {
@@ -40,19 +42,8 @@ export default function Button({ children, onPressIn, onPressOut, ...props }: Bu
   }
 
   return (
-    <AnimatedPressable onPressIn={handlePressIn} onPressOut={handlePressOut} {...props} style={[styles.button, { backgroundColor }]}>
+    <AnimatedPressable onPressIn={handlePressIn} onPressOut={handlePressOut} {...props} style={[props.style, { backgroundColor }]}>
       {children}
     </AnimatedPressable>
   );
 }
-
-const styles = StyleSheet.create({
-  button: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    borderRadius: 10,
-    paddingHorizontal: 14,
-    height: 44,
-    gap: 4,
-  },
-});

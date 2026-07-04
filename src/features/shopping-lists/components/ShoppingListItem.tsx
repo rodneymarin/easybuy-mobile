@@ -1,4 +1,5 @@
 import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { PressableCard } from '@components/common/pressable-card';
 import { Tag } from '@components/ui';
 import { useTheme } from '@lib/theme';
 
@@ -12,7 +13,7 @@ export default function ShoppingListItem({ title, itemCount, totalAmount }: Shop
 	const { colors } = useTheme();
 
 	return (
-		<View style={[styles.card, { borderColor: colors.border, backgroundColor: colors.cardBackground }]}>
+		<PressableCard style={[styles.card, { borderColor: colors.border }]}>
 			<View style={styles.cardContent}>
 				<View style={styles.cardLeft}>
 					<Text style={[styles.title, { color: colors.text }]}>{title}</Text>
@@ -25,7 +26,7 @@ export default function ShoppingListItem({ title, itemCount, totalAmount }: Shop
 					<Text style={[styles.removeIcon, { color: colors.textSecondary }]}>×</Text>
 				</Pressable>
 			</View>
-		</View>
+		</PressableCard>
 	);
 }
 
