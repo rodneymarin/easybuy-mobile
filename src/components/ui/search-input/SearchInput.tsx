@@ -1,5 +1,5 @@
-import { StyleSheet, TextInput } from 'react-native';
-import { useTheme } from '@lib/theme';
+import { StyleSheet } from 'react-native';
+import { Input } from '@components/ui/input';
 
 interface SearchInputProps {
   value: string;
@@ -8,20 +8,13 @@ interface SearchInputProps {
 }
 
 export default function SearchInput({ value, onChangeText, placeholder }: SearchInputProps) {
-  const { colors } = useTheme();
-
   return (
-    <TextInput style={[styles.input, { color: colors.text, borderColor: colors.border, backgroundColor: colors.background }]} placeholder={placeholder} placeholderTextColor={colors.placeholderText} value={value} onChangeText={onChangeText} />
+    <Input style={styles.input} value={value} onChangeText={onChangeText} placeholder={placeholder} />
   );
 }
 
 const styles = StyleSheet.create({
   input: {
     flex: 1,
-    height: 44,
-    borderWidth: 1,
-    borderRadius: 10,
-    paddingHorizontal: 14,
-    fontSize: 15,
   },
 });

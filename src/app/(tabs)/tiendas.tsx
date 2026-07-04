@@ -1,9 +1,10 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { ActivityIndicator, StyleSheet, Text, View } from 'react-native';
 import { ScreenTitle } from '@components/common/screen-title';
 import { Button, SearchInput } from '@components/ui';
 import { StoreList, type StoreListData } from '@features/stores';
-import { getAllStores } from '@lib/repositories/stores';
+import { UpdateStoreModal } from '@features/stores/components';
+import { createStore, deleteStore, getAllStores, updateStore } from '@lib/repositories/stores';
 import { useDebounce } from '@lib/hooks';
 import { useI18n } from '@lib/i18n';
 import { useTheme } from '@lib/theme';
@@ -14,24 +15,64 @@ export default function TiendasScreen() {
   const [isLoading, setIsLoading] = useState(true);
   const [stores, setStores] = useState<StoreListData[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [selectedStore, setSelectedStore] = useState<StoreListData | undefined>(undefined);
   const debouncedSearch = useDebounce(searchQuery, 300);
 
-  useEffect(() => {
-    async function load() {
-      try {
-        const allStores = await getAllStores();
-        const mapped = allStores.map((s) => ({
-          id: s.id,
-          description: s.description,
-        }));
-        setStores(mapped);
-      } catch (error) {
-        console.error("Failed to load stores:", error);
-      } finally {
-        setIsLoading(false);
-      }
+  async function loadStores() {
+    try {
+      const allStores = await getAllStores();
+      const mapped = allStores.map((s) => ({
+        id: s.id,
+        description: s.description,
+      }));
+      setStores(mapped);
+    } catch (error) {
+      console.error("Failed to load stores:", error);
     }
-    load();
+  }
+
+  useEffect(() => {
+    (async () => {
+      await loadStores();
+      setIsLoading(false);
+    })();
+  }, []);
+
+  function openAddModal() {
+    setSelectedStore(undefined);
+    setIsModalOpen(true);
+  }
+
+  function openEditModal(storeId: string) {
+    const store = stores.find((s) => s.id === storeId);
+    if (store) {
+      setSelectedStore(store);
+      setIsModalOpen(true);
+    }
+  }
+
+  function closeModal() {
+    setIsModalOpen(false);
+    setSelectedStore(undefined);
+  }
+
+  const handleAddStore = useCallback(async (description: string) => {
+    await createStore(crypto.randomUUID(), description);
+    closeModal();
+    await loadStores();
+  }, []);
+
+  const handleUpdateStore = useCallback(async (id: string, description: string) => {
+    await updateStore(id, description);
+    closeModal();
+    await loadStores();
+  }, []);
+
+  const handleDeleteStore = useCallback(async (id: string) => {
+    await deleteStore(id);
+    closeModal();
+    await loadStores();
   }, []);
 
   const filteredStores = useMemo(() => {
@@ -54,13 +95,16 @@ export default function TiendasScreen() {
       <ScreenTitle>{t('tab.stores')}</ScreenTitle>
       <View style={styles.searchRow}>
         <SearchInput value={searchQuery} onChangeText={setSearchQuery} placeholder={t('search.stores')} />
-        <Button>
+        <Button onPress={openAddModal}>
           <Text style={styles.addButtonIcon}>+</Text>
           <Text style={styles.addButtonText}>{t('stores.add')}</Text>
         </Button>
       </View>
+      <UpdateStoreModal isOpen={isModalOpen} onClose={closeModal} onSave={handleAddStore}
+        onUpdate={handleUpdateStore} onDelete={handleDeleteStore} store={selectedStore}
+      />
       {filteredStores.length > 0 ? (
-        <StoreList data={filteredStores} />
+        <StoreList data={filteredStores} onStorePress={openEditModal} />
       ) : searchQuery !== debouncedSearch ? (
         <View style={styles.emptyContainer}>
           <ActivityIndicator size="large" color={colors.text} />

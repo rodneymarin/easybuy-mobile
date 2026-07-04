@@ -2,8 +2,12 @@ import { type ReactNode, useRef } from 'react';
 import { Animated, type GestureResponderEvent, Pressable, type PressableProps, StyleSheet } from 'react-native';
 import { useTheme } from '@lib/theme';
 
+type ButtonVariant = 'primary' | 'secondary' | 'destructive';
+
 interface ButtonProps extends PressableProps {
   children: ReactNode;
+  style?: PressableProps['style'];
+  variant?: ButtonVariant;
 }
 
 function darkenColor(hex: string, amount: number): string {
@@ -20,13 +24,25 @@ function darkenColor(hex: string, amount: number): string {
 
 const AnimatedPressable = Animated.createAnimatedComponent(Pressable);
 
-export default function Button({ children, onPressIn, onPressOut, ...props }: ButtonProps) {
+export default function Button({ children, onPressIn, onPressOut, style, variant = 'primary', ...props }: ButtonProps) {
   const { colors } = useTheme();
   const darkAnim = useRef(new Animated.Value(0)).current;
 
+  const bgColor = variant === 'primary' ? colors.primary
+    : variant === 'secondary' ? colors.surface
+    : colors.destructive;
+
+  const borderColor = variant === 'primary' ? 'transparent'
+    : variant === 'secondary' ? colors.border
+    : colors.destructiveBorder;
+
+  const borderWidth = variant === 'primary' ? 0
+    : variant === 'secondary' ? 1
+    : 1.5;
+
   const backgroundColor = darkAnim.interpolate({
     inputRange: [0, 1],
-    outputRange: [colors.primary, darkenColor(colors.primary, 0.15)],
+    outputRange: [bgColor, darkenColor(bgColor, 0.15)],
   });
 
   function handlePressIn(event: GestureResponderEvent) {
@@ -40,7 +56,9 @@ export default function Button({ children, onPressIn, onPressOut, ...props }: Bu
   }
 
   return (
-    <AnimatedPressable onPressIn={handlePressIn} onPressOut={handlePressOut} {...props} style={[styles.button, { backgroundColor }]}>
+    <AnimatedPressable onPressIn={handlePressIn} onPressOut={handlePressOut} {...props}
+      style={[styles.button, { backgroundColor, borderColor, borderWidth }, style]}
+    >
       {children}
     </AnimatedPressable>
   );

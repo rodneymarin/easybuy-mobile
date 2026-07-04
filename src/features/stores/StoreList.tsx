@@ -8,13 +8,14 @@ export interface StoreListData {
 
 interface StoreListProps {
   data: StoreListData[];
+  onStorePress: (id: string) => void;
 }
 
-export default function StoreList({ data }: StoreListProps) {
+export default function StoreList({ data, onStorePress }: StoreListProps) {
   return (
     <FlatList data={data} keyExtractor={(item) => item.id} contentContainerStyle={styles.list}
       renderItem={({ item }) => (
-        <StoreListItem description={item.description} />
+        <StoreListItem id={item.id} description={item.description} onPress={onStorePress} />
       )}
     />
   );

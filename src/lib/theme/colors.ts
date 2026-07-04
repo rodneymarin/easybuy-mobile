@@ -7,6 +7,8 @@ interface ThemeColors {
   surface: string;
   surfaceText: string;
   primary: string;
+  destructive: string;
+  destructiveBorder: string;
   tabBarInactive: string;
   panelBackground: string;
   panelText: string;
@@ -23,6 +25,8 @@ const light: ThemeColors = {
   surface: '#f0f0f0',
   surfaceText: '#555',
   primary: '#6C63FF',
+  destructive: '#FFE0E0',
+  destructiveBorder: '#E05555',
   tabBarInactive: '#8e8e93',
   panelBackground: '#fff',
   panelText: '#333',
@@ -39,6 +43,8 @@ const dark: ThemeColors = {
   surface: '#2c2c2e',
   surfaceText: '#ccc',
   primary: '#6C6CE6',
+  destructive: '#4A1C1C',
+  destructiveBorder: '#FF6B6B',
   tabBarInactive: '#636366',
   panelBackground: '#1c1c1e',
   panelText: '#f5f5f5',
