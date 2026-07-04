@@ -8,5 +8,6 @@ export {
   addItemToList,
   toggleItemDone,
   removeItemFromList,
+  updateShoppingListTitle,
 } from './shopping-lists';
 export { getSetting, setSetting } from './settings';

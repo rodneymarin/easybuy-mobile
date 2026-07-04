@@ -2,8 +2,8 @@ import { useEffect, useMemo, useState } from 'react';
 import { ActivityIndicator, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { BottomSheet, ScreenTitle } from '@components/ui';
-import { StoreFilterTags, ShoppingListItemCard, ShoppingListTotals } from '@features/shopping-lists/components';
-import { getShoppingListById, toggleItemDone, removeItemFromList } from '@lib/repositories/shopping-lists';
+import { StoreFilterTags, ShoppingListItemCard, ShoppingListTotals, ListTitleFormSheet } from '@features/shopping-lists/components';
+import { getShoppingListById, toggleItemDone, removeItemFromList, updateShoppingListTitle } from '@lib/repositories/shopping-lists';
 import { getAllProducts } from '@lib/repositories/products';
 import { getAllStores } from '@lib/repositories/stores';
 import { useI18n } from '@lib/i18n';
@@ -38,6 +38,7 @@ export default function ShoppingListDetailScreen({ shoppingListId, onBack }: Sho
   const [activeStoreId, setActiveStoreId] = useState<string | null>(null);
   const [isRemoveSheetOpen, setIsRemoveSheetOpen] = useState(false);
   const [itemToRemove, setItemToRemove] = useState<ItemDisplayData | null>(null);
+  const [isTitleSheetOpen, setIsTitleSheetOpen] = useState(false);
 
   useEffect(() => {
     async function load() {
@@ -144,6 +145,16 @@ export default function ShoppingListDetailScreen({ shoppingListId, onBack }: Sho
     }
   }
 
+  function handleTitlePress() {
+    setIsTitleSheetOpen(true);
+  }
+
+  async function handleSaveTitle(title: string) {
+    await updateShoppingListTitle(shoppingListId, title);
+    setShoppingList((prev) => prev ? { ...prev, title } : prev);
+    setIsTitleSheetOpen(false);
+  }
+
   function handleRemovePress(item: ItemDisplayData) {
     setItemToRemove(item);
     setIsRemoveSheetOpen(true);
@@ -199,7 +210,9 @@ export default function ShoppingListDetailScreen({ shoppingListId, onBack }: Sho
   return (
     <View style={[styles.container, { backgroundColor: colors.background }]}>
       <View style={styles.headerWrapper}>
-        <ScreenTitle>{shoppingList.title}</ScreenTitle>
+        <Pressable onPress={handleTitlePress}>
+          <ScreenTitle>{shoppingList.title}</ScreenTitle>
+        </Pressable>
         <Pressable onPress={onBack} style={styles.backButton} hitSlop={8}>
           <Ionicons name="arrow-back" size={24} color={colors.text} />
         </Pressable>
@@ -259,6 +272,13 @@ export default function ShoppingListDetailScreen({ shoppingListId, onBack }: Sho
           </View>
         )}
       </ScrollView>
+
+      <ListTitleFormSheet
+        isOpen={isTitleSheetOpen}
+        initialTitle={shoppingList.title}
+        onSave={handleSaveTitle}
+        onClose={() => setIsTitleSheetOpen(false)}
+      />
 
       <BottomSheet isOpen={isRemoveSheetOpen} onClose={() => setIsRemoveSheetOpen(false)}>
         <Text style={[styles.sheetTitle, { color: colors.text }]}>{t('listDetail.removeTitle')}</Text>
