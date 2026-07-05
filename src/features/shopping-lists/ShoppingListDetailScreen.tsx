@@ -1,8 +1,8 @@
 import { useEffect, useMemo, useState } from 'react';
 import { ActivityIndicator, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { BottomSheet, ScreenTitle } from '@components/ui';
-import { StoreFilterTags, ShoppingListItemCard, ShoppingListTotals, ListTitleFormSheet } from '@features/shopping-lists/components';
+import { BottomSheet, ScreenTitle, Toggle } from '@components/ui';
+import { ShoppingListItemCard, ShoppingListTotals, ListTitleFormSheet } from '@features/shopping-lists/components';
 import { getShoppingListById, toggleItemDone, removeItemFromList, updateShoppingListTitle } from '@lib/repositories/shopping-lists';
 import { getAllProducts } from '@lib/repositories/products';
 import { getAllStores } from '@lib/repositories/stores';
@@ -219,7 +219,12 @@ export default function ShoppingListDetailScreen({ shoppingListId, onBack }: Sho
       </View>
 
       {uniqueStores.length > 1 && (
-        <StoreFilterTags stores={uniqueStores} selectedStoreId={activeStoreId} onSelect={handleSelectStore} />
+        <View style={styles.filterContainer}>
+          <Toggle label={t('listDetail.allStores')} isSelected={activeStoreId === null} onPress={() => handleSelectStore(null)} />
+          {uniqueStores.map((store) => (
+            <Toggle key={store.id} label={store.description} isSelected={activeStoreId === store.id} onPress={() => handleSelectStore(store.id)} />
+          ))}
+        </View>
       )}
 
       <ShoppingListTotals globalTotal={globalTotal} cartTotal={cartTotal} />
@@ -309,6 +314,13 @@ const styles = StyleSheet.create({
   },
   headerWrapper: {
     position: 'relative',
+  },
+  filterContainer: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    paddingHorizontal: 16,
+    gap: 6,
+    paddingBottom: 8,
   },
   backButton: {
     position: 'absolute',

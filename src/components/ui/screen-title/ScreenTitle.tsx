@@ -12,7 +12,7 @@ export default function ScreenTitle({ children }: ScreenTitleProps) {
 
   return (
     <View style={styles.container}>
-      <Text style={[styles.title, { color: colors.text }]}>{children}</Text>
+      <Text numberOfLines={2} ellipsizeMode="tail" style={[styles.title, { color: colors.text }]}>{children}</Text>
       <Pressable style={styles.hamburger} onPress={openDrawer}>
         <Ionicons name="menu-outline" size={28} color={colors.text} />
       </Pressable>
@@ -25,9 +25,10 @@ const styles = StyleSheet.create({
     marginBottom: 20,
   },
   title: {
-    fontSize: 28,
+    fontSize: 24,
     fontWeight: '700',
     textAlign: 'center',
+    paddingHorizontal: 52,
   },
   hamburger: {
     position: 'absolute',
