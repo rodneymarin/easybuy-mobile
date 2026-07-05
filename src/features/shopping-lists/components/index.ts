@@ -1,5 +1,7 @@
 export { default as ShoppingListItem } from './ShoppingListItem';
 export { default as ShoppingListItemCard } from './ShoppingListItemCard';
+export { default as ShoppingListCheckCircle } from './ShoppingListCheckCircle';
+export { default as ShoppingListItemTitle } from './ShoppingListItemTitle';
 export { default as ShoppingListTotals } from './ShoppingListTotals';
 export { default as ListTitleFormSheet } from './ListTitleFormSheet';
 export { default as ShoppingListItemFormScreen } from './ShoppingListItemFormScreen';

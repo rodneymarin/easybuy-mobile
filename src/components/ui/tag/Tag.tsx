@@ -10,7 +10,7 @@ export default function Tag({ label, size = 'md' }: TagProps) {
   const { colors } = useTheme();
   const isSmall = size === 'sm';
 
-  return <Text style={[styles.tag, isSmall ? styles.tagSm : styles.tagMd, { backgroundColor: colors.surface }, styles.label, isSmall ? styles.labelSm : styles.labelMd, { color: colors.surfaceText }]}>{label}</Text>;
+  return <Text style={[styles.tag, isSmall ? styles.tagSm : styles.tagMd, { backgroundColor: colors.surface }, isSmall ? styles.labelSm : styles.labelMd, { color: colors.surfaceText }]}>{label}</Text>;
 }
 
 const styles = StyleSheet.create({

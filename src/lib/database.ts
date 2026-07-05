@@ -3,13 +3,20 @@ import type { SQLiteDatabase } from 'expo-sqlite';
 import { seedIfEmpty } from './seed';
 
 let db: SQLiteDatabase | null = null;
+let initPromise: Promise<SQLiteDatabase> | null = null;
 
 export async function getDatabase(): Promise<SQLiteDatabase> {
   if (db) return db;
-  db = await SQLite.openDatabaseAsync('easybuy.db');
-  await runMigrations(db);
-  await seedIfEmpty(db);
-  return db;
+  if (initPromise) return initPromise;
+
+  initPromise = (async () => {
+    db = await SQLite.openDatabaseAsync('easybuy.db');
+    await runMigrations(db);
+    await seedIfEmpty(db);
+    return db;
+  })();
+
+  return initPromise;
 }
 
 async function runMigrations(database: SQLiteDatabase): Promise<void> {

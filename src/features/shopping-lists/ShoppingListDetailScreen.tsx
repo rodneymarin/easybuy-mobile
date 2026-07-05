@@ -1,8 +1,8 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { ActivityIndicator, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { BottomSheet, ScreenTitle, Toggle } from '@components/ui';
-import { ShoppingListItemCard, ShoppingListTotals, ListTitleFormSheet, ShoppingListItemFormScreen } from '@features/shopping-lists/components';
+import { BottomSheet, CloseButton, ScreenTitle, Tag, Toggle } from '@components/ui';
+import { ShoppingListCheckCircle, ShoppingListItemCard, ShoppingListItemTitle, ShoppingListTotals, ListTitleFormSheet, ShoppingListItemFormScreen } from '@features/shopping-lists/components';
 import { getShoppingListById, toggleItemDone, removeItemFromList, updateShoppingListTitle, addItemToList, updateItemInList } from '@lib/repositories/shopping-lists';
 import { getAllProducts } from '@lib/repositories/products';
 import { getAllStores } from '@lib/repositories/stores';
@@ -309,19 +309,22 @@ export default function ShoppingListDetailScreen({ shoppingListId, onBack }: Sho
       <ScrollView style={styles.scrollBody} contentContainerStyle={styles.scrollContent}>
         {pendingItems.length > 0 && (
           pendingItems.map((item) => (
-            <ShoppingListItemCard
-              key={item.rowId}
-              productName={item.productName}
-              quantity={item.quantity}
-              unitLabel={item.unitLabel}
-              totalPrice={item.price * item.quantity}
-              storeDescription={item.storeDescription}
-              isDone={false}
-              isFilteredByStore={activeStoreId !== null}
-              onToggleDone={() => handleToggleDone(item.rowId)}
-              onRemove={() => handleRemovePress(item)}
-              onEditPress={() => handleEditPress(item)}
-            />
+            <ShoppingListItemCard key={item.rowId} onEditPress={() => handleEditPress(item)}>
+              <ShoppingListCheckCircle isDone={false} onToggle={() => handleToggleDone(item.rowId)} />
+              <View style={styles.itemContent}>
+                <ShoppingListItemTitle name={item.productName} isDone={false} />
+                <View style={styles.itemTags}>
+                  {!activeStoreId && item.storeDescription ? (
+                    <Tag size="sm" label={item.storeDescription} />
+                  ) : null}
+                  <Tag size="sm" label={`${item.quantity} ${item.unitLabel}`} />
+                  {item.price * item.quantity > 0 ? (
+                    <Tag size="sm" label={`$${(item.price * item.quantity).toFixed(2)}`} />
+                  ) : null}
+                </View>
+              </View>
+              <CloseButton onPress={() => handleRemovePress(item)} />
+            </ShoppingListItemCard>
           ))
         )}
 
@@ -337,19 +340,22 @@ export default function ShoppingListDetailScreen({ shoppingListId, onBack }: Sho
             <Text style={[styles.doneSectionTitle, { color: colors.textSecondary }]}>{t('listDetail.doneSection')}</Text>
             <View style={[styles.doneDivider, { backgroundColor: colors.border }]} />
             {doneItems.map((item) => (
-              <ShoppingListItemCard
-                key={item.rowId}
-                productName={item.productName}
-                quantity={item.quantity}
-                unitLabel={item.unitLabel}
-                totalPrice={item.price * item.quantity}
-                storeDescription={item.storeDescription}
-                isDone={true}
-                isFilteredByStore={activeStoreId !== null}
-                onToggleDone={() => handleToggleDone(item.rowId)}
-                onRemove={() => handleRemovePress(item)}
-                onEditPress={() => handleEditPress(item)}
-              />
+              <ShoppingListItemCard key={item.rowId} onEditPress={() => handleEditPress(item)}>
+                <ShoppingListCheckCircle isDone={true} onToggle={() => handleToggleDone(item.rowId)} />
+                <View style={styles.itemContent}>
+                  <ShoppingListItemTitle name={item.productName} isDone={true} />
+                  <View style={styles.itemTags}>
+                    {!activeStoreId && item.storeDescription ? (
+                      <Tag size="sm" label={item.storeDescription} />
+                    ) : null}
+                    <Tag size="sm" label={`${item.quantity} ${item.unitLabel}`} />
+                    {item.price * item.quantity > 0 ? (
+                      <Tag size="sm" label={`$${(item.price * item.quantity).toFixed(2)}`} />
+                    ) : null}
+                  </View>
+                </View>
+                <CloseButton onPress={() => handleRemovePress(item)} />
+              </ShoppingListItemCard>
             ))}
           </View>
         )}
@@ -435,6 +441,14 @@ const styles = StyleSheet.create({
   doneDivider: {
     height: 1,
     marginBottom: 12,
+  },
+  itemContent: {
+    flex: 1,
+    marginRight: 8,
+  },
+  itemTags: {
+    flexDirection: 'row',
+    gap: 6,
   },
   sheetTitle: {
     fontSize: 17,

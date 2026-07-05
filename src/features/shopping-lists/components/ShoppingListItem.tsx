@@ -1,7 +1,5 @@
-import { Pressable, StyleSheet, Text, View } from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
-import { PressableCard } from '@components/ui/pressable-card';
-import { Tag } from '@components/ui';
+import { StyleSheet, Text, View } from 'react-native';
+import { CloseButton, PressableCard, Tag } from '@components/ui';
 import { useI18n } from '@lib/i18n';
 import { useTheme } from '@lib/theme';
 
@@ -27,9 +25,7 @@ export default function ShoppingListItem({ title, itemCount, totalAmount, onPres
 						<Tag size="sm" label={t('list.total', { amount: totalAmount.toFixed(2) })} />
 					</View>
 				</View>
-				<Pressable onPress={onRemove} style={styles.removeButton}>
-					<Ionicons name="close" size={18} color={colors.textSecondary} />
-				</Pressable>
+				<CloseButton onPress={onRemove} />
 			</View>
 		</PressableCard>
 	);
@@ -59,10 +55,5 @@ const styles = StyleSheet.create({
 		flexDirection: 'row',
 		gap: 6,
 	},
-	removeButton: {
-		width: 32,
-		height: 32,
-		justifyContent: 'center',
-		alignItems: 'center',
-	},
+
 });
