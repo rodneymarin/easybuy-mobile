@@ -7,3 +7,5 @@ export { ScreenTitle } from './screen-title';
 export { MainMenu } from './main-menu';
 export { BottomSheet } from './bottom-sheet';
 export { Toggle } from './toggle';
+export { Dropdown } from './dropdown';
+export type { DropdownOption } from './dropdown';

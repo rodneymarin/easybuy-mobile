@@ -7,14 +7,15 @@ import { useTheme } from '@lib/theme';
 interface ShoppingListTotalsProps {
   globalTotal: number;
   cartTotal: number;
+  onAddPress?: () => void;
 }
 
-export default function ShoppingListTotals({ globalTotal, cartTotal }: ShoppingListTotalsProps) {
+export default function ShoppingListTotals({ globalTotal, cartTotal, onAddPress }: ShoppingListTotalsProps) {
   const { colors } = useTheme();
   const { t } = useI18n();
 
   return (
-    <View style={[styles.container, { borderColor: colors.border }]}>
+    <View style={styles.container}>
       <View style={styles.left}>
         <View style={styles.totalBlock}>
           <Text style={[styles.totalText, { color: colors.text }]}>{t('listDetail.globalTotal')}:</Text>
@@ -25,7 +26,7 @@ export default function ShoppingListTotals({ globalTotal, cartTotal }: ShoppingL
           <Text style={[styles.cartText, { color: colors.textSecondary }]}>${cartTotal.toFixed(2)}</Text>
         </View>
       </View>
-      <Button>
+      <Button onPress={onAddPress}>
         <Ionicons name="add" size={20} color="#fff" />
         <Text style={styles.addButtonText}>{t('lists.add')}</Text>
       </Button>
@@ -41,8 +42,6 @@ const styles = StyleSheet.create({
     marginHorizontal: 16,
     paddingVertical: 12,
     paddingHorizontal: 4,
-    borderBottomWidth: 1,
-    marginBottom: 12,
   },
   left: {
     gap: 4,

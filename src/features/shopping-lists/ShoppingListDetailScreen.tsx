@@ -1,9 +1,9 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { ActivityIndicator, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { BottomSheet, ScreenTitle, Toggle } from '@components/ui';
-import { ShoppingListItemCard, ShoppingListTotals, ListTitleFormSheet } from '@features/shopping-lists/components';
-import { getShoppingListById, toggleItemDone, removeItemFromList, updateShoppingListTitle } from '@lib/repositories/shopping-lists';
+import { ShoppingListItemCard, ShoppingListTotals, ListTitleFormSheet, ShoppingListItemFormScreen } from '@features/shopping-lists/components';
+import { getShoppingListById, toggleItemDone, removeItemFromList, updateShoppingListTitle, addItemToList, updateItemInList } from '@lib/repositories/shopping-lists';
 import { getAllProducts } from '@lib/repositories/products';
 import { getAllStores } from '@lib/repositories/stores';
 import { useI18n } from '@lib/i18n';
@@ -39,26 +39,29 @@ export default function ShoppingListDetailScreen({ shoppingListId, onBack }: Sho
   const [isRemoveSheetOpen, setIsRemoveSheetOpen] = useState(false);
   const [itemToRemove, setItemToRemove] = useState<ItemDisplayData | null>(null);
   const [isTitleSheetOpen, setIsTitleSheetOpen] = useState(false);
+  const [isItemFormOpen, setIsItemFormOpen] = useState(false);
+  const [editingItemRowId, setEditingItemRowId] = useState<number | null>(null);
+
+  const loadData = useCallback(async () => {
+    try {
+      const [list, allProducts, allStores] = await Promise.all([
+        getShoppingListById(shoppingListId),
+        getAllProducts(),
+        getAllStores(),
+      ]);
+      setShoppingList(list);
+      setProducts(allProducts);
+      setStores(allStores);
+    } catch (error) {
+      console.error("Failed to load shopping list detail:", error);
+    } finally {
+      setIsLoading(false);
+    }
+  }, [shoppingListId]);
 
   useEffect(() => {
-    async function load() {
-      try {
-        const [list, allProducts, allStores] = await Promise.all([
-          getShoppingListById(shoppingListId),
-          getAllProducts(),
-          getAllStores(),
-        ]);
-        setShoppingList(list);
-        setProducts(allProducts);
-        setStores(allStores);
-      } catch (error) {
-        console.error("Failed to load shopping list detail:", error);
-      } finally {
-        setIsLoading(false);
-      }
-    }
-    load();
-  }, [shoppingListId]);
+    loadData();
+  }, [loadData]);
 
   const storeMap = useMemo(() => {
     const map = new Map<string, string>();
@@ -100,6 +103,9 @@ export default function ShoppingListDetailScreen({ shoppingListId, onBack }: Sho
     });
   }, [shoppingList, productMap, storeMap, t]);
 
+  const hasStorelessItems = useMemo(() => items.some((item) => !item.storeId), [items]);
+  const hasStoredItems = useMemo(() => items.some((item) => item.storeId), [items]);
+
   const uniqueStores = useMemo(() => {
     const storeIds = new Set<string>();
     for (const item of items) {
@@ -107,6 +113,8 @@ export default function ShoppingListDetailScreen({ shoppingListId, onBack }: Sho
     }
     return stores.filter((s) => storeIds.has(s.id));
   }, [items, stores]);
+
+  const shouldShowFilters = uniqueStores.length > 1 || (hasStorelessItems && hasStoredItems);
 
   const filteredItems = useMemo(() => {
     if (!activeStoreId) return items;
@@ -155,6 +163,11 @@ export default function ShoppingListDetailScreen({ shoppingListId, onBack }: Sho
     setIsTitleSheetOpen(false);
   }
 
+  function handleEditPress(item: ItemDisplayData) {
+    setEditingItemRowId(item.rowId);
+    setIsItemFormOpen(true);
+  }
+
   function handleRemovePress(item: ItemDisplayData) {
     setItemToRemove(item);
     setIsRemoveSheetOpen(true);
@@ -179,11 +192,83 @@ export default function ShoppingListDetailScreen({ shoppingListId, onBack }: Sho
     }
   }
 
+  function handleAddPress() {
+    setEditingItemRowId(null);
+    setIsItemFormOpen(true);
+  }
+
+  async function handleSaveItem(productId: string, quantity: number, storeId?: string) {
+    try {
+      await addItemToList(shoppingListId, { productId, quantity, storeId });
+      await loadData();
+      setIsItemFormOpen(false);
+    } catch (error) {
+      console.error("Failed to add item:", error);
+    }
+  }
+
+  async function handleUpdateItem(rowId: number, productId: string, quantity: number, storeId?: string) {
+    setShoppingList((prev) => {
+      if (!prev) return prev;
+      return {
+        ...prev,
+        items: prev.items.map((item) =>
+          item.rowId === rowId ? { ...item, productId, quantity, storeId } : item
+        ),
+      };
+    });
+    setIsItemFormOpen(false);
+    setEditingItemRowId(null);
+    try {
+      await updateItemInList(rowId, productId, quantity, storeId);
+    } catch (error) {
+      console.error("Failed to update item:", error);
+    }
+  }
+
+  async function handleDeleteItem(rowId: number) {
+    setShoppingList((prev) => {
+      if (!prev) return prev;
+      return {
+        ...prev,
+        items: prev.items.filter((item) => item.rowId !== rowId),
+      };
+    });
+    setIsItemFormOpen(false);
+    setEditingItemRowId(null);
+    try {
+      await removeItemFromList(rowId);
+    } catch (error) {
+      console.error("Failed to remove item:", error);
+    }
+  }
+
+  const editingItem = useMemo(() => {
+    if (editingItemRowId === null || !shoppingList) return undefined;
+    const item = shoppingList.items.find((i) => i.rowId === editingItemRowId);
+    if (!item) return undefined;
+    return { rowId: item.rowId, productId: item.productId, quantity: item.quantity, storeId: item.storeId };
+  }, [editingItemRowId, shoppingList]);
+
+  if (isItemFormOpen) {
+    return (
+      <ShoppingListItemFormScreen
+        item={editingItem}
+        products={products}
+        stores={stores}
+        onBack={() => { setIsItemFormOpen(false); setEditingItemRowId(null); }}
+        onSave={handleSaveItem}
+        onUpdate={handleUpdateItem}
+        onDelete={handleDeleteItem}
+      />
+    );
+  }
+
   if (isLoading) {
     return (
       <View style={[styles.container, { backgroundColor: colors.background }]}>
         <View style={styles.headerWrapper}>
-          <ScreenTitle>Loading...</ScreenTitle>
+          <ScreenTitle>{t('common.loading')}</ScreenTitle>
           <Pressable onPress={onBack} style={styles.backButton} hitSlop={8}>
             <Ionicons name="arrow-back" size={24} color={colors.text} />
           </Pressable>
@@ -218,7 +303,7 @@ export default function ShoppingListDetailScreen({ shoppingListId, onBack }: Sho
         </Pressable>
       </View>
 
-      {uniqueStores.length > 1 && (
+      {shouldShowFilters && (
         <View style={styles.filterContainer}>
           <Toggle label={t('listDetail.allStores')} isSelected={activeStoreId === null} onPress={() => handleSelectStore(null)} />
           {uniqueStores.map((store) => (
@@ -227,10 +312,9 @@ export default function ShoppingListDetailScreen({ shoppingListId, onBack }: Sho
         </View>
       )}
 
-      <ShoppingListTotals globalTotal={globalTotal} cartTotal={cartTotal} />
+      <ShoppingListTotals globalTotal={globalTotal} cartTotal={cartTotal} onAddPress={handleAddPress} />
 
       <ScrollView style={styles.scrollBody} contentContainerStyle={styles.scrollContent}>
-        {/* Pending items */}
         {pendingItems.length > 0 && (
           pendingItems.map((item) => (
             <ShoppingListItemCard
@@ -244,6 +328,7 @@ export default function ShoppingListDetailScreen({ shoppingListId, onBack }: Sho
               isFilteredByStore={activeStoreId !== null}
               onToggleDone={() => handleToggleDone(item.rowId)}
               onRemove={() => handleRemovePress(item)}
+              onEditPress={() => handleEditPress(item)}
             />
           ))
         )}
@@ -255,7 +340,6 @@ export default function ShoppingListDetailScreen({ shoppingListId, onBack }: Sho
           <Text style={[styles.emptyText, { color: colors.textSecondary }]}>{t('listDetail.noFilterMatch')}</Text>
         )}
 
-        {/* Done section */}
         {doneItems.length > 0 && (
           <View style={styles.doneSection}>
             <Text style={[styles.doneSectionTitle, { color: colors.textSecondary }]}>{t('listDetail.doneSection')}</Text>
@@ -272,6 +356,7 @@ export default function ShoppingListDetailScreen({ shoppingListId, onBack }: Sho
                 isFilteredByStore={activeStoreId !== null}
                 onToggleDone={() => handleToggleDone(item.rowId)}
                 onRemove={() => handleRemovePress(item)}
+                onEditPress={() => handleEditPress(item)}
               />
             ))}
           </View>
@@ -303,6 +388,7 @@ export default function ShoppingListDetailScreen({ shoppingListId, onBack }: Sho
           </Pressable>
         </View>
       </BottomSheet>
+
     </View>
   );
 }

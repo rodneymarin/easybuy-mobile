@@ -88,6 +88,14 @@ export async function updateShoppingListTitle(id: string, title: string): Promis
   await db.runAsync("UPDATE shopping_lists SET title = ? WHERE id = ?", [title, id]);
 }
 
+export async function updateItemInList(rowId: number, productId: string, quantity: number, storeId?: string): Promise<void> {
+  const db = await getDatabase();
+  await db.runAsync(
+    "UPDATE shopping_list_items SET product_id = ?, store_id = ?, quantity = ? WHERE id = ?",
+    [productId, storeId ?? null, quantity, rowId]
+  );
+}
+
 export async function removeItemFromList(itemRowId: number): Promise<void> {
   const db = await getDatabase();
   await db.runAsync("DELETE FROM shopping_list_items WHERE id = ?", [itemRowId]);

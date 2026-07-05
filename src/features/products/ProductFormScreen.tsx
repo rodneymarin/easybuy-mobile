@@ -1,11 +1,10 @@
 import { useEffect, useState } from 'react';
-import { FlatList, KeyboardAvoidingView, Modal as RNModal, Platform, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { KeyboardAvoidingView, Platform, Pressable, StyleSheet, Text, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { Button, Input, BottomSheet, ScreenTitle } from '@components/ui';
-import { ProductPrices } from '@features/products/components';
+import { Button, BottomSheet, ScreenTitle } from '@components/ui';
+import { ProductFormContent } from '@features/products/components';
 import { useI18n } from '@lib/i18n';
 import { useTheme } from '@lib/theme';
-import { UNIT_OF_MEASUREMENT } from '@models/product.model';
 import type { Price } from '@models/price.model';
 import type { StoreListData } from '@features/stores';
 
@@ -24,12 +23,10 @@ export default function ProductFormScreen({ product, stores, onBack, onSave, onU
   const [productName, setProductName] = useState('');
   const [unitOfMeasurement, setUnitOfMeasurement] = useState('');
   const [prices, setPrices] = useState<Price[]>([]);
-  const [isUnitSelectorOpen, setIsUnitSelectorOpen] = useState(false);
   const [isDeleteSheetOpen, setIsDeleteSheetOpen] = useState(false);
 
   const isEditMode = product !== undefined;
   const isFormValid = productName.trim().length > 0 && unitOfMeasurement.length > 0;
-  const selectedUnit = UNIT_OF_MEASUREMENT.find((u) => u.id === unitOfMeasurement);
 
   useEffect(() => {
     setProductName(product?.productName ?? '');
@@ -65,17 +62,15 @@ export default function ProductFormScreen({ product, stores, onBack, onSave, onU
         </Pressable>
       </View>
 
-      <ScrollView style={styles.body} contentContainerStyle={styles.bodyContent} keyboardShouldPersistTaps="handled">
-        <Input value={productName} onChangeText={setProductName} placeholder={t('products.addModal.namePlaceholder')} autoFocus returnKeyType="next" />
-        <Text style={[styles.unitLabel, { color: colors.text }]}>{t('products.addModal.unitLabel')}</Text>
-        <Pressable onPress={() => setIsUnitSelectorOpen(true)} style={[styles.unitSelector, { borderColor: colors.border, backgroundColor: colors.background }]}>
-          <Text style={[styles.unitSelectorText, { color: selectedUnit ? colors.text : colors.placeholderText }]}>
-            {selectedUnit ? selectedUnit.label : t('products.addModal.unitLabel')}
-          </Text>
-          <Text style={[styles.dropdownArrow, { color: colors.text }]}>▼</Text>
-        </Pressable>
-        <ProductPrices prices={prices} stores={stores} onPricesChange={setPrices} />
-      </ScrollView>
+      <ProductFormContent
+        productName={productName}
+        unitOfMeasurement={unitOfMeasurement}
+        prices={prices}
+        stores={stores}
+        onProductNameChange={setProductName}
+        onUnitOfMeasurementChange={setUnitOfMeasurement}
+        onPricesChange={setPrices}
+      />
 
       <View style={[styles.footer, { borderTopColor: colors.border }]}>
         {isEditMode && (
@@ -90,21 +85,6 @@ export default function ProductFormScreen({ product, stores, onBack, onSave, onU
           <Text style={styles.buttonTextPrimary}>{t('products.addModal.save')}</Text>
         </Button>
       </View>
-
-      <RNModal visible={isUnitSelectorOpen} transparent animationType="fade" onRequestClose={() => setIsUnitSelectorOpen(false)}>
-        <Pressable style={styles.backdrop} onPress={() => setIsUnitSelectorOpen(false)}>
-          <View style={[styles.selectorModal, { backgroundColor: colors.cardBackground }]}>
-            <Text style={[styles.selectorTitle, { color: colors.text }]}>{t('products.addModal.unitLabel')}</Text>
-            <FlatList data={UNIT_OF_MEASUREMENT} keyExtractor={(item) => item.id}
-              renderItem={({ item }) => (
-                <Pressable onPress={() => { setUnitOfMeasurement(item.id); setIsUnitSelectorOpen(false); }} style={[styles.selectorItem, { borderColor: colors.border, backgroundColor: unitOfMeasurement === item.id ? colors.surface : 'transparent' }]}>
-                  <Text style={[styles.selectorItemText, { color: colors.text }]}>{item.label}</Text>
-                </Pressable>
-              )}
-            />
-          </View>
-        </Pressable>
-      </RNModal>
 
       <BottomSheet isOpen={isDeleteSheetOpen} onClose={() => setIsDeleteSheetOpen(false)}>
         <Text style={[styles.deleteSheetTitle, { color: colors.text }]}>{t('products.deleteModal.title')}</Text>
@@ -137,35 +117,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     zIndex: 1,
   },
-  body: {
-    flex: 1,
-  },
-  bodyContent: {
-    padding: 16,
-    paddingBottom: 24,
-  },
-  unitLabel: {
-    fontSize: 15,
-    fontWeight: '600',
-    marginTop: 16,
-    marginBottom: 6,
-  },
-  unitSelector: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    borderWidth: 1,
-    borderRadius: 10,
-    paddingHorizontal: 12,
-    height: 44,
-  },
-  unitSelectorText: {
-    flex: 1,
-    fontSize: 15,
-  },
-  dropdownArrow: {
-    fontSize: 10,
-    marginLeft: 4,
-  },
   footer: {
     padding: 16,
     gap: 8,
@@ -186,32 +137,6 @@ const styles = StyleSheet.create({
   destructiveButtonText: {
     fontSize: 15,
     fontWeight: '600',
-  },
-  backdrop: {
-    flex: 1,
-    backgroundColor: 'rgba(0,0,0,0.5)',
-    justifyContent: 'center',
-    paddingHorizontal: 32,
-  },
-  selectorModal: {
-    borderRadius: 16,
-    padding: 20,
-    maxHeight: 350,
-  },
-  selectorTitle: {
-    fontSize: 16,
-    fontWeight: '600',
-    marginBottom: 12,
-    textAlign: 'center',
-  },
-  selectorItem: {
-    paddingVertical: 12,
-    paddingHorizontal: 12,
-    borderRadius: 8,
-    marginBottom: 4,
-  },
-  selectorItemText: {
-    fontSize: 15,
   },
   deleteSheetTitle: {
     fontSize: 17,

@@ -1,6 +1,6 @@
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { Tag } from '@components/ui';
+import { PressableCard, Tag } from '@components/ui';
 import { useTheme } from '@lib/theme';
 
 interface ShoppingListItemCardProps {
@@ -13,6 +13,7 @@ interface ShoppingListItemCardProps {
   isFilteredByStore: boolean;
   onToggleDone: () => void;
   onRemove: () => void;
+  onEditPress: () => void;
 }
 
 export default function ShoppingListItemCard({
@@ -25,11 +26,12 @@ export default function ShoppingListItemCard({
   isFilteredByStore,
   onToggleDone,
   onRemove,
+  onEditPress,
 }: ShoppingListItemCardProps) {
   const { colors } = useTheme();
 
   return (
-    <View style={[styles.card, { backgroundColor: colors.cardBackground, borderColor: colors.border }]}>
+    <PressableCard onPress={onEditPress} style={[styles.card, { borderColor: colors.border }]}>
       <Pressable onPress={onToggleDone} style={styles.checkCircle} hitSlop={6}>
         {isDone ? (
           <View style={[styles.circleFilled, { backgroundColor: colors.primary }]}>
@@ -63,7 +65,7 @@ export default function ShoppingListItemCard({
       <Pressable onPress={onRemove} style={styles.removeButton} hitSlop={8}>
         <Ionicons name="close" size={18} color={colors.textSecondary} />
       </Pressable>
-    </View>
+    </PressableCard>
   );
 }
 
