@@ -252,15 +252,7 @@ export default function ShoppingListDetailScreen({ shoppingListId, onBack }: Sho
 
   if (isItemFormOpen) {
     return (
-      <ShoppingListItemFormScreen
-        item={editingItem}
-        products={products}
-        stores={stores}
-        onBack={() => { setIsItemFormOpen(false); setEditingItemRowId(null); }}
-        onSave={handleSaveItem}
-        onUpdate={handleUpdateItem}
-        onDelete={handleDeleteItem}
-      />
+      <ShoppingListItemFormScreen item={editingItem} products={products} stores={stores} onBack={() => { setIsItemFormOpen(false); setEditingItemRowId(null); }} onSave={handleSaveItem} onUpdate={handleUpdateItem} onDelete={handleDeleteItem} />
     );
   }
 
@@ -363,12 +355,7 @@ export default function ShoppingListDetailScreen({ shoppingListId, onBack }: Sho
         )}
       </ScrollView>
 
-      <ListTitleFormSheet
-        isOpen={isTitleSheetOpen}
-        initialTitle={shoppingList.title}
-        onSave={handleSaveTitle}
-        onClose={() => setIsTitleSheetOpen(false)}
-      />
+      <ListTitleFormSheet isOpen={isTitleSheetOpen} initialTitle={shoppingList.title} onSave={handleSaveTitle} onClose={() => setIsTitleSheetOpen(false)} />
 
       <BottomSheet isOpen={isRemoveSheetOpen} onClose={() => setIsRemoveSheetOpen(false)}>
         <Text style={[styles.sheetTitle, { color: colors.text }]}>{t('listDetail.removeTitle')}</Text>
@@ -376,14 +363,10 @@ export default function ShoppingListDetailScreen({ shoppingListId, onBack }: Sho
           {t('listDetail.removeMessage', { product: itemToRemove?.productName ?? '' })}
         </Text>
         <View style={styles.sheetActions}>
-          <Pressable
-            onPress={handleConfirmRemove}
-            style={[styles.sheetButton, { backgroundColor: colors.destructive }]}>
+          <Pressable onPress={handleConfirmRemove} style={[styles.sheetButton, { backgroundColor: colors.destructive }]}>
             <Text style={[styles.sheetButtonText, { color: colors.destructiveBorder }]}>{t('listDetail.removeConfirm')}</Text>
           </Pressable>
-          <Pressable
-            onPress={() => setIsRemoveSheetOpen(false)}
-            style={[styles.sheetButton, { backgroundColor: colors.surface }]}>
+          <Pressable onPress={() => setIsRemoveSheetOpen(false)} style={[styles.sheetButton, { backgroundColor: colors.surface }]}>
             <Text style={[styles.sheetButtonText, { color: colors.text }]}>{t('products.addModal.cancel')}</Text>
           </Pressable>
         </View>

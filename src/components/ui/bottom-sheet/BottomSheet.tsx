@@ -1,14 +1,15 @@
-import { useCallback, useEffect, useRef, useState, type PropsWithChildren } from 'react';
-import { Animated, Pressable, StyleSheet, View } from 'react-native';
+import { useEffect, useRef, useState, type PropsWithChildren } from 'react';
+import { Animated, Dimensions, Pressable, ScrollView, StyleSheet, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useTheme } from '@lib/theme';
 
 interface BottomSheetProps extends PropsWithChildren {
   isOpen: boolean;
   onClose: () => void;
+  percentage?: number;
 }
 
-export default function BottomSheet({ isOpen, onClose, children }: BottomSheetProps) {
+export default function BottomSheet({ isOpen, onClose, children, percentage }: BottomSheetProps) {
   const { colors } = useTheme();
   const [isRendered, setIsRendered] = useState(false);
   const translateY = useRef(new Animated.Value(300)).current;
@@ -31,22 +32,31 @@ export default function BottomSheet({ isOpen, onClose, children }: BottomSheetPr
     }
   }, [isOpen]);
 
-  const handleBackdropPress = useCallback(() => {
+  function handleBackdropPress() {
     if (isOpen) onClose();
-  }, [isOpen, onClose]);
+  }
 
   if (!isRendered) return null;
+
+  const screenHeight = Dimensions.get('window').height;
+  const sheetHeight = percentage ? screenHeight * percentage : undefined;
 
   return (
     <View style={styles.wrapper}>
       <Animated.View style={[styles.backdrop, { opacity: backdropOpacity }]}>
         <Pressable style={StyleSheet.absoluteFill} onPress={handleBackdropPress} />
       </Animated.View>
-      <Animated.View style={[styles.sheet, { backgroundColor: colors.cardBackground, transform: [{ translateY }] }]}>
+      <Animated.View style={[styles.sheet, { backgroundColor: colors.cardBackground, transform: [{ translateY }] }, sheetHeight ? { height: sheetHeight } : undefined]}>
         <Pressable onPress={onClose} style={styles.closeButton} hitSlop={8}>
           <Ionicons name="close" size={18} color={colors.textSecondary} />
         </Pressable>
-        {children}
+        {percentage ? (
+          <ScrollView keyboardShouldPersistTaps="handled" showsVerticalScrollIndicator={false} style={styles.scroll}>
+            {children}
+          </ScrollView>
+        ) : (
+          children
+        )}
       </Animated.View>
     </View>
   );
@@ -82,5 +92,9 @@ const styles = StyleSheet.create({
     borderRadius: 14,
     justifyContent: 'center',
     alignItems: 'center',
+    zIndex: 1,
+  },
+  scroll: {
+    flex: 1,
   },
 });

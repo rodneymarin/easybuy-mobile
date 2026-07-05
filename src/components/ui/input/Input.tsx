@@ -9,12 +9,7 @@ export default function Input({ style, onFocus, onBlur, ...props }: InputProps) 
   const [isFocused, setIsFocused] = useState(false);
 
   return (
-    <TextInput style={[styles.input, { color: colors.text, borderColor: isFocused ? colors.primary : colors.border, borderWidth: isFocused ? 2 : 1, paddingHorizontal: isFocused ? 13 : 14, backgroundColor: colors.background }, style]}
-      placeholderTextColor={colors.placeholderText}
-      onFocus={(e) => { setIsFocused(true); onFocus?.(e); }}
-      onBlur={(e) => { setIsFocused(false); onBlur?.(e); }}
-      {...props}
-    />
+    <TextInput style={[styles.input, { color: colors.text, borderColor: isFocused ? colors.primary : colors.border, borderWidth: isFocused ? 2 : 1, paddingHorizontal: isFocused ? 13 : 14, backgroundColor: colors.background }, style]} placeholderTextColor={colors.placeholderText} onFocus={(e) => { setIsFocused(true); onFocus?.(e); }} onBlur={(e) => { setIsFocused(false); onBlur?.(e); }} {...props} />
   );
 }
 

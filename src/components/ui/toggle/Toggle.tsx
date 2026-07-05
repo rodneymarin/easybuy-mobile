@@ -11,16 +11,7 @@ export default function Toggle({ label, isSelected, onPress }: ToggleProps) {
   const { colors } = useTheme();
 
   return (
-    <Pressable
-      onPress={onPress}
-      style={[
-        styles.toggle,
-        {
-          backgroundColor: isSelected ? colors.primary : 'transparent',
-          borderColor: isSelected ? colors.primary : colors.border,
-          borderWidth: 1,
-        },
-      ]}>
+    <Pressable onPress={onPress} style={[styles.toggle, { backgroundColor: isSelected ? colors.primary : 'transparent', borderColor: isSelected ? colors.primary : colors.border, borderWidth: 1 }]}>
       <Text style={[styles.label, { color: isSelected ? '#fff' : colors.text }]}>{label}</Text>
     </Pressable>
   );

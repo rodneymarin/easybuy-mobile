@@ -95,15 +95,9 @@ export default function ProductPrices({ prices, stores, onPricesChange }: Produc
             </Text>
             <Text style={[styles.dropdownArrow, { color: colors.text }]}>▼</Text>
           </Pressable>
-          <TextInput value={newPriceText} onChangeText={(text) => { const filtered = text.replace(/[^0-9.]/g, ''); if (filtered === '' || /^\d*\.?\d*$/.test(filtered)) setNewPriceText(filtered); }} placeholder={t('products.addModal.pricePlaceholder')} keyboardType="decimal-pad"
-            placeholderTextColor={colors.placeholderText}
-            style={[styles.priceInput, { color: colors.text, borderColor: colors.border, backgroundColor: colors.background }]}
-          />
+          <TextInput value={newPriceText} onChangeText={(text) => { const filtered = text.replace(/[^0-9.]/g, ''); if (filtered === '' || /^\d*\.?\d*$/.test(filtered)) setNewPriceText(filtered); }} placeholder={t('products.addModal.pricePlaceholder')} keyboardType="decimal-pad" placeholderTextColor={colors.placeholderText} style={[styles.priceInput, { color: colors.text, borderColor: colors.border, backgroundColor: colors.background }]} />
           <View style={styles.addActions}>
-            <Button variant="primary" style={styles.addActionButton}
-              onPress={handleConfirmAddPrice}
-              disabled={!canConfirm}
-            >
+            <Button variant="primary" style={styles.addActionButton} onPress={handleConfirmAddPrice} disabled={!canConfirm}>
               <Text style={styles.confirmText}>✓</Text>
             </Button>
             <Button variant="secondary" style={styles.addActionButton} onPress={handleCancelAddPrice}>

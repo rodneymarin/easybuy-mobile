@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { KeyboardAvoidingView, Platform, Pressable, StyleSheet, Text, View } from 'react-native';
+import { Keyboard, KeyboardAvoidingView, Pressable, StyleSheet, Text, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { Button, Input, BottomSheet, ScreenTitle } from '@components/ui';
 import { useI18n } from '@lib/i18n';
@@ -28,6 +28,7 @@ export default function StoreFormScreen({ store, onBack, onSave, onUpdate, onDel
 
   function handleSave() {
     if (!isFormValid) return;
+    Keyboard.dismiss();
     if (store) {
       onUpdate(store.id, description.trim());
     } else {
@@ -36,20 +37,27 @@ export default function StoreFormScreen({ store, onBack, onSave, onUpdate, onDel
   }
 
   function handleDeletePress() {
+    Keyboard.dismiss();
     setIsDeleteSheetOpen(true);
   }
 
   function handleConfirmDelete() {
     if (!store) return;
+    Keyboard.dismiss();
     onDelete(store.id);
     setIsDeleteSheetOpen(false);
   }
 
+  function handleGoBack() {
+    Keyboard.dismiss();
+    onBack();
+  }
+
   return (
-    <KeyboardAvoidingView style={[styles.container, { backgroundColor: colors.background }]} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
+    <KeyboardAvoidingView style={[styles.container, { backgroundColor: colors.background }]} behavior="padding">
       <View style={styles.headerWrapper}>
         <ScreenTitle>{isEditMode ? t('stores.editTitle') : t('stores.addTitle')}</ScreenTitle>
-        <Pressable onPress={onBack} style={styles.backButton} hitSlop={8}>
+        <Pressable onPress={handleGoBack} style={styles.backButton} hitSlop={8}>
           <Ionicons name="arrow-back" size={24} color={colors.text} />
         </Pressable>
       </View>
@@ -64,7 +72,7 @@ export default function StoreFormScreen({ store, onBack, onSave, onUpdate, onDel
             <Text style={[styles.destructiveButtonText, { color: colors.destructiveBorder }]}>{t('stores.delete')}</Text>
           </Button>
         )}
-        <Button variant="secondary" style={styles.actionButton} onPress={onBack}>
+        <Button variant="secondary" style={styles.actionButton} onPress={handleGoBack}>
           <Text style={[styles.buttonTextSecondary, { color: colors.text }]}>{t('stores.addModal.cancel')}</Text>
         </Button>
         <Button variant="primary" style={styles.actionButton} onPress={handleSave} disabled={!isFormValid}>

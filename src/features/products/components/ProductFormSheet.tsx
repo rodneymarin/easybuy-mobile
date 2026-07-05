@@ -44,19 +44,10 @@ export default function ProductFormSheet({ isOpen, stores, onSave, onClose }: Pr
   }
 
   return (
-    <BottomSheet isOpen={isOpen} onClose={handleClose}>
+    <BottomSheet isOpen={isOpen} onClose={handleClose} percentage={0.75}>
       <Text style={[styles.title, { color: colors.text }]}>{t('products.addTitle')}</Text>
       <View style={styles.content}>
-        <ProductFormContent
-          productName={productName}
-          unitOfMeasurement={unitOfMeasurement}
-          prices={prices}
-          stores={stores}
-          noPadding
-          onProductNameChange={setProductName}
-          onUnitOfMeasurementChange={setUnitOfMeasurement}
-          onPricesChange={setPrices}
-        />
+        <ProductFormContent productName={productName} unitOfMeasurement={unitOfMeasurement} prices={prices} stores={stores} noPadding onProductNameChange={setProductName} onUnitOfMeasurementChange={setUnitOfMeasurement} onPricesChange={setPrices} />
       </View>
       <Button variant="primary" style={styles.saveButton} onPress={handleSave} disabled={!isFormValid}>
         <Text style={styles.buttonTextPrimary}>{t('products.addModal.save')}</Text>

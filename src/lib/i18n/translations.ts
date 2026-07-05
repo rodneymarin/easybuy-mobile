@@ -93,6 +93,11 @@ export const translations: Record<Language, TranslationMap> = {
     'listItem.deleteModal.title': 'Remove item',
     'listItem.deleteModal.confirmMessage': 'Are you sure you want to remove this item?',
     'listItem.deleteModal.confirm': 'Remove',
+    'lists.deleteModal.title': 'Delete list',
+    'lists.deleteModal.confirmMessage': 'Are you sure you want to delete "{list}"?',
+    'lists.deleteModal.warning': 'All items in this list will also be removed.',
+    'lists.deleteModal.cancel': 'Cancel',
+    'lists.deleteModal.confirm': 'Delete',
   },
   es: {
     'tab.lists': 'Listas',
@@ -184,5 +189,10 @@ export const translations: Record<Language, TranslationMap> = {
     'listItem.deleteModal.title': 'Eliminar item',
     'listItem.deleteModal.confirmMessage': '¿Estás seguro de que deseas eliminar este item?',
     'listItem.deleteModal.confirm': 'Eliminar',
+    'lists.deleteModal.title': 'Eliminar lista',
+    'lists.deleteModal.confirmMessage': '¿Estás seguro de que deseas eliminar "{list}"?',
+    'lists.deleteModal.warning': 'Todos los items de esta lista también serán eliminados.',
+    'lists.deleteModal.cancel': 'Cancelar',
+    'lists.deleteModal.confirm': 'Eliminar',
   },
 };

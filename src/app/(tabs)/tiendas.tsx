@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useMemo, useRef, useState } from 'react';
 import { ActivityIndicator, StyleSheet, Text, View } from 'react-native';
 import { useFocusEffect } from '@react-navigation/native';
 import { ScreenTitle } from '@components/ui/screen-title';
@@ -35,7 +35,10 @@ export default function TiendasScreen() {
   const [selectedStore, setSelectedStore] = useState<StoreListData | undefined>(undefined);
   const debouncedSearch = useDebounce(searchQuery, 300);
 
-  async function loadStores() {
+  const isFirstFocus = useRef(true);
+
+  const loadStores = useCallback(async (isInitial = false) => {
+    if (isInitial) setIsLoading(true);
     try {
       const allStores = await getAllStores();
       const mapped = allStores.map((s) => ({
@@ -45,24 +48,27 @@ export default function TiendasScreen() {
       setStores(mapped);
     } catch (error) {
       console.error("Failed to load stores:", error);
+    } finally {
+      if (isInitial) setIsLoading(false);
     }
-  }
-
-  useEffect(() => {
-    async function init() {
-      await loadStores();
-      setIsLoading(false);
-    }
-    init();
   }, []);
 
   useFocusEffect(
     useCallback(() => {
+      if (isFirstFocus.current) {
+        isFirstFocus.current = false;
+        loadStores(true);
+        return () => {
+          setIsFormOpen(false);
+          setSelectedStore(undefined);
+        };
+      }
+      loadStores();
       return () => {
         setIsFormOpen(false);
         setSelectedStore(undefined);
       };
-    }, [])
+    }, [loadStores])
   );
 
   function openAddForm() {

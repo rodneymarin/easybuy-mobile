@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { KeyboardAvoidingView, Platform, Pressable, StyleSheet, Text, View } from 'react-native';
+import { Keyboard, KeyboardAvoidingView, Pressable, StyleSheet, Text, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { Button, BottomSheet, ScreenTitle } from '@components/ui';
 import { ProductFormContent } from '@features/products/components';
@@ -36,6 +36,7 @@ export default function ProductFormScreen({ product, stores, onBack, onSave, onU
 
   function handleSave() {
     if (!isFormValid) return;
+    Keyboard.dismiss();
     if (product) {
       onUpdate(product.id, productName.trim(), unitOfMeasurement, prices);
     } else {
@@ -44,33 +45,32 @@ export default function ProductFormScreen({ product, stores, onBack, onSave, onU
   }
 
   function handleDeletePress() {
+    Keyboard.dismiss();
     setIsDeleteSheetOpen(true);
   }
 
   function handleConfirmDelete() {
     if (!product) return;
+    Keyboard.dismiss();
     onDelete(product.id);
     setIsDeleteSheetOpen(false);
   }
 
+  function handleGoBack() {
+    Keyboard.dismiss();
+    onBack();
+  }
+
   return (
-    <KeyboardAvoidingView style={[styles.container, { backgroundColor: colors.background }]} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
+    <KeyboardAvoidingView style={[styles.container, { backgroundColor: colors.background }]} behavior="padding">
       <View style={styles.headerWrapper}>
         <ScreenTitle>{isEditMode ? t('products.editTitle') : t('products.addTitle')}</ScreenTitle>
-        <Pressable onPress={onBack} style={styles.backButton} hitSlop={8}>
+        <Pressable onPress={handleGoBack} style={styles.backButton} hitSlop={8}>
           <Ionicons name="arrow-back" size={24} color={colors.text} />
         </Pressable>
       </View>
 
-      <ProductFormContent
-        productName={productName}
-        unitOfMeasurement={unitOfMeasurement}
-        prices={prices}
-        stores={stores}
-        onProductNameChange={setProductName}
-        onUnitOfMeasurementChange={setUnitOfMeasurement}
-        onPricesChange={setPrices}
-      />
+      <ProductFormContent productName={productName} unitOfMeasurement={unitOfMeasurement} prices={prices} stores={stores} onProductNameChange={setProductName} onUnitOfMeasurementChange={setUnitOfMeasurement} onPricesChange={setPrices} />
 
       <View style={[styles.footer, { borderTopColor: colors.border }]}>
         {isEditMode && (
@@ -78,7 +78,7 @@ export default function ProductFormScreen({ product, stores, onBack, onSave, onU
             <Text style={[styles.destructiveButtonText, { color: colors.destructiveBorder }]}>{t('products.delete')}</Text>
           </Button>
         )}
-        <Button variant="secondary" style={styles.actionButton} onPress={onBack}>
+        <Button variant="secondary" style={styles.actionButton} onPress={handleGoBack}>
           <Text style={[styles.buttonTextSecondary, { color: colors.text }]}>{t('products.addModal.cancel')}</Text>
         </Button>
         <Button variant="primary" style={styles.actionButton} onPress={handleSave} disabled={!isFormValid}>

@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useMemo, useRef, useState } from 'react';
 import { ActivityIndicator, StyleSheet, Text, View } from 'react-native';
 import { useFocusEffect } from '@react-navigation/native';
 import { ScreenTitle } from '@components/ui/screen-title';
@@ -41,31 +41,37 @@ export default function ProductosScreen() {
   const [selectedProduct, setSelectedProduct] = useState<Product | undefined>(undefined);
   const debouncedSearch = useDebounce(searchQuery, 300);
 
-  async function loadData() {
+  const isFirstFocus = useRef(true);
+
+  const loadData = useCallback(async (isInitial = false) => {
+    if (isInitial) setIsLoading(true);
     try {
       const [allProducts, allStores] = await Promise.all([getAllProducts(), getAllStores()]);
       setProducts(allProducts);
       setStores(allStores.map((s) => ({ id: s.id, description: s.description })));
     } catch (error) {
       console.error("Failed to load data:", error);
+    } finally {
+      if (isInitial) setIsLoading(false);
     }
-  }
-
-  useEffect(() => {
-    async function init() {
-      await loadData();
-      setIsLoading(false);
-    }
-    init();
   }, []);
 
   useFocusEffect(
     useCallback(() => {
+      if (isFirstFocus.current) {
+        isFirstFocus.current = false;
+        loadData(true);
+        return () => {
+          setIsFormOpen(false);
+          setSelectedProduct(undefined);
+        };
+      }
+      loadData();
       return () => {
         setIsFormOpen(false);
         setSelectedProduct(undefined);
       };
-    }, [])
+    }, [loadData])
   );
 
   function openAddForm() {

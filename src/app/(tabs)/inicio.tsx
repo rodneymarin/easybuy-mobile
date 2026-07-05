@@ -2,9 +2,9 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 import { ActivityIndicator, StyleSheet, Text, View } from 'react-native';
 import { useFocusEffect } from '@react-navigation/native';
 import { ScreenTitle } from '@components/ui/screen-title';
-import { Button, SearchInput } from '@components/ui';
+import { BottomSheet, Button, SearchInput } from '@components/ui';
 import { ShoppingList, ShoppingListDetailScreen, ListTitleFormSheet, type ShoppingListData } from '@features/shopping-lists';
-import { createShoppingList, getAllShoppingLists } from '@lib/repositories/shopping-lists';
+import { createShoppingList, deleteShoppingList, getAllShoppingLists } from '@lib/repositories/shopping-lists';
 import { getAllProducts } from '@lib/repositories/products';
 import { useDebounce } from '@lib/hooks';
 import { useI18n } from '@lib/i18n';
@@ -36,6 +36,8 @@ export default function InicioScreen() {
   const [isDetailOpen, setIsDetailOpen] = useState(false);
   const [selectedListId, setSelectedListId] = useState<string | null>(null);
   const [isTitleSheetOpen, setIsTitleSheetOpen] = useState(false);
+  const [isDeleteSheetOpen, setIsDeleteSheetOpen] = useState(false);
+  const [listToDelete, setListToDelete] = useState<{ id: string; title: string } | null>(null);
   const debouncedSearch = useDebounce(searchQuery, 300);
 
   async function loadLists() {
@@ -97,6 +99,26 @@ export default function InicioScreen() {
     loadLists();
   }
 
+  function handleRemovePress(listId: string) {
+    const list = lists.find((l) => l.id === listId);
+    if (!list) return;
+    setListToDelete({ id: list.id, title: list.title });
+    setIsDeleteSheetOpen(true);
+  }
+
+  async function handleConfirmDelete() {
+    if (!listToDelete) return;
+    await deleteShoppingList(listToDelete.id);
+    setIsDeleteSheetOpen(false);
+    setListToDelete(null);
+    loadLists();
+  }
+
+  function handleCancelDelete() {
+    setIsDeleteSheetOpen(false);
+    setListToDelete(null);
+  }
+
   const filteredLists = useMemo(() => {
     if (!debouncedSearch.trim()) return lists;
     const query = debouncedSearch.toLowerCase();
@@ -127,7 +149,7 @@ export default function InicioScreen() {
         </Button>
       </View>
       {filteredLists.length > 0 ? (
-        <ShoppingList data={filteredLists} onListPress={openDetail} />
+        <ShoppingList data={filteredLists} onListPress={openDetail} onRemoveList={handleRemovePress} />
       ) : searchQuery !== debouncedSearch ? (
         <View style={styles.emptyContainer}>
           <ActivityIndicator size="large" color={colors.text} />
@@ -143,6 +165,15 @@ export default function InicioScreen() {
         onSave={handleCreateList}
         onClose={closeTitleSheet}
       />
+
+      <BottomSheet isOpen={isDeleteSheetOpen} onClose={handleCancelDelete}>
+        <Text style={[styles.deleteSheetTitle, { color: colors.text }]}>{t('lists.deleteModal.title')}</Text>
+        <Text style={[styles.deleteSheetMessage, { color: colors.text }]}>{t('lists.deleteModal.confirmMessage', { list: listToDelete?.title ?? '' })}</Text>
+        <Text style={[styles.deleteSheetWarning, { color: colors.textSecondary }]}>{t('lists.deleteModal.warning')}</Text>
+        <Button variant="destructive" style={styles.deleteSheetButton} onPress={handleConfirmDelete}>
+          <Text style={[styles.destructiveButtonText, { color: colors.destructiveBorder }]}>{t('lists.deleteModal.confirm')}</Text>
+        </Button>
+      </BottomSheet>
     </View>
   );
 }
@@ -182,5 +213,29 @@ const styles = StyleSheet.create({
   emptyText: {
     fontSize: 16,
     textAlign: 'center',
+  },
+  deleteSheetTitle: {
+    fontSize: 17,
+    fontWeight: '700',
+    marginBottom: 8,
+    textAlign: 'center',
+  },
+  deleteSheetMessage: {
+    fontSize: 15,
+    textAlign: 'center',
+    marginBottom: 8,
+  },
+  deleteSheetWarning: {
+    fontSize: 13,
+    textAlign: 'center',
+    lineHeight: 18,
+    marginBottom: 20,
+  },
+  deleteSheetButton: {
+    justifyContent: 'center',
+  },
+  destructiveButtonText: {
+    fontSize: 15,
+    fontWeight: '600',
   },
 });

@@ -42,14 +42,7 @@ export default function ShoppingListItemCard({
         )}
       </Pressable>
       <View style={styles.content}>
-        <Text
-          numberOfLines={1}
-          ellipsizeMode="tail"
-          style={[
-            styles.title,
-            { color: isDone ? colors.textSecondary : colors.text },
-            isDone && styles.titleDone,
-          ]}>
+        <Text numberOfLines={1} ellipsizeMode="tail" style={[styles.title, { color: isDone ? colors.textSecondary : colors.text }, isDone && styles.titleDone]}>
           {productName}
         </Text>
         <View style={styles.tags}>

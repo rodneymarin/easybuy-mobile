@@ -10,9 +10,10 @@ interface ShoppingListItemProps {
 	itemCount: number;
 	totalAmount: number;
 	onPress?: () => void;
+	onRemove?: () => void;
 }
 
-export default function ShoppingListItem({ title, itemCount, totalAmount, onPress }: ShoppingListItemProps) {
+export default function ShoppingListItem({ title, itemCount, totalAmount, onPress, onRemove }: ShoppingListItemProps) {
 	const { colors } = useTheme();
 	const { t } = useI18n();
 
@@ -22,11 +23,11 @@ export default function ShoppingListItem({ title, itemCount, totalAmount, onPres
 				<View style={styles.cardLeft}>
 					<Text style={[styles.title, { color: colors.text }]}>{title}</Text>
 					<View style={styles.tags}>
-						<Tag label={t('list.items', { count: itemCount })} />
-						<Tag label={t('list.total', { amount: totalAmount.toFixed(2) })} />
+						<Tag size="sm" label={t('list.items', { count: itemCount })} />
+						<Tag size="sm" label={t('list.total', { amount: totalAmount.toFixed(2) })} />
 					</View>
 				</View>
-				<Pressable style={styles.removeButton}>
+				<Pressable onPress={onRemove} style={styles.removeButton}>
 					<Ionicons name="close" size={18} color={colors.textSecondary} />
 				</Pressable>
 			</View>
@@ -56,7 +57,7 @@ const styles = StyleSheet.create({
 	},
 	tags: {
 		flexDirection: 'row',
-		gap: 8,
+		gap: 6,
 	},
 	removeButton: {
 		width: 32,

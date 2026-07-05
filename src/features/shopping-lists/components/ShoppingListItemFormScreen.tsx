@@ -139,14 +139,7 @@ export default function ShoppingListItemFormScreen({ item, products, stores, onB
 
         <Text style={[styles.fieldLabel, { color: colors.text }]}>{t('listItem.quantityLabel')}</Text>
         <View style={styles.quantityRow}>
-          <TextInput
-            value={quantityText}
-            onChangeText={handleQuantityChange}
-            keyboardType="decimal-pad"
-            placeholder="0"
-            placeholderTextColor={colors.placeholderText}
-            style={[styles.quantityInput, { color: colors.text, borderColor: colors.border, backgroundColor: colors.background }]}
-          />
+          <TextInput value={quantityText} onChangeText={handleQuantityChange} keyboardType="decimal-pad" placeholder="0" placeholderTextColor={colors.placeholderText} style={[styles.quantityInput, { color: colors.text, borderColor: colors.border, backgroundColor: colors.background }]} />
           <Text style={[styles.unitLabel, { color: colors.textSecondary }]}>{unitLabel}</Text>
         </View>
 
@@ -182,12 +175,7 @@ export default function ShoppingListItemFormScreen({ item, products, stores, onB
         </Button>
       </BottomSheet>
 
-      <ProductFormSheet
-        isOpen={isProductSheetOpen}
-        stores={stores}
-        onSave={handleCreateProduct}
-        onClose={() => setIsProductSheetOpen(false)}
-      />
+      <ProductFormSheet isOpen={isProductSheetOpen} stores={stores} onSave={handleCreateProduct} onClose={() => setIsProductSheetOpen(false)} />
     </KeyboardAvoidingView>
   );
 }
