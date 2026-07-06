@@ -3,7 +3,7 @@ import { ActivityIndicator, Modal as RNModal, Pressable, ScrollView, StyleSheet,
 import { Ionicons } from '@expo/vector-icons';
 import { BottomSheet, Button, ScreenTitle, Tag, Toggle } from '@components/ui';
 import { ShoppingListCheckCircle, ShoppingListItemCard, ShoppingListItemTitle, ShoppingListTotals, ListTitleFormSheet, ShoppingListItemFormScreen } from '@features/shopping-lists/components';
-import { getShoppingListById, toggleItemDone, removeItemFromList, removeItemsFromList, updateShoppingListTitle, addItemToList, updateItemInList } from '@lib/repositories/shopping-lists';
+import { getShoppingListById, getAllShoppingLists, toggleItemDone, removeItemFromList, removeItemsFromList, moveItemsToList, updateShoppingListTitle, addItemToList, updateItemInList } from '@lib/repositories/shopping-lists';
 import { getAllProducts } from '@lib/repositories/products';
 import { getAllStores } from '@lib/repositories/stores';
 import { useI18n } from '@lib/i18n';
@@ -39,6 +39,8 @@ export default function ShoppingListDetailScreen({ shoppingListId, onBack }: Sho
   const [isSelectionMode, setIsSelectionMode] = useState(false);
   const [selectedItemRowIds, setSelectedItemRowIds] = useState<Set<number>>(new Set());
   const [isDeleteSelectedSheetOpen, setIsDeleteSelectedSheetOpen] = useState(false);
+  const [isMoveSheetOpen, setIsMoveSheetOpen] = useState(false);
+  const [availableLists, setAvailableLists] = useState<{ id: string; title: string }[]>([]);
   const [isRemoveCompletedSheetOpen, setIsRemoveCompletedSheetOpen] = useState(false);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isTitleSheetOpen, setIsTitleSheetOpen] = useState(false);
@@ -169,6 +171,7 @@ export default function ShoppingListDetailScreen({ shoppingListId, onBack }: Sho
   function resetSelection() {
     setIsSelectionMode(false);
     setSelectedItemRowIds(new Set());
+    setAvailableLists([]);
   }
 
   function handleEditPress(item: ItemDisplayData) {
@@ -188,6 +191,11 @@ export default function ShoppingListDetailScreen({ shoppingListId, onBack }: Sho
     if (!isSelectionMode) {
       setIsSelectionMode(true);
       setSelectedItemRowIds(new Set([item.rowId]));
+      getAllShoppingLists().then((allLists) => {
+        setAvailableLists(allLists.filter((l) => l.id !== shoppingListId));
+      }).catch((error) => {
+        console.error("Failed to load lists for move:", error);
+      });
     }
   }
 
@@ -204,6 +212,24 @@ export default function ShoppingListDetailScreen({ shoppingListId, onBack }: Sho
       }
       return next;
     });
+  }
+
+  function handleMoveSelectedPress() {
+    setIsMoveSheetOpen(true);
+  }
+
+  async function handleConfirmMoveItems(targetListId: string) {
+    const rowIds = Array.from(selectedItemRowIds);
+    setIsMoveSheetOpen(false);
+    setShoppingList((prev) => {
+      if (!prev) return prev;
+      return {
+        ...prev,
+        items: prev.items.filter((item) => !rowIds.includes(item.rowId)),
+      };
+    });
+    resetSelection();
+    await moveItemsToList(rowIds, targetListId);
   }
 
   function handleDeleteSelectedPress() {
@@ -364,9 +390,16 @@ export default function ShoppingListDetailScreen({ shoppingListId, onBack }: Sho
             <Ionicons name="close" size={24} color={colors.text} />
           </Pressable>
           <Text style={[styles.selectionCount, { color: colors.text }]}>{selectedItemRowIds.size} {t('common.selected')}</Text>
-          <Button variant="destructive" style={styles.deleteSelectedButton} onPress={handleDeleteSelectedPress}>
-            <Text style={[styles.destructiveButtonText, { color: colors.destructiveBorder }]}>{t('listDetail.removeConfirm')} ({selectedItemRowIds.size})</Text>
-          </Button>
+          <View style={styles.selectionActions}>
+            {availableLists.length > 0 && (
+              <Button onPress={handleMoveSelectedPress}>
+                <Text style={[styles.destructiveButtonText, { color: '#fff' }]}>{t('listDetail.moveSelected')}</Text>
+              </Button>
+            )}
+            <Button variant="destructive" style={styles.deleteSelectedButton} onPress={handleDeleteSelectedPress}>
+              <Text style={[styles.destructiveButtonText, { color: colors.destructiveBorder }]}>{t('listDetail.removeConfirm')} ({selectedItemRowIds.size})</Text>
+            </Button>
+          </View>
         </View>
       ) : (
         <>
@@ -471,6 +504,22 @@ export default function ShoppingListDetailScreen({ shoppingListId, onBack }: Sho
             <Text style={[styles.sheetButtonText, { color: colors.text }]}>{t('products.addModal.cancel')}</Text>
           </Pressable>
         </View>
+      </BottomSheet>
+
+      <BottomSheet isOpen={isMoveSheetOpen} onClose={() => setIsMoveSheetOpen(false)}>
+        <Text style={[styles.sheetTitle, { color: colors.text }]}>{t('listDetail.moveSelectedTitle')}</Text>
+        {availableLists.length === 0 ? (
+          <Text style={[styles.sheetMessage, { color: colors.textSecondary }]}>{t('listDetail.moveNoLists')}</Text>
+        ) : (
+          <View style={styles.moveListContainer}>
+            {availableLists.map((list) => (
+              <Pressable key={list.id} style={[styles.moveListItem, { borderColor: colors.border }]} onPress={() => handleConfirmMoveItems(list.id)}>
+                <Text style={[styles.moveListItemText, { color: colors.text }]}>{list.title}</Text>
+                <Ionicons name="chevron-forward" size={18} color={colors.textSecondary} />
+              </Pressable>
+            ))}
+          </View>
+        )}
       </BottomSheet>
 
       <BottomSheet isOpen={isDeleteSelectedSheetOpen} onClose={() => setIsDeleteSelectedSheetOpen(false)}>
@@ -615,6 +664,10 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     marginLeft: 8,
   },
+  selectionActions: {
+    flexDirection: 'row',
+    gap: 8,
+  },
   deleteSelectedButton: {
     paddingHorizontal: 12,
   },
@@ -645,5 +698,21 @@ const styles = StyleSheet.create({
   sheetButtonText: {
     fontSize: 15,
     fontWeight: '600',
+  },
+  moveListContainer: {
+    gap: 4,
+  },
+  moveListItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    borderWidth: 1,
+    borderRadius: 10,
+    padding: 14,
+    marginBottom: 4,
+  },
+  moveListItemText: {
+    fontSize: 16,
+    fontWeight: '500',
   },
 });

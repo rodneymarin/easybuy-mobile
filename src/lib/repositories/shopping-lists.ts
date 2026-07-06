@@ -107,3 +107,10 @@ export async function removeItemsFromList(itemRowIds: number[]): Promise<void> {
   const placeholders = itemRowIds.map(() => '?').join(',');
   await db.runAsync(`DELETE FROM shopping_list_items WHERE id IN (${placeholders})`, itemRowIds);
 }
+
+export async function moveItemsToList(itemRowIds: number[], targetListId: string): Promise<void> {
+  if (itemRowIds.length === 0) return;
+  const db = await getDatabase();
+  const placeholders = itemRowIds.map(() => '?').join(',');
+  await db.runAsync(`UPDATE shopping_list_items SET shopping_list_id = ? WHERE id IN (${placeholders})`, [targetListId, ...itemRowIds]);
+}
