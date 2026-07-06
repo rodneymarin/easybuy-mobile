@@ -33,7 +33,7 @@ export default function ProductFormContent({ productName, unitOfMeasurement, pri
         <Text style={[styles.unitLabel, { color: colors.text }]}>{t('products.addModal.unitLabel')}</Text>
         <Pressable onPress={() => setIsUnitSelectorOpen(true)} style={[styles.unitSelector, { borderColor: colors.border, backgroundColor: colors.background }]}>
           <Text style={[styles.unitSelectorText, { color: selectedUnit ? colors.text : colors.placeholderText }]}>
-            {selectedUnit ? selectedUnit.label : t('products.addModal.unitLabel')}
+            {selectedUnit ? t(`unit.${selectedUnit.id}`) : t('products.addModal.unitLabel')}
           </Text>
           <Text style={[styles.dropdownArrow, { color: colors.text }]}>▼</Text>
         </Pressable>
@@ -47,7 +47,7 @@ export default function ProductFormContent({ productName, unitOfMeasurement, pri
             <FlatList data={UNIT_OF_MEASUREMENT} keyExtractor={(item) => item.id}
               renderItem={({ item }) => (
                 <Pressable onPress={() => { onUnitOfMeasurementChange(item.id); setIsUnitSelectorOpen(false); }} style={[styles.selectorItem, { borderColor: colors.border, backgroundColor: unitOfMeasurement === item.id ? colors.surface : 'transparent' }]}>
-                  <Text style={[styles.selectorItemText, { color: colors.text }]}>{item.label}</Text>
+                  <Text style={[styles.selectorItemText, { color: colors.text }]}>{t(`unit.${item.id}`)}</Text>
                 </Pressable>
               )}
             />

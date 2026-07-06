@@ -92,7 +92,7 @@ export default function ShoppingListDetailScreen({ shoppingListId, onBack }: Sho
       })();
       return {
         rowId: item.rowId,
-        productName: product?.productName ?? 'Unknown',
+        productName: product?.productName ?? t('common.unknown'),
         quantity: item.quantity,
         unitLabel,
         storeId: item.storeId,
@@ -274,12 +274,12 @@ export default function ShoppingListDetailScreen({ shoppingListId, onBack }: Sho
     return (
       <View style={[styles.container, { backgroundColor: colors.background }]}>
         <View style={styles.headerWrapper}>
-          <ScreenTitle>Error</ScreenTitle>
+          <ScreenTitle>{t('common.error')}</ScreenTitle>
           <Pressable onPress={onBack} style={styles.backButton} hitSlop={8}>
             <Ionicons name="arrow-back" size={24} color={colors.text} />
           </Pressable>
         </View>
-        <Text style={[styles.errorText, { color: colors.textSecondary }]}>List not found</Text>
+        <Text style={[styles.errorText, { color: colors.textSecondary }]}>{t('listDetail.notFound')}</Text>
       </View>
     );
   }

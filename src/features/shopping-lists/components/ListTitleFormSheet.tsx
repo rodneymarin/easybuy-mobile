@@ -31,10 +31,10 @@ export default function ListTitleFormSheet({ isOpen, initialTitle, onSave, onClo
 
   return (
     <BottomSheet isOpen={isOpen} onClose={handleClose} percentage={0.75}>
-      <Text style={[styles.title, { color: colors.text }]}>{initialTitle !== undefined ? 'Edit list name' : 'New list'}</Text>
-      <Input value={title} onChangeText={setTitle} placeholder="List name" autoFocus returnKeyType="done" onSubmitEditing={handleSave} />
+      <Text style={[styles.title, { color: colors.text }]}>{initialTitle !== undefined ? t('listForm.editTitle') : t('listForm.newTitle')}</Text>
+      <Input value={title} onChangeText={setTitle} placeholder={t('listForm.placeholder')} autoFocus returnKeyType="done" onSubmitEditing={handleSave} />
       <Button variant="primary" style={styles.saveButton} onPress={handleSave} disabled={!isFormValid}>
-        <Text style={styles.buttonTextPrimary}>{initialTitle !== undefined ? 'Save' : 'Create'}</Text>
+        <Text style={styles.buttonTextPrimary}>{initialTitle !== undefined ? t('common.save') : t('common.create')}</Text>
       </Button>
     </BottomSheet>
   );
