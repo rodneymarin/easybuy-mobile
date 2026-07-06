@@ -19,10 +19,7 @@ export default function ProductList({ data, selectedIds, isSelectionMode, onProd
   return (
     <FlatList data={data} keyExtractor={(item) => item.id} contentContainerStyle={styles.list}
       renderItem={({ item }) => (
-        <ProductListItem productName={item.productName} unitOfMeasurement={item.unitOfMeasurement}
-          isSelected={selectedIds?.has(item.id)} isSelectionMode={isSelectionMode}
-          onPress={onProductPress ? () => onProductPress(item.id) : undefined}
-          onLongPress={onProductLongPress ? () => onProductLongPress(item.id) : undefined} />
+        <ProductListItem productName={item.productName} unitOfMeasurement={item.unitOfMeasurement} isSelected={selectedIds?.has(item.id)} isSelectionMode={isSelectionMode} onPress={onProductPress ? () => onProductPress(item.id) : undefined} onLongPress={onProductLongPress ? () => onProductLongPress(item.id) : undefined} />
       )}
     />
   );
