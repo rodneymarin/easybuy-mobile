@@ -100,3 +100,10 @@ export async function removeItemFromList(itemRowId: number): Promise<void> {
   const db = await getDatabase();
   await db.runAsync("DELETE FROM shopping_list_items WHERE id = ?", [itemRowId]);
 }
+
+export async function removeItemsFromList(itemRowIds: number[]): Promise<void> {
+  if (itemRowIds.length === 0) return;
+  const db = await getDatabase();
+  const placeholders = itemRowIds.map(() => '?').join(',');
+  await db.runAsync(`DELETE FROM shopping_list_items WHERE id IN (${placeholders})`, itemRowIds);
+}

@@ -1,9 +1,9 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { ActivityIndicator, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { ActivityIndicator, Modal as RNModal, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { BottomSheet, CloseButton, ScreenTitle, Tag, Toggle } from '@components/ui';
 import { ShoppingListCheckCircle, ShoppingListItemCard, ShoppingListItemTitle, ShoppingListTotals, ListTitleFormSheet, ShoppingListItemFormScreen } from '@features/shopping-lists/components';
-import { getShoppingListById, toggleItemDone, removeItemFromList, updateShoppingListTitle, addItemToList, updateItemInList } from '@lib/repositories/shopping-lists';
+import { getShoppingListById, toggleItemDone, removeItemFromList, removeItemsFromList, updateShoppingListTitle, addItemToList, updateItemInList } from '@lib/repositories/shopping-lists';
 import { getAllProducts } from '@lib/repositories/products';
 import { getAllStores } from '@lib/repositories/stores';
 import { useI18n } from '@lib/i18n';
@@ -38,6 +38,8 @@ export default function ShoppingListDetailScreen({ shoppingListId, onBack }: Sho
   const [activeStoreId, setActiveStoreId] = useState<string | null>(null);
   const [isRemoveSheetOpen, setIsRemoveSheetOpen] = useState(false);
   const [itemToRemove, setItemToRemove] = useState<ItemDisplayData | null>(null);
+  const [isRemoveCompletedSheetOpen, setIsRemoveCompletedSheetOpen] = useState(false);
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isTitleSheetOpen, setIsTitleSheetOpen] = useState(false);
   const [isItemFormOpen, setIsItemFormOpen] = useState(false);
   const [editingItemRowId, setEditingItemRowId] = useState<number | null>(null);
@@ -173,6 +175,37 @@ export default function ShoppingListDetailScreen({ shoppingListId, onBack }: Sho
     setIsRemoveSheetOpen(true);
   }
 
+  function handleRemoveCompletedPress() {
+    setIsRemoveCompletedSheetOpen(true);
+  }
+
+  async function handleUncheckAll() {
+    const doneItemsList = shoppingList?.items.filter((item) => item.done) ?? [];
+    setShoppingList((prev) => {
+      if (!prev) return prev;
+      return {
+        ...prev,
+        items: prev.items.map((item) => ({ ...item, done: false })),
+      };
+    });
+    for (const item of doneItemsList) {
+      await toggleItemDone(item.rowId);
+    }
+  }
+
+  async function handleConfirmRemoveCompleted() {
+    const doneRowIds = doneItems.map((item) => item.rowId);
+    setIsRemoveCompletedSheetOpen(false);
+    setShoppingList((prev) => {
+      if (!prev) return prev;
+      return {
+        ...prev,
+        items: prev.items.filter((item) => !item.done),
+      };
+    });
+    await removeItemsFromList(doneRowIds);
+  }
+
   async function handleConfirmRemove() {
     if (!itemToRemove) return;
     const rowId = itemToRemove.rowId;
@@ -304,7 +337,14 @@ export default function ShoppingListDetailScreen({ shoppingListId, onBack }: Sho
         </View>
       )}
 
-      <ShoppingListTotals globalTotal={globalTotal} cartTotal={cartTotal} onAddPress={handleAddPress} />
+      <View style={styles.totalsRow}>
+        <View style={styles.totalsFlex}>
+          <ShoppingListTotals globalTotal={globalTotal} cartTotal={cartTotal} onAddPress={handleAddPress} />
+        </View>
+        <Pressable onPress={doneItems.length > 0 ? () => setIsMenuOpen(true) : undefined} style={styles.menuButton} hitSlop={8} disabled={doneItems.length === 0}>
+          <Ionicons name="ellipsis-vertical" size={20} color={doneItems.length > 0 ? colors.text : colors.border} />
+        </Pressable>
+      </View>
 
       <ScrollView style={styles.scrollBody} contentContainerStyle={styles.scrollContent}>
         {pendingItems.length > 0 && (
@@ -362,6 +402,34 @@ export default function ShoppingListDetailScreen({ shoppingListId, onBack }: Sho
       </ScrollView>
 
       <ListTitleFormSheet isOpen={isTitleSheetOpen} initialTitle={shoppingList.title} onSave={handleSaveTitle} onClose={() => setIsTitleSheetOpen(false)} />
+
+      <RNModal visible={isMenuOpen} transparent animationType="fade" onRequestClose={() => setIsMenuOpen(false)}>
+        <Pressable style={styles.menuBackdrop} onPress={() => setIsMenuOpen(false)}>
+          <View style={[styles.menuCard, { backgroundColor: colors.cardBackground }]}>
+            <Pressable style={styles.menuItem} onPress={() => { setIsMenuOpen(false); handleUncheckAll(); }}>
+              <Text style={[styles.menuItemText, { color: colors.text }]}>{t('listDetail.menuUncheckAll')}</Text>
+            </Pressable>
+            <Pressable style={styles.menuItem} onPress={() => { setIsMenuOpen(false); handleRemoveCompletedPress(); }}>
+              <Text style={[styles.menuItemText, { color: colors.text }]}>{t('listDetail.removeCompleted')}</Text>
+            </Pressable>
+          </View>
+        </Pressable>
+      </RNModal>
+
+      <BottomSheet isOpen={isRemoveCompletedSheetOpen} onClose={() => setIsRemoveCompletedSheetOpen(false)}>
+        <Text style={[styles.sheetTitle, { color: colors.text }]}>{t('listDetail.removeCompleted')}</Text>
+        <Text style={[styles.sheetMessage, { color: colors.textSecondary }]}>
+          {t('listDetail.removeCompletedConfirmMessage')}
+        </Text>
+        <View style={styles.sheetActions}>
+          <Pressable onPress={handleConfirmRemoveCompleted} style={[styles.sheetButton, { backgroundColor: colors.destructive }]}>
+            <Text style={[styles.sheetButtonText, { color: colors.destructiveBorder }]}>{t('listDetail.removeConfirm')}</Text>
+          </Pressable>
+          <Pressable onPress={() => setIsRemoveCompletedSheetOpen(false)} style={[styles.sheetButton, { backgroundColor: colors.surface }]}>
+            <Text style={[styles.sheetButtonText, { color: colors.text }]}>{t('products.addModal.cancel')}</Text>
+          </Pressable>
+        </View>
+      </BottomSheet>
 
       <BottomSheet isOpen={isRemoveSheetOpen} onClose={() => setIsRemoveSheetOpen(false)}>
         <Text style={[styles.sheetTitle, { color: colors.text }]}>{t('listDetail.removeTitle')}</Text>
@@ -449,6 +517,47 @@ const styles = StyleSheet.create({
   itemTags: {
     flexDirection: 'row',
     gap: 6,
+  },
+  totalsRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  totalsFlex: {
+    flex: 1,
+  },
+  menuButton: {
+    padding: 8,
+    marginRight: 12,
+  },
+  menuBackdrop: {
+    flex: 1,
+    justifyContent: 'flex-start',
+    paddingTop: 100,
+    alignItems: 'flex-end',
+    paddingRight: 16,
+    backgroundColor: 'rgba(0,0,0,0.3)',
+  },
+  menuCard: {
+    borderRadius: 14,
+    paddingVertical: 4,
+    minWidth: 200,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.15,
+    shadowRadius: 12,
+    elevation: 8,
+  },
+  menuItem: {
+    paddingVertical: 14,
+    paddingHorizontal: 16,
+  },
+  menuItemText: {
+    fontSize: 16,
+    fontWeight: '500',
+  },
+  menuDivider: {
+    height: 1,
+    marginHorizontal: 16,
   },
   sheetTitle: {
     fontSize: 17,
