@@ -1,35 +1,36 @@
 {
-	"expo": {
-		"name": "easybuy-mobile",
-		"slug": "easybuy-mobile",
-		"version": "1.0.0",
-		"orientation": "portrait",
-		"userInterfaceStyle": "automatic",
-		"scheme": "easybuy-mobile",
-		"ios": {
-			"supportsTablet": true,
-			"bundleIdentifier": "com.easybuy.mobile",
-			"infoPlist": {
-				"UIUserInterfaceStyle": "Automatic"
-			}
-		},
-		"android": {
-			"adaptiveIcon": {
-				"backgroundColor": "#ffffff"
-			},
-			"package": "com.easybuy.mobile"
-		},
-		"web": {
-			"bundler": "metro"
-		},
-		"plugins": [
-			"expo-sqlite"
-		],
-		"extra": {
-			"eas": {
-				"projectId": "342f2913-0fc4-4484-9cb8-04f93621d7fa"
-			}
-		},
-		"owner": "rodneymarin"
-	}
+  "expo": {
+    "name": "easybuy-mobile",
+    "slug": "easybuy-mobile",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "userInterfaceStyle": "automatic",
+    "scheme": "easybuy-mobile",
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "com.easybuy.mobile",
+      "infoPlist": {
+        "UIUserInterfaceStyle": "Automatic"
+      }
+    },
+    "android": {
+      "adaptiveIcon": {
+        "backgroundColor": "#ffffff"
+      },
+      "package": "com.easybuy.mobile"
+    },
+    "web": {
+      "bundler": "metro"
+    },
+    "plugins": [
+      "expo-sqlite",
+      "expo-font"
+    ],
+    "extra": {
+      "eas": {
+        "projectId": "342f2913-0fc4-4484-9cb8-04f93621d7fa"
+      }
+    },
+    "owner": "rodneymarin"
+  }
 }
