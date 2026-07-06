@@ -5,19 +5,20 @@ import { useTheme } from '@lib/theme';
 interface ShoppingListCheckCircleProps {
   isDone: boolean;
   onToggle: () => void;
+  disabled?: boolean;
 }
 
-function ShoppingListCheckCircle({ isDone, onToggle }: ShoppingListCheckCircleProps) {
+function ShoppingListCheckCircle({ isDone, onToggle, disabled }: ShoppingListCheckCircleProps) {
   const { colors } = useTheme();
 
   return (
-    <Pressable onPress={onToggle} style={styles.circle} hitSlop={6}>
+    <Pressable onPress={disabled ? undefined : onToggle} style={styles.circle} hitSlop={6}>
       {isDone ? (
-        <View style={[styles.circleFilled, { backgroundColor: colors.primary }]}>
+        <View style={[styles.circleFilled, { backgroundColor: disabled ? colors.textSecondary : colors.primary }]}>
           <Ionicons name="checkmark" size={14} color="#fff" />
         </View>
       ) : (
-        <View style={[styles.circleEmpty, { borderColor: colors.textSecondary }]} />
+        <View style={[styles.circleEmpty, { borderColor: disabled ? colors.border : colors.textSecondary }]} />
       )}
     </Pressable>
   );

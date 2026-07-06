@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useMemo, useRef, useState } from 'react';
 import { ActivityIndicator, StyleSheet, Text, View } from 'react-native';
 import { useFocusEffect } from '@react-navigation/native';
 import { ScreenTitle } from '@components/ui/screen-title';
@@ -40,7 +40,9 @@ export default function InicioScreen() {
   const [listToDelete, setListToDelete] = useState<{ id: string; title: string } | null>(null);
   const debouncedSearch = useDebounce(searchQuery, 300);
 
-  async function loadLists() {
+  const isFirstFocus = useRef(true);
+
+  const loadLists = useCallback(async () => {
     try {
       const shoppingLists = await getAllShoppingLists();
       const products = await getAllProducts();
@@ -56,19 +58,24 @@ export default function InicioScreen() {
     } finally {
       setIsLoading(false);
     }
-  }
-
-  useEffect(() => {
-    loadLists();
   }, []);
 
   useFocusEffect(
     useCallback(() => {
+      if (isFirstFocus.current) {
+        isFirstFocus.current = false;
+        loadLists();
+        return () => {
+          setIsDetailOpen(false);
+          setSelectedListId(null);
+        };
+      }
+      loadLists();
       return () => {
         setIsDetailOpen(false);
         setSelectedListId(null);
       };
-    }, [])
+    }, [loadLists])
   );
 
   function openCreateSheet() {
