@@ -10,3 +10,4 @@ export { Toggle } from './toggle';
 export { Dropdown } from './dropdown';
 export type { DropdownOption } from './dropdown';
 export { CloseButton } from './close-button';
+export { About } from './about';
