@@ -53,3 +53,12 @@ export async function deleteProduct(id: string): Promise<void> {
   await db.runAsync("DELETE FROM shopping_list_items WHERE product_id = ?", [id]);
   await db.runAsync("DELETE FROM products WHERE id = ?", [id]);
 }
+
+export async function deleteProducts(ids: string[]): Promise<void> {
+  if (ids.length === 0) return;
+  const db = await getDatabase();
+  const placeholders = ids.map(() => '?').join(',');
+  await db.runAsync(`DELETE FROM product_prices WHERE product_id IN (${placeholders})`, ids);
+  await db.runAsync(`DELETE FROM shopping_list_items WHERE product_id IN (${placeholders})`, ids);
+  await db.runAsync(`DELETE FROM products WHERE id IN (${placeholders})`, ids);
+}

@@ -1,11 +1,12 @@
 import { useCallback, useMemo, useRef, useState } from 'react';
-import { ActivityIndicator, StyleSheet, Text, View } from 'react-native';
+import { ActivityIndicator, Pressable, StyleSheet, Text, View } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
 import { useFocusEffect } from '@react-navigation/native';
 import { ScreenTitle } from '@components/ui/screen-title';
-import { Button, SearchInput } from '@components/ui';
+import { BottomSheet, Button, SearchInput } from '@components/ui';
 import { ProductList, type ProductListData } from '@features/products';
 import { ProductFormScreen } from '@features/products';
-import { createProduct, deleteProduct, getAllProducts, updateProduct } from '@lib/repositories/products';
+import { createProduct, deleteProduct, deleteProducts, getAllProducts, updateProduct } from '@lib/repositories/products';
 import { getAllStores } from '@lib/repositories/stores';
 import { useDebounce } from '@lib/hooks';
 import { useI18n } from '@lib/i18n';
@@ -39,6 +40,9 @@ export default function ProductosScreen() {
   const [searchQuery, setSearchQuery] = useState('');
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [selectedProduct, setSelectedProduct] = useState<Product | undefined>(undefined);
+  const [isSelectionMode, setIsSelectionMode] = useState(false);
+  const [selectedProductIds, setSelectedProductIds] = useState<Set<string>>(new Set());
+  const [isDeleteSelectedSheetOpen, setIsDeleteSelectedSheetOpen] = useState(false);
   const debouncedSearch = useDebounce(searchQuery, 300);
 
   const isFirstFocus = useRef(true);
@@ -56,6 +60,11 @@ export default function ProductosScreen() {
     }
   }, []);
 
+  function resetSelection() {
+    setIsSelectionMode(false);
+    setSelectedProductIds(new Set());
+  }
+
   useFocusEffect(
     useCallback(() => {
       if (isFirstFocus.current) {
@@ -64,12 +73,14 @@ export default function ProductosScreen() {
         return () => {
           setIsFormOpen(false);
           setSelectedProduct(undefined);
+          resetSelection();
         };
       }
       loadData();
       return () => {
         setIsFormOpen(false);
         setSelectedProduct(undefined);
+        resetSelection();
       };
     }, [loadData])
   );
@@ -109,6 +120,53 @@ export default function ProductosScreen() {
     await loadData();
   }
 
+  function handleProductPress(productId: string) {
+    if (isSelectionMode) {
+      toggleProductSelection(productId);
+    } else {
+      openEditForm(productId);
+    }
+  }
+
+  function handleProductLongPress(productId: string) {
+    if (!isSelectionMode) {
+      setIsSelectionMode(true);
+      setSelectedProductIds(new Set([productId]));
+    }
+  }
+
+  function toggleProductSelection(productId: string) {
+    setSelectedProductIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(productId)) {
+        next.delete(productId);
+        if (next.size === 0) {
+          setIsSelectionMode(false);
+        }
+      } else {
+        next.add(productId);
+      }
+      return next;
+    });
+  }
+
+  function handleExitSelectionMode() {
+    resetSelection();
+  }
+
+  function handleDeleteSelectedPress() {
+    setIsDeleteSelectedSheetOpen(true);
+  }
+
+  async function handleConfirmDeleteSelected() {
+    const ids = Array.from(selectedProductIds);
+    setIsDeleteSelectedSheetOpen(false);
+    setIsSelectionMode(false);
+    setSelectedProductIds(new Set());
+    await deleteProducts(ids);
+    await loadData();
+  }
+
   const filteredProducts: ProductListData[] = useMemo(() => {
     const mapped = products.map((p) => ({
       id: p.id,
@@ -138,15 +196,27 @@ export default function ProductosScreen() {
   return (
     <View style={[styles.container, { backgroundColor: colors.background }]}>
       <ScreenTitle>{t('tab.products')}</ScreenTitle>
-      <View style={styles.searchRow}>
-        <SearchInput value={searchQuery} onChangeText={setSearchQuery} placeholder={t('search.products')} />
-        <Button onPress={openAddForm}>
-          <Text style={styles.addButtonIcon}>+</Text>
-          <Text style={styles.addButtonText}>{t('products.add')}</Text>
-        </Button>
-      </View>
+      {isSelectionMode ? (
+        <View style={styles.selectionHeader}>
+          <Pressable onPress={handleExitSelectionMode} hitSlop={8} style={styles.selectionBackButton}>
+            <Ionicons name="close" size={24} color={colors.text} />
+          </Pressable>
+          <Text style={[styles.selectionCount, { color: colors.text }]}>{selectedProductIds.size} {t('common.selected')}</Text>
+          <Button variant="destructive" style={styles.deleteSelectedButton} onPress={handleDeleteSelectedPress}>
+            <Text style={[styles.destructiveButtonText, { color: colors.destructiveBorder }]}>{t('products.deleteSelected.confirm')} ({selectedProductIds.size})</Text>
+          </Button>
+        </View>
+      ) : (
+        <View style={styles.searchRow}>
+          <SearchInput value={searchQuery} onChangeText={setSearchQuery} placeholder={t('search.products')} />
+          <Button onPress={openAddForm}>
+            <Text style={styles.addButtonIcon}>+</Text>
+            <Text style={styles.addButtonText}>{t('products.add')}</Text>
+          </Button>
+        </View>
+      )}
       {filteredProducts.length > 0 ? (
-        <ProductList data={filteredProducts} onProductPress={openEditForm} />
+        <ProductList data={filteredProducts} selectedIds={selectedProductIds} isSelectionMode={isSelectionMode} onProductPress={handleProductPress} onProductLongPress={handleProductLongPress} />
       ) : searchQuery !== debouncedSearch ? (
         <View style={styles.emptyContainer}>
           <ActivityIndicator size="large" color={colors.text} />
@@ -156,6 +226,17 @@ export default function ProductosScreen() {
           <Text style={[styles.emptyText, { color: colors.textSecondary }]}>{products.length > 0 ? t('common.noResults') : t('products.empty')}</Text>
         </View>
       )}
+
+      <BottomSheet isOpen={isDeleteSelectedSheetOpen} onClose={() => setIsDeleteSelectedSheetOpen(false)}>
+        <Text style={[styles.deleteSheetTitle, { color: colors.text }]}>{t('products.deleteSelected.title')}</Text>
+        <Text style={[styles.deleteSheetMessage, { color: colors.textSecondary }]}>
+          {t('products.deleteSelected.confirmMessage', { count: selectedProductIds.size })}
+        </Text>
+        <Text style={[styles.deleteSheetWarning, { color: colors.textSecondary }]}>{t('products.deleteSelected.warning')}</Text>
+        <Button variant="destructive" style={styles.deleteSheetButton} onPress={handleConfirmDeleteSelected}>
+          <Text style={[styles.destructiveButtonText, { color: colors.destructiveBorder }]}>{t('products.deleteSelected.confirm')}</Text>
+        </Button>
+      </BottomSheet>
     </View>
   );
 }
@@ -195,5 +276,50 @@ const styles = StyleSheet.create({
   emptyText: {
     fontSize: 16,
     textAlign: 'center',
+  },
+  selectionHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 16,
+  },
+  selectionBackButton: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  selectionCount: {
+    flex: 1,
+    fontSize: 17,
+    fontWeight: '600',
+    marginLeft: 8,
+  },
+  deleteSelectedButton: {
+    paddingHorizontal: 12,
+  },
+  destructiveButtonText: {
+    fontSize: 15,
+    fontWeight: '600',
+  },
+  deleteSheetTitle: {
+    fontSize: 17,
+    fontWeight: '700',
+    marginBottom: 8,
+    textAlign: 'center',
+  },
+  deleteSheetMessage: {
+    fontSize: 15,
+    textAlign: 'center',
+    marginBottom: 8,
+  },
+  deleteSheetWarning: {
+    fontSize: 13,
+    textAlign: 'center',
+    marginBottom: 24,
+    lineHeight: 18,
+  },
+  deleteSheetButton: {
+    justifyContent: 'center',
   },
 });
