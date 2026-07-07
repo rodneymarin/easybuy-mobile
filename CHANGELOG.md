@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [1.2.0](https://github.com/rodneymarin/easybuy-mobile/compare/v1.1.3...v1.2.0) (2026-07-07)
+
+
+### Bug Fixes
+
+* espacios y botones ([8905b30](https://github.com/rodneymarin/easybuy-mobile/commit/8905b30deb8b2d3dff511a46fe4142022aef13e2))
+
 ### [1.1.3](https://github.com/rodneymarin/easybuy-mobile/compare/v1.1.2...v1.1.3) (2026-07-07)
 
 
