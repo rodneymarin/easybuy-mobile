@@ -32,7 +32,7 @@ type ProductsStackParamList = {
 
 type StoresStackParamList = {
   StoreList: undefined;
-  StoreForm: { store?: { id: string; description: string } };
+  StoreForm: { store?: { id: string; description: string; color?: number } };
 };
 
 const ListsStack = createNativeStackNavigator<ListsStackParamList>();

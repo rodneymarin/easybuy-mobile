@@ -1,4 +1,5 @@
 export interface Store {
 	id: string;
 	description: string;
+	color: number;
 }

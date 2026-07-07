@@ -1,4 +1,4 @@
-import { useCallback, useMemo, useState } from 'react';
+import { useCallback, useMemo, useRef, useState } from 'react';
 import { ActivityIndicator, Modal as RNModal, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import * as Clipboard from 'expo-clipboard';
 import { Ionicons } from '@expo/vector-icons';
@@ -22,6 +22,7 @@ interface ItemDisplayData {
   unitLabel: string;
   storeId?: string;
   storeDescription?: string;
+  storeColor?: number;
   price: number;
   isDone: boolean;
 }
@@ -92,6 +93,14 @@ export default function ShoppingListDetailScreen() {
     return map;
   }, [products]);
 
+  const storeColorMap = useMemo(() => {
+    const map = new Map<string, number>();
+    for (const store of stores) {
+      map.set(store.id, store.color);
+    }
+    return map;
+  }, [stores]);
+
   const items: ItemDisplayData[] = useMemo(() => {
     if (!shoppingList) return [];
     return shoppingList.items.map((item) => {
@@ -110,11 +119,12 @@ export default function ShoppingListDetailScreen() {
         unitLabel,
         storeId: item.storeId,
         storeDescription: storeDesc,
+        storeColor: item.storeId ? storeColorMap.get(item.storeId) : undefined,
         price,
         isDone: item.done ?? false,
       };
     });
-  }, [shoppingList, productMap, storeMap, t]);
+  }, [shoppingList, productMap, storeMap, storeColorMap, t]);
 
   const hasStorelessItems = useMemo(() => items.some((item) => !item.storeId), [items]);
   const hasStoredItems = useMemo(() => items.some((item) => item.storeId), [items]);
@@ -128,6 +138,62 @@ export default function ShoppingListDetailScreen() {
   }, [items, stores]);
 
   const shouldShowFilters = uniqueStores.length > 1 || (hasStorelessItems && hasStoredItems);
+
+  const [filterBarWidth, setFilterBarWidth] = useState(0);
+  const [isMoreFilterOpen, setIsMoreFilterOpen] = useState(false);
+
+  const EST_CHAR_WIDTH = 8.5;
+  const MORE_TOGGLE_WIDTH = 40;
+
+  const sortedStores = useMemo(() => {
+    return [...uniqueStores].sort((a, b) => a.description.localeCompare(b.description));
+  }, [uniqueStores]);
+
+  const { visibleStores, hiddenStores } = useMemo(() => {
+    if (!filterBarWidth || sortedStores.length === 0) {
+      return { visibleStores: sortedStores, hiddenStores: [] as typeof sortedStores };
+    }
+    const allLabel = t('listDetail.allStores');
+    const allWidth = 28 + allLabel.length * EST_CHAR_WIDTH;
+    let remaining = filterBarWidth - 16 - allWidth - 6;
+    const visible: typeof sortedStores = [];
+    const hidden: typeof sortedStores = [];
+
+    for (const store of sortedStores) {
+      const w = 28 + store.description.length * EST_CHAR_WIDTH;
+      if (w + MORE_TOGGLE_WIDTH + 6 <= remaining) {
+        visible.push(store);
+        remaining -= w + 6;
+      } else {
+        hidden.push(store);
+      }
+    }
+
+    if (activeStoreId && hidden.some((s) => s.id === activeStoreId)) {
+      const promoted = hidden.find((s) => s.id === activeStoreId)!;
+      const newHidden = hidden.filter((s) => s.id !== activeStoreId);
+      const promotedWidth = 28 + promoted.description.length * EST_CHAR_WIDTH;
+
+      let visRemaining = filterBarWidth - 16 - allWidth - 6 - promotedWidth - 6;
+      const wouldFit: typeof sortedStores = [promoted];
+      for (const s of visible) {
+        const w = 28 + s.description.length * EST_CHAR_WIDTH;
+        if (w + MORE_TOGGLE_WIDTH + 6 <= visRemaining) {
+          wouldFit.push(s);
+          visRemaining -= w + 6;
+        } else {
+          newHidden.push(s);
+        }
+      }
+      return { visibleStores: wouldFit, hiddenStores: newHidden };
+    }
+
+    return { visibleStores: visible, hiddenStores: hidden };
+  }, [sortedStores, filterBarWidth, activeStoreId, t]);
+
+  function handleFilterBarLayout(e: { nativeEvent: { layout: { width: number } } }) {
+    setFilterBarWidth(e.nativeEvent.layout.width);
+  }
 
   const filteredItems = useMemo(() => {
     if (!activeStoreId) return items;
@@ -378,13 +444,37 @@ export default function ShoppingListDetailScreen() {
       )}
 
       {shouldShowFilters && (
-        <View style={[styles.filterContainer, isSelectionMode && styles.filterContainerMuted]}>
+        <View style={[styles.filterContainer, isSelectionMode && styles.filterContainerMuted]} onLayout={handleFilterBarLayout}>
           <Toggle label={t('listDetail.allStores')} isSelected={activeStoreId === null} onPress={() => handleSelectStore(null)} disabled={isSelectionMode} />
-          {uniqueStores.map((store) => (
+          {visibleStores.map((store) => (
             <Toggle key={store.id} label={store.description} isSelected={activeStoreId === store.id} onPress={() => handleSelectStore(store.id)} disabled={isSelectionMode} />
           ))}
+          {hiddenStores.length > 0 && (
+            <Pressable style={[styles.moreToggle, { borderColor: colors.border }]} onPress={() => setIsMoreFilterOpen(true)} disabled={isSelectionMode}>
+              <Ionicons name="chevron-down" size={16} color={isSelectionMode ? colors.textSecondary : colors.text} />
+            </Pressable>
+          )}
         </View>
       )}
+
+      <RNModal visible={isMoreFilterOpen} transparent animationType="none" onRequestClose={() => setIsMoreFilterOpen(false)}>
+        <FadeIn style={styles.filterDropdownBackdrop}><Pressable style={styles.filterDropdownBackdropInner} onPress={() => setIsMoreFilterOpen(false)}>
+          <View style={[styles.filterDropdownCard, { backgroundColor: colors.cardBackground }]}>
+            {hiddenStores.map((store) => (
+              <Pressable key={store.id} style={styles.filterDropdownItem} onPress={() => { setIsMoreFilterOpen(false); handleSelectStore(store.id); }}>
+                <Text style={[styles.filterDropdownItemText, { color: colors.text }, activeStoreId === store.id && styles.filterDropdownItemTextActive]}>{store.description}</Text>
+                {activeStoreId === store.id && <Ionicons name="checkmark" size={18} color={colors.primary} />}
+              </Pressable>
+            ))}
+            <View style={[styles.filterDropdownDivider, { backgroundColor: colors.border }]} />
+            <Pressable style={styles.filterDropdownItem} onPress={() => { setIsMoreFilterOpen(false); handleSelectStore(null); }}>
+              <Text style={[styles.filterDropdownItemText, { color: colors.text }, activeStoreId === null && styles.filterDropdownItemTextActive]}>{t('listDetail.allStores')}</Text>
+              {activeStoreId === null && <Ionicons name="checkmark" size={18} color={colors.primary} />}
+            </Pressable>
+          </View>
+        </Pressable>
+        </FadeIn>
+      </RNModal>
 
       <ScrollView style={styles.scrollBody} contentContainerStyle={styles.scrollContent}>
         {pendingItems.length > 0 && (
@@ -395,7 +485,7 @@ export default function ShoppingListDetailScreen() {
                 <View style={styles.itemTags}>
                   {!activeStoreId ? (
                     item.storeDescription ? (
-                      <Tag size="sm" label={item.storeDescription} />
+                      <Tag size="sm" label={item.storeDescription} colorIndex={item.storeColor} />
                     ) : (
                       <Text style={[styles.noStoreTag, { color: noStoreColor, borderColor: colors.border }]}>{t('listDetail.noStore')}</Text>
                     )
@@ -431,7 +521,7 @@ export default function ShoppingListDetailScreen() {
                   <View style={styles.itemTags}>
                     {!activeStoreId ? (
                       item.storeDescription ? (
-                        <Tag size="sm" label={item.storeDescription} />
+                        <Tag size="sm" label={item.storeDescription} colorIndex={item.storeColor} />
                       ) : (
                         <Text style={[styles.noStoreTag, { color: noStoreColor, borderColor: colors.border }]}>{t('listDetail.noStore')}</Text>
                       )
@@ -525,7 +615,7 @@ const styles = StyleSheet.create({
   },
   filterContainer: {
     flexDirection: 'row',
-    flexWrap: 'wrap',
+    flexWrap: 'nowrap',
     paddingHorizontal: 16,
     gap: 6,
     paddingTop: 20,
@@ -533,6 +623,52 @@ const styles = StyleSheet.create({
   },
   filterContainerMuted: {
     opacity: 0.5,
+  },
+  moreToggle: {
+    width: 42,
+    height: 32,
+    borderRadius: 16,
+    borderWidth: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  filterDropdownBackdrop: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: 'rgba(0,0,0,0.3)',
+  },
+  filterDropdownBackdropInner: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  filterDropdownCard: {
+    borderRadius: 14,
+    paddingVertical: 4,
+    minWidth: 220,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.15,
+    shadowRadius: 12,
+    elevation: 8,
+  },
+  filterDropdownItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingVertical: 14,
+    paddingHorizontal: 16,
+  },
+  filterDropdownItemText: {
+    fontSize: 16,
+  },
+  filterDropdownItemTextActive: {
+    fontWeight: '700',
+  },
+  filterDropdownDivider: {
+    height: 1,
+    marginHorizontal: 16,
   },
   backButton: {
     position: 'absolute',

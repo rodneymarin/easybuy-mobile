@@ -4,6 +4,7 @@ import { StoreListItem } from '@features/stores/components';
 export interface StoreListData {
   id: string;
   description: string;
+  color: number;
 }
 
 interface StoreListProps {
@@ -18,7 +19,7 @@ export default function StoreList({ data, selectedIds, isSelectionMode, onStoreP
   return (
     <FlatList data={data} keyExtractor={(item) => item.id} contentContainerStyle={styles.list}
       renderItem={({ item }) => (
-        <StoreListItem id={item.id} description={item.description} isSelected={selectedIds?.has(item.id)} isSelectionMode={isSelectionMode} onPress={onStorePress} onLongPress={onStoreLongPress} />
+        <StoreListItem id={item.id} description={item.description} color={item.color} isSelected={selectedIds?.has(item.id)} isSelectionMode={isSelectionMode} onPress={onStorePress} onLongPress={onStoreLongPress ? () => onStoreLongPress(item.id) : undefined} />
       )}
     />
   );

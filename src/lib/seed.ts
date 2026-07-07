@@ -1,8 +1,8 @@
 import type { SQLiteDatabase } from 'expo-sqlite';
 
 const STORES = [
-  { id: "store-demo", description: "Demo Store" },
-  { id: "store-test", description: "Test Store" },
+  { id: "store-demo", description: "Demo Store", color: "0" },
+  { id: "store-test", description: "Test Store", color: "1" },
 ] as const;
 
 const PRODUCTS = [
@@ -124,9 +124,10 @@ export async function seedIfEmpty(database: SQLiteDatabase): Promise<void> {
   if (row && row.count > 0) return;
 
   for (const store of STORES) {
-    await database.runAsync("INSERT INTO stores (id, description) VALUES (?, ?)", [
+    await database.runAsync("INSERT INTO stores (id, description, color) VALUES (?, ?, ?)", [
       store.id,
       store.description,
+      store.color,
     ]);
   }
 

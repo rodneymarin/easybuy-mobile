@@ -4,6 +4,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { useRoute, useNavigation } from '@react-navigation/native';
 import { Button, Input, BottomSheet, ScreenTitle } from '@components/ui';
 import { createStore, updateStore, deleteStore } from '@lib/repositories/stores';
+import { STORE_COLORS, getStoreColor } from '@lib/store-colors';
 import { useI18n } from '@lib/i18n';
 import { useTheme } from '@lib/theme';
 
@@ -24,12 +25,13 @@ function generateUUID(): string {
 }
 
 export default function StoreFormScreen() {
-  const route = useRoute<{ key: string; name: string; params: { store?: { id: string; description: string } } }>();
+  const route = useRoute<{ key: string; name: string; params: { store?: { id: string; description: string; color?: number } } }>();
   const navigation = useNavigation();
   const { store } = route.params;
-  const { colors } = useTheme();
+  const { colors, isDark } = useTheme();
   const { t } = useI18n();
   const [description, setDescription] = useState('');
+  const [selectedColor, setSelectedColor] = useState(0);
   const [isDeleteSheetOpen, setIsDeleteSheetOpen] = useState(false);
 
   const isEditMode = store !== undefined;
@@ -37,15 +39,18 @@ export default function StoreFormScreen() {
 
   useEffect(() => {
     setDescription(store?.description ?? '');
+    if (store?.color !== undefined) {
+      setSelectedColor(store.color);
+    }
   }, [store]);
 
   async function handleSave() {
     if (!isFormValid) return;
     Keyboard.dismiss();
     if (store) {
-      await updateStore(store.id, description.trim());
+      await updateStore(store.id, description.trim(), selectedColor);
     } else {
-      await createStore(generateUUID(), description.trim());
+      await createStore(generateUUID(), description.trim(), selectedColor);
     }
     navigation.goBack();
   }
@@ -79,6 +84,13 @@ export default function StoreFormScreen() {
 
       <View style={styles.body}>
         <Input value={description} onChangeText={setDescription} placeholder={t('stores.addModal.placeholder')} autoFocus returnKeyType="done" onSubmitEditing={handleSave} />
+
+        <Text style={[styles.colorLabel, { color: colors.textSecondary }]}>{t('stores.colorLabel')}</Text>
+        <View style={styles.colorRow}>
+          {STORE_COLORS.map((entry, index) => (
+            <Pressable key={index} style={[styles.colorSwatch, { backgroundColor: getStoreColor(index, isDark) }, selectedColor === index && styles.colorSwatchSelected, selectedColor === index && { borderColor: colors.text }]} onPress={() => setSelectedColor(index)} hitSlop={6} />
+          ))}
+        </View>
       </View>
 
       <View style={[styles.footer, { borderTopColor: colors.border }]}>
@@ -130,6 +142,27 @@ const styles = StyleSheet.create({
     flex: 1,
     padding: 16,
   },
+  colorLabel: {
+    fontSize: 13,
+    fontWeight: '600',
+    marginTop: 20,
+    marginBottom: 10,
+    textTransform: 'uppercase',
+    letterSpacing: 1,
+  },
+  colorRow: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 12,
+  },
+  colorSwatch: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+  },
+  colorSwatchSelected: {
+    borderWidth: 3,
+  },
   footer: {
     padding: 16,
     gap: 8,
@@ -165,8 +198,8 @@ const styles = StyleSheet.create({
   deleteSheetWarning: {
     fontSize: 13,
     textAlign: 'center',
-    lineHeight: 18,
     marginBottom: 20,
+    lineHeight: 18,
   },
   deleteSheetButton: {
     justifyContent: 'center',

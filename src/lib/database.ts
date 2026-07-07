@@ -1,6 +1,6 @@
 import * as SQLite from 'expo-sqlite';
 import type { SQLiteDatabase } from 'expo-sqlite';
-import { seedIfEmpty } from './seed';
+import { seedIfEmpty } from '@lib/seed';
 
 let db: SQLiteDatabase | null = null;
 let initPromise: Promise<SQLiteDatabase> | null = null;
@@ -23,7 +23,8 @@ async function runMigrations(database: SQLiteDatabase): Promise<void> {
   await database.execAsync(`
     CREATE TABLE IF NOT EXISTS stores (
       id TEXT PRIMARY KEY,
-      description TEXT NOT NULL
+      description TEXT NOT NULL,
+      color TEXT NOT NULL DEFAULT '0'
     );
 
     CREATE TABLE IF NOT EXISTS products (
@@ -63,4 +64,10 @@ async function runMigrations(database: SQLiteDatabase): Promise<void> {
       value TEXT NOT NULL
     );
   `);
+
+  try {
+    await database.execAsync("ALTER TABLE stores ADD COLUMN color TEXT NOT NULL DEFAULT '0'");
+  } catch {
+    // Column already exists — ignore
+  }
 }

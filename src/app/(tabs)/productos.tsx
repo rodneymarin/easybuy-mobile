@@ -54,7 +54,7 @@ export default function ProductosScreen() {
     try {
       const [allProducts, allStores] = await Promise.all([getAllProducts(), getAllStores()]);
       setProducts(allProducts);
-      setStores(allStores.map((s) => ({ id: s.id, description: s.description })));
+      setStores(allStores.map((s) => ({ id: s.id, description: s.description, color: s.color })));
     } catch (error) {
       console.error("Failed to load data:", error);
     } finally {

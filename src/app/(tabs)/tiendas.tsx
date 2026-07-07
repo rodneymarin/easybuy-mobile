@@ -51,6 +51,7 @@ export default function TiendasScreen() {
       const mapped = allStores.map((s) => ({
         id: s.id,
         description: s.description,
+        color: s.color,
       }));
       setStores(mapped);
     } catch (error) {
@@ -83,7 +84,7 @@ export default function TiendasScreen() {
   function openEditForm(storeId: string) {
     const store = stores.find((s) => s.id === storeId);
     if (store) {
-      navigation.navigate('StoreForm', { store });
+      navigation.navigate('StoreForm', { store: { id: store.id, description: store.description, color: store.color } });
     }
   }
 

@@ -2,21 +2,24 @@ import { StyleSheet, Text, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { PressableCard } from '@components/ui/pressable-card';
 import { useTheme } from '@lib/theme';
+import { getStoreColor } from '@lib/store-colors';
 
 interface StoreListItemProps {
   id: string;
   description: string;
+  color: number;
   isSelected?: boolean;
   isSelectionMode?: boolean;
   onPress: (id: string) => void;
   onLongPress?: (id: string) => void;
 }
 
-export default function StoreListItem({ id, description, isSelected, isSelectionMode, onPress, onLongPress }: StoreListItemProps) {
-  const { colors } = useTheme();
+export default function StoreListItem({ id, description, color, isSelected, isSelectionMode, onPress, onLongPress }: StoreListItemProps) {
+  const { colors, isDark } = useTheme();
+  const resolvedColor = getStoreColor(color, isDark);
 
   return (
-    <PressableCard style={[styles.card, { borderColor: colors.border }]} onPress={() => onPress(id)} onLongPress={onLongPress ? () => onLongPress(id) : undefined}>
+    <PressableCard style={[styles.card, { borderColor: colors.border, borderRightColor: resolvedColor, borderRightWidth: 6 }]} onPress={() => onPress(id)} onLongPress={onLongPress ? () => onLongPress(id) : undefined}>
       <View style={styles.cardContent}>
         {isSelectionMode && (
           <>
