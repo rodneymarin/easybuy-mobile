@@ -1,5 +1,6 @@
 import { useCallback, useMemo, useState } from 'react';
 import { ActivityIndicator, Modal as RNModal, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import * as Clipboard from 'expo-clipboard';
 import { Ionicons } from '@expo/vector-icons';
 import { useRoute, useNavigation, useFocusEffect } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
@@ -295,6 +296,19 @@ export default function ShoppingListDetailScreen() {
     navigation.navigate('ShoppingListItemForm', { item: undefined, shoppingListId, products, stores });
   }
 
+  async function handleCopyList() {
+    if (!shoppingList) return;
+    const lines: string[] = [
+      shoppingList.title,
+      `Total: ${globalTotal.toFixed(2)}`,
+      '',
+      ...items.map((item) => `${item.productName} ... ${item.quantity} ${item.unitLabel}`),
+    ];
+    const text = lines.join('\n');
+    await Clipboard.setStringAsync(text);
+    setIsMenuOpen(false);
+  }
+
   if (isLoading) {
     return (
       <View style={[styles.container, { backgroundColor: colors.background }]}>
@@ -356,11 +370,9 @@ export default function ShoppingListDetailScreen() {
           <View style={styles.totalsFlex}>
             <ShoppingListTotals globalTotal={globalTotal} cartTotal={cartTotal} onAddPress={handleAddPress} />
           </View>
-          {doneItems.length > 0 && (
-            <Pressable onPress={() => setIsMenuOpen(true)} style={styles.menuButton} hitSlop={8}>
-              <Ionicons name="ellipsis-vertical" size={20} color={colors.text} />
-            </Pressable>
-          )}
+          <Pressable onPress={() => setIsMenuOpen(true)} style={[styles.menuButton, items.length === 0 && styles.menuButtonDisabled]} hitSlop={8} disabled={items.length === 0}>
+            <Ionicons name="ellipsis-vertical" size={20} color={items.length === 0 ? colors.textSecondary : colors.text} />
+          </Pressable>
         </View>
       )}
 
@@ -431,6 +443,9 @@ export default function ShoppingListDetailScreen() {
       <RNModal visible={isMenuOpen} transparent animationType="none" onRequestClose={() => setIsMenuOpen(false)}>
         <FadeIn style={styles.menuBackdrop}><Pressable style={styles.menuBackdropInner} onPress={() => setIsMenuOpen(false)}>
           <View style={[styles.menuCard, { backgroundColor: colors.cardBackground }]}>
+            <Pressable style={styles.menuItem} onPress={handleCopyList}>
+              <Text style={[styles.menuItemText, { color: colors.text }]}>{t('listDetail.copyList')}</Text>
+            </Pressable>
             <Pressable style={styles.menuItem} onPress={() => { setIsMenuOpen(false); handleUncheckAll(); }}>
               <Text style={[styles.menuItemText, { color: colors.text }]}>{t('listDetail.menuUncheckAll')}</Text>
             </Pressable>
@@ -570,6 +585,9 @@ const styles = StyleSheet.create({
   menuButton: {
     padding: 8,
     marginRight: 12,
+  },
+  menuButtonDisabled: {
+    opacity: 0.4,
   },
   menuBackdrop: {
     flex: 1,
