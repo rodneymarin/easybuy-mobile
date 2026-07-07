@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [1.2.1](https://github.com/rodneymarin/easybuy-mobile/compare/v1.2.0...v1.2.1) (2026-07-07)
+
+
+### Bug Fixes
+
+* agregado "carton" ([e6a9b5c](https://github.com/rodneymarin/easybuy-mobile/commit/e6a9b5cf524244b2b0ba5180486bcdeee147415f))
+
 ## [1.2.0](https://github.com/rodneymarin/easybuy-mobile/compare/v1.1.3...v1.2.0) (2026-07-07)
 
 
