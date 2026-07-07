@@ -1,5 +1,6 @@
 import { useCallback, useMemo, useRef, useState } from 'react';
 import { ActivityIndicator, StyleSheet, Text, View } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
 import { useFocusEffect, useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { ScreenTitle } from '@components/ui/screen-title';
@@ -136,10 +137,9 @@ export default function InicioScreen() {
       <ScreenTitle>{t('tab.lists')}</ScreenTitle>
       <View style={styles.searchRow}>
         <SearchInput value={searchQuery} onChangeText={setSearchQuery} placeholder={t('search.lists')} />
-        <Button onPress={openCreateSheet}>
-          <Text style={styles.addButtonIcon}>+</Text>
-          <Text style={styles.addButtonText}>{t('lists.add')}</Text>
-        </Button>
+        <Button onPress={openCreateSheet} size="icon">
+            <Ionicons name="add" size={20} color="#fff" />
+          </Button>
       </View>
       {filteredLists.length > 0 ? (
         <ShoppingList data={filteredLists} onListPress={openDetail} onRemoveList={handleRemovePress} />
@@ -182,16 +182,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginHorizontal: 16,
     gap: 10,
-  },
-  addButtonIcon: {
-    fontSize: 20,
-    color: '#fff',
-    lineHeight: 22,
-  },
-  addButtonText: {
-    fontSize: 15,
-    color: '#fff',
-    fontWeight: '600',
   },
   emptyContainer: {
     flex: 1,

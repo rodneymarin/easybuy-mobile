@@ -3,11 +3,13 @@ import { Animated, type GestureResponderEvent, Pressable, type PressableProps, S
 import { useTheme } from '@lib/theme';
 
 type ButtonVariant = 'primary' | 'secondary' | 'destructive';
+type ButtonSize = 'default' | 'icon';
 
 interface ButtonProps extends Omit<PressableProps, 'style'> {
   children: ReactNode;
   style?: StyleProp<ViewStyle>;
   variant?: ButtonVariant;
+  size?: ButtonSize;
 }
 
 function darkenColor(hex: string, amount: number): string {
@@ -24,7 +26,7 @@ function darkenColor(hex: string, amount: number): string {
 
 const AnimatedPressable = Animated.createAnimatedComponent(Pressable);
 
-export default function Button({ children, onPressIn, onPressOut, style, variant = 'primary', disabled, ...props }: ButtonProps) {
+export default function Button({ children, onPressIn, onPressOut, style, variant = 'primary', size = 'default', disabled, ...props }: ButtonProps) {
   const { colors } = useTheme();
   const darkAnim = useRef(new Animated.Value(0)).current;
 
@@ -56,7 +58,7 @@ export default function Button({ children, onPressIn, onPressOut, style, variant
   }
 
   return (
-    <AnimatedPressable onPressIn={handlePressIn} onPressOut={handlePressOut} disabled={disabled} {...props} style={[styles.button, { backgroundColor, borderColor, borderWidth, opacity: disabled ? 0.35 : 1 }, style]}>
+    <AnimatedPressable onPressIn={handlePressIn} onPressOut={handlePressOut} disabled={disabled} {...props} style={[styles.button, size === 'icon' && styles.icon, { backgroundColor, borderColor, borderWidth, opacity: disabled ? 0.35 : 1 }, style]}>
       {children}
     </AnimatedPressable>
   );
@@ -70,5 +72,10 @@ const styles = StyleSheet.create({
     paddingHorizontal: 14,
     height: 44,
     gap: 4,
+  },
+  icon: {
+    width: 44,
+    paddingHorizontal: 0,
+    justifyContent: 'center',
   },
 });

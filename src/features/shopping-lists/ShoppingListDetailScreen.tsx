@@ -334,15 +334,6 @@ export default function ShoppingListDetailScreen() {
         </Pressable>
       </View>
 
-      {shouldShowFilters && (
-        <View style={[styles.filterContainer, isSelectionMode && styles.filterContainerMuted]}>
-          <Toggle label={t('listDetail.allStores')} isSelected={activeStoreId === null} onPress={() => handleSelectStore(null)} disabled={isSelectionMode} />
-          {uniqueStores.map((store) => (
-            <Toggle key={store.id} label={store.description} isSelected={activeStoreId === store.id} onPress={() => handleSelectStore(store.id)} disabled={isSelectionMode} />
-          ))}
-        </View>
-      )}
-
       {isSelectionMode ? (
         <View style={styles.selectionHeader}>
           <Pressable onPress={resetSelection} hitSlop={8} style={styles.selectionBackButton}>
@@ -370,6 +361,15 @@ export default function ShoppingListDetailScreen() {
               <Ionicons name="ellipsis-vertical" size={20} color={colors.text} />
             </Pressable>
           )}
+        </View>
+      )}
+
+      {shouldShowFilters && (
+        <View style={[styles.filterContainer, isSelectionMode && styles.filterContainerMuted]}>
+          <Toggle label={t('listDetail.allStores')} isSelected={activeStoreId === null} onPress={() => handleSelectStore(null)} disabled={isSelectionMode} />
+          {uniqueStores.map((store) => (
+            <Toggle key={store.id} label={store.description} isSelected={activeStoreId === store.id} onPress={() => handleSelectStore(store.id)} disabled={isSelectionMode} />
+          ))}
         </View>
       )}
 
@@ -500,7 +500,8 @@ const styles = StyleSheet.create({
     flexWrap: 'wrap',
     paddingHorizontal: 16,
     gap: 6,
-    paddingBottom: 8,
+    paddingTop: 20,
+    paddingBottom: 0,
   },
   filterContainerMuted: {
     opacity: 0.5,
@@ -528,6 +529,7 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   scrollContent: {
+    paddingTop: 16,
     paddingBottom: 24,
   },
   emptyText: {

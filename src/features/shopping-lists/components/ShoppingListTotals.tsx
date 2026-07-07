@@ -26,9 +26,8 @@ export default function ShoppingListTotals({ globalTotal, cartTotal, onAddPress 
           <Text style={[styles.cartText, { color: colors.textSecondary }]}>${cartTotal.toFixed(2)}</Text>
         </View>
       </View>
-      <Button onPress={onAddPress}>
+      <Button onPress={onAddPress} size="icon">
         <Ionicons name="add" size={20} color="#fff" />
-        <Text style={styles.addButtonText}>{t('lists.add')}</Text>
       </Button>
     </View>
   );
@@ -40,7 +39,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'space-between',
     marginHorizontal: 16,
-    paddingVertical: 12,
     paddingHorizontal: 4,
   },
   left: {
@@ -59,9 +57,5 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontWeight: '500',
   },
-  addButtonText: {
-    fontSize: 15,
-    color: '#fff',
-    fontWeight: '600',
-  },
+
 });

@@ -130,7 +130,7 @@ export default function ShoppingListItemFormScreen() {
         <Text style={[styles.fieldLabel, { color: colors.text }]}>{t('listItem.productLabel')}</Text>
         <View style={styles.productRow}>
           <Dropdown style={styles.productDropdown} value={selectedProductId} options={productOptions} onSelect={setSelectedProductId} placeholder={t('listItem.productPlaceholder')} />
-          <Button variant="secondary" onPress={() => setIsProductSheetOpen(true)} style={styles.addProductButton}>
+          <Button variant="secondary" onPress={() => setIsProductSheetOpen(true)} size="icon">
             <Ionicons name="add" size={20} color={colors.text} />
           </Button>
         </View>
@@ -220,14 +220,6 @@ const styles = StyleSheet.create({
   },
   productDropdown: {
     flex: 1,
-  },
-  addProductButton: {
-    width: 44,
-    height: 44,
-    borderRadius: 10,
-    justifyContent: 'center',
-    alignItems: 'center',
-    paddingHorizontal: 0,
   },
   quantityRow: {
     flexDirection: 'row',

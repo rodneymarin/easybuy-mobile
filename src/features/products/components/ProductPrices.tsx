@@ -101,7 +101,8 @@ export default function ProductPrices({ prices, stores, onPricesChange }: Produc
       ) : (
         !allStoresUsed && stores.length > 0 && (
           <Button variant="secondary" style={styles.addPriceButton} onPress={handleOpenAddPrice}>
-            <Text style={[styles.addPriceButtonText, { color: colors.text }]}>+ {t('products.addPrice')}</Text>
+            <Ionicons name="add" size={16} color={colors.text} />
+            <Text style={[styles.addPriceButtonText, { color: colors.text }]}>{t('products.addPrice')}</Text>
           </Button>
         )
       )}

@@ -169,9 +169,8 @@ export default function TiendasScreen() {
       ) : (
         <View style={styles.searchRow}>
           <SearchInput value={searchQuery} onChangeText={setSearchQuery} placeholder={t('search.stores')} />
-          <Button onPress={openAddForm}>
-            <Text style={styles.addButtonIcon}>+</Text>
-            <Text style={styles.addButtonText}>{t('stores.add')}</Text>
+          <Button onPress={openAddForm} size="icon">
+            <Ionicons name="add" size={20} color="#fff" />
           </Button>
         </View>
       )}
@@ -216,16 +215,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginHorizontal: 16,
     gap: 10,
-  },
-  addButtonIcon: {
-    fontSize: 20,
-    color: '#fff',
-    lineHeight: 22,
-  },
-  addButtonText: {
-    fontSize: 15,
-    color: '#fff',
-    fontWeight: '600',
   },
   emptyContainer: {
     flex: 1,
