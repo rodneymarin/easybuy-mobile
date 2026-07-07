@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { FlatList, Modal as RNModal, Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { Button } from '@components/ui';
+import { Button, FadeIn } from '@components/ui';
 import { useI18n } from '@lib/i18n';
 import { useTheme } from '@lib/theme';
 import type { Price } from '@models/price.model';
@@ -93,7 +93,7 @@ export default function ProductPrices({ prices, stores, onPricesChange }: Produc
             <Text style={[styles.storeSelectorText, { color: newStoreId ? colors.text : colors.placeholderText }]}>
               {selectedStore ? selectedStore.description : t('products.addModal.storePlaceholder')}
             </Text>
-            <Text style={[styles.dropdownArrow, { color: colors.text }]}>▼</Text>
+            <Ionicons name="chevron-down" size={14} color={colors.text} />
           </Pressable>
           <TextInput value={newPriceText} onChangeText={(text) => { const filtered = text.replace(/[^0-9.]/g, ''); if (filtered === '' || /^\d*\.?\d*$/.test(filtered)) setNewPriceText(filtered); }} placeholder={t('products.addModal.pricePlaceholder')} keyboardType="decimal-pad" placeholderTextColor={colors.placeholderText} style={[styles.priceInput, { color: colors.text, borderColor: colors.border, backgroundColor: colors.background }]} />
           <View style={styles.addActions}>
@@ -121,8 +121,8 @@ export default function ProductPrices({ prices, stores, onPricesChange }: Produc
         <Text style={[styles.noStoresText, { color: colors.textSecondary }]}>{t('products.noStoresAvailable')}</Text>
       )}
 
-      <RNModal visible={isStoreSelectorOpen} transparent animationType="fade" onRequestClose={() => setIsStoreSelectorOpen(false)}>
-        <Pressable style={styles.backdrop} onPress={() => setIsStoreSelectorOpen(false)}>
+      <RNModal visible={isStoreSelectorOpen} transparent animationType="none" onRequestClose={() => setIsStoreSelectorOpen(false)}>
+        <FadeIn style={styles.backdrop}><Pressable style={styles.backdropInner} onPress={() => setIsStoreSelectorOpen(false)}>
           <View style={[styles.selectorModal, { backgroundColor: colors.cardBackground }]}>
             <Text style={[styles.selectorTitle, { color: colors.text }]}>{t('products.addModal.storePlaceholder')}</Text>
             {availableStores.length > 0 ? (
@@ -138,6 +138,7 @@ export default function ProductPrices({ prices, stores, onPricesChange }: Produc
             )}
           </View>
         </Pressable>
+        </FadeIn>
       </RNModal>
     </View>
   );
@@ -199,7 +200,6 @@ const styles = StyleSheet.create({
     fontSize: 15,
   },
   dropdownArrow: {
-    fontSize: 10,
     marginLeft: 4,
   },
   priceInput: {
@@ -246,6 +246,9 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(0,0,0,0.5)',
     justifyContent: 'center',
     paddingHorizontal: 32,
+  },
+  backdropInner: {
+    flex: 1,
   },
   selectorModal: {
     borderRadius: 16,

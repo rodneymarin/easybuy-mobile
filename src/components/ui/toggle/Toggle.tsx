@@ -5,14 +5,34 @@ interface ToggleProps {
   label: string;
   isSelected: boolean;
   onPress: () => void;
+  disabled?: boolean;
 }
 
-export default function Toggle({ label, isSelected, onPress }: ToggleProps) {
+export default function Toggle({ label, isSelected, onPress, disabled }: ToggleProps) {
   const { colors } = useTheme();
 
+  const dynamicStyle = {
+    backgroundColor: 'transparent',
+    borderColor: colors.border,
+    borderWidth: 1,
+  };
+
+  if (isSelected) {
+    dynamicStyle.backgroundColor = disabled ? colors.textSecondary : colors.primary;
+    dynamicStyle.borderWidth = 0;
+  } else if (disabled) {
+    dynamicStyle.borderColor = colors.border;
+  }
+
+  const labelColor = (() => {
+    if (isSelected) return '#fff';
+    if (disabled) return colors.textSecondary;
+    return colors.text;
+  })();
+
   return (
-    <Pressable onPress={onPress} style={[styles.toggle, { backgroundColor: isSelected ? colors.primary : 'transparent', borderColor: isSelected ? colors.primary : colors.border, borderWidth: 1 }]}>
-      <Text style={[styles.label, { color: isSelected ? '#fff' : colors.text }]}>{label}</Text>
+    <Pressable onPress={onPress} disabled={disabled} style={[styles.toggle, dynamicStyle]}>
+      <Text style={[styles.label, { color: labelColor }]}>{label}</Text>
     </Pressable>
   );
 }

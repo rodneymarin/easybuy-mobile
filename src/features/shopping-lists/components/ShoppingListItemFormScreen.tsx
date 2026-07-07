@@ -126,9 +126,7 @@ export default function ShoppingListItemFormScreen({ item, products, stores, onB
       <ScrollView style={styles.body} contentContainerStyle={styles.bodyContent} keyboardShouldPersistTaps="handled">
         <Text style={[styles.fieldLabel, { color: colors.text }]}>{t('listItem.productLabel')}</Text>
         <View style={styles.productRow}>
-          <View style={styles.productDropdown}>
-            <Dropdown value={selectedProductId} options={productOptions} onSelect={setSelectedProductId} placeholder={t('listItem.productPlaceholder')} />
-          </View>
+          <Dropdown style={styles.productDropdown} value={selectedProductId} options={productOptions} onSelect={setSelectedProductId} placeholder={t('listItem.productPlaceholder')} />
           <Button variant="secondary" onPress={() => setIsProductSheetOpen(true)} style={styles.addProductButton}>
             <Ionicons name="add" size={20} color={colors.text} />
           </Button>

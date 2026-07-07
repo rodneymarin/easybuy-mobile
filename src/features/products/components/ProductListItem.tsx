@@ -27,7 +27,7 @@ export default function ProductListItem({ productName, unitOfMeasurement, isSele
 		<PressableCard onPress={onPress} onLongPress={onLongPress} style={[styles.card, { borderColor: colors.border }]}>
 			<View style={styles.cardContent}>
 				{isSelectionMode && (
-					<View style={styles.circle}>
+					<>
 						{isSelected ? (
 							<View style={[styles.circleFilled, { backgroundColor: colors.primary }]}>
 								<Ionicons name="checkmark" size={14} color="#fff" />
@@ -35,7 +35,7 @@ export default function ProductListItem({ productName, unitOfMeasurement, isSele
 						) : (
 							<View style={[styles.circleEmpty, { borderColor: colors.textSecondary }]} />
 						)}
-					</View>
+					</>
 				)}
 				<Text style={[styles.title, { color: colors.text }]} numberOfLines={1} ellipsizeMode="tail">{productName}</Text>
 				<Tag label={unitLabel} />
@@ -62,14 +62,12 @@ const styles = StyleSheet.create({
 		fontSize: 17,
 		fontWeight: '500',
 	},
-	circle: {
-		marginRight: 2,
-	},
 	circleEmpty: {
 		width: 24,
 		height: 24,
 		borderRadius: 12,
 		borderWidth: 2,
+		marginRight: 2,
 	},
 	circleFilled: {
 		width: 24,
@@ -77,5 +75,6 @@ const styles = StyleSheet.create({
 		borderRadius: 12,
 		justifyContent: 'center',
 		alignItems: 'center',
+		marginRight: 2,
 	},
 });

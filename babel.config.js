@@ -12,6 +12,7 @@ module.exports = function (api) {
             '@features': './src/features',
             '@lib': './src/lib',
             '@models': './src/models',
+            '@assets': './src/assets',
           },
         },
       ],

@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { FlatList, Modal as RNModal, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
-import { Input } from '@components/ui';
+import { Ionicons } from '@expo/vector-icons';
+import { FadeIn, Input } from '@components/ui';
 import { ProductPrices } from '@features/products/components';
 import { useI18n } from '@lib/i18n';
 import { useTheme } from '@lib/theme';
@@ -35,13 +36,13 @@ export default function ProductFormContent({ productName, unitOfMeasurement, pri
           <Text style={[styles.unitSelectorText, { color: selectedUnit ? colors.text : colors.placeholderText }]}>
             {selectedUnit ? t(`unit.${selectedUnit.id}`) : t('products.addModal.unitLabel')}
           </Text>
-          <Text style={[styles.dropdownArrow, { color: colors.text }]}>▼</Text>
+          <Ionicons name="chevron-down" size={14} color={colors.text} />
         </Pressable>
         <ProductPrices prices={prices} stores={stores} onPricesChange={onPricesChange} />
       </ScrollView>
 
-      <RNModal visible={isUnitSelectorOpen} transparent animationType="fade" onRequestClose={() => setIsUnitSelectorOpen(false)}>
-        <Pressable style={styles.backdrop} onPress={() => setIsUnitSelectorOpen(false)}>
+      <RNModal visible={isUnitSelectorOpen} transparent animationType="none" onRequestClose={() => setIsUnitSelectorOpen(false)}>
+        <FadeIn style={styles.backdrop}><Pressable style={styles.backdropInner} onPress={() => setIsUnitSelectorOpen(false)}>
           <View style={[styles.selectorModal, { backgroundColor: colors.cardBackground }]}>
             <Text style={[styles.selectorTitle, { color: colors.text }]}>{t('products.addModal.unitLabel')}</Text>
             <FlatList data={UNIT_OF_MEASUREMENT} keyExtractor={(item) => item.id}
@@ -53,6 +54,7 @@ export default function ProductFormContent({ productName, unitOfMeasurement, pri
             />
           </View>
         </Pressable>
+        </FadeIn>
       </RNModal>
     </>
   );
@@ -88,7 +90,6 @@ const styles = StyleSheet.create({
     fontSize: 15,
   },
   dropdownArrow: {
-    fontSize: 10,
     marginLeft: 4,
   },
   backdrop: {
@@ -96,6 +97,9 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(0,0,0,0.5)',
     justifyContent: 'center',
     paddingHorizontal: 32,
+  },
+  backdropInner: {
+    flex: 1,
   },
   selectorModal: {
     borderRadius: 16,

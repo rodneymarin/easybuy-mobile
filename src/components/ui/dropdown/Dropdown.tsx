@@ -1,5 +1,7 @@
 import { useState } from 'react';
 import { FlatList, Modal as RNModal, Pressable, StyleSheet, Text, View, type StyleProp, type ViewStyle } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
+import { FadeIn } from '@components/ui';
 import { useTheme } from '@lib/theme';
 
 export interface DropdownOption {
@@ -32,10 +34,10 @@ export default function Dropdown({ value, options, onSelect, placeholder, style 
         <Text style={[styles.text, { color: selectedOption ? colors.text : colors.placeholderText }]} numberOfLines={1}>
           {selectedOption ? selectedOption.label : placeholder}
         </Text>
-        <Text style={[styles.arrow, { color: colors.text }]}>▼</Text>
+        <Ionicons name="chevron-down" size={14} color={colors.text} />
       </Pressable>
-      <RNModal visible={isOpen} transparent animationType="fade" onRequestClose={() => setIsOpen(false)}>
-        <Pressable style={styles.backdrop} onPress={() => setIsOpen(false)}>
+      <RNModal visible={isOpen} transparent animationType="none" onRequestClose={() => setIsOpen(false)}>
+        <FadeIn style={styles.backdrop}><Pressable style={styles.backdropInner} onPress={() => setIsOpen(false)}>
           <View style={[styles.modal, { backgroundColor: colors.cardBackground }]}>
             <FlatList data={options} keyExtractor={(item) => item.value}
               renderItem={({ item }) => (
@@ -46,6 +48,7 @@ export default function Dropdown({ value, options, onSelect, placeholder, style 
             />
           </View>
         </Pressable>
+        </FadeIn>
       </RNModal>
     </>
   );
@@ -65,7 +68,6 @@ const styles = StyleSheet.create({
     fontSize: 15,
   },
   arrow: {
-    fontSize: 10,
     marginLeft: 4,
   },
   backdrop: {
@@ -73,6 +75,9 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(0,0,0,0.5)',
     justifyContent: 'center',
     paddingHorizontal: 32,
+  },
+  backdropInner: {
+    flex: 1,
   },
   modal: {
     borderRadius: 16,

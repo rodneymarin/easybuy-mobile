@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { ActivityIndicator, Modal as RNModal, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { BottomSheet, Button, ScreenTitle, Tag, Toggle } from '@components/ui';
+import { BottomSheet, Button, FadeIn, ScreenTitle, Tag, Toggle } from '@components/ui';
 import { ShoppingListCheckCircle, ShoppingListItemCard, ShoppingListItemTitle, ShoppingListTotals, ListTitleFormSheet, ShoppingListItemFormScreen } from '@features/shopping-lists/components';
 import { getShoppingListById, getAllShoppingLists, toggleItemDone, removeItemFromList, removeItemsFromList, moveItemsToList, updateShoppingListTitle, addItemToList, updateItemInList } from '@lib/repositories/shopping-lists';
 import { getAllProducts } from '@lib/repositories/products';
@@ -384,6 +384,15 @@ export default function ShoppingListDetailScreen({ shoppingListId, onBack }: Sho
         </Pressable>
       </View>
 
+      {shouldShowFilters && (
+        <View style={[styles.filterContainer, isSelectionMode && styles.filterContainerMuted]}>
+          <Toggle label={t('listDetail.allStores')} isSelected={activeStoreId === null} onPress={() => handleSelectStore(null)} disabled={isSelectionMode} />
+          {uniqueStores.map((store) => (
+            <Toggle key={store.id} label={store.description} isSelected={activeStoreId === store.id} onPress={() => handleSelectStore(store.id)} disabled={isSelectionMode} />
+          ))}
+        </View>
+      )}
+
       {isSelectionMode ? (
         <View style={styles.selectionHeader}>
           <Pressable onPress={resetSelection} hitSlop={8} style={styles.selectionBackButton}>
@@ -402,25 +411,16 @@ export default function ShoppingListDetailScreen({ shoppingListId, onBack }: Sho
           </View>
         </View>
       ) : (
-        <>
-          {shouldShowFilters && (
-            <View style={styles.filterContainer}>
-              <Toggle label={t('listDetail.allStores')} isSelected={activeStoreId === null} onPress={() => handleSelectStore(null)} />
-              {uniqueStores.map((store) => (
-                <Toggle key={store.id} label={store.description} isSelected={activeStoreId === store.id} onPress={() => handleSelectStore(store.id)} />
-              ))}
-            </View>
-          )}
-
-          <View style={styles.totalsRow}>
-            <View style={styles.totalsFlex}>
-              <ShoppingListTotals globalTotal={globalTotal} cartTotal={cartTotal} onAddPress={handleAddPress} />
-            </View>
-            <Pressable onPress={doneItems.length > 0 ? () => setIsMenuOpen(true) : undefined} style={styles.menuButton} hitSlop={8} disabled={doneItems.length === 0}>
-              <Ionicons name="ellipsis-vertical" size={20} color={doneItems.length > 0 ? colors.text : colors.border} />
-            </Pressable>
+        <View style={styles.totalsRow}>
+          <View style={styles.totalsFlex}>
+            <ShoppingListTotals globalTotal={globalTotal} cartTotal={cartTotal} onAddPress={handleAddPress} />
           </View>
-        </>
+          {doneItems.length > 0 && (
+            <Pressable onPress={() => setIsMenuOpen(true)} style={styles.menuButton} hitSlop={8}>
+              <Ionicons name="ellipsis-vertical" size={20} color={colors.text} />
+            </Pressable>
+          )}
+        </View>
       )}
 
       <ScrollView style={styles.scrollBody} contentContainerStyle={styles.scrollContent}>
@@ -478,8 +478,8 @@ export default function ShoppingListDetailScreen({ shoppingListId, onBack }: Sho
 
       <ListTitleFormSheet isOpen={isTitleSheetOpen} initialTitle={shoppingList.title} onSave={handleSaveTitle} onClose={() => setIsTitleSheetOpen(false)} />
 
-      <RNModal visible={isMenuOpen} transparent animationType="fade" onRequestClose={() => setIsMenuOpen(false)}>
-        <Pressable style={styles.menuBackdrop} onPress={() => setIsMenuOpen(false)}>
+      <RNModal visible={isMenuOpen} transparent animationType="none" onRequestClose={() => setIsMenuOpen(false)}>
+        <FadeIn style={styles.menuBackdrop}><Pressable style={styles.menuBackdropInner} onPress={() => setIsMenuOpen(false)}>
           <View style={[styles.menuCard, { backgroundColor: colors.cardBackground }]}>
             <Pressable style={styles.menuItem} onPress={() => { setIsMenuOpen(false); handleUncheckAll(); }}>
               <Text style={[styles.menuItemText, { color: colors.text }]}>{t('listDetail.menuUncheckAll')}</Text>
@@ -489,6 +489,7 @@ export default function ShoppingListDetailScreen({ shoppingListId, onBack }: Sho
             </Pressable>
           </View>
         </Pressable>
+        </FadeIn>
       </RNModal>
 
       <BottomSheet isOpen={isRemoveCompletedSheetOpen} onClose={() => setIsRemoveCompletedSheetOpen(false)}>
@@ -550,6 +551,9 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     gap: 6,
     paddingBottom: 8,
+  },
+  filterContainerMuted: {
+    opacity: 0.5,
   },
   backButton: {
     position: 'absolute',
@@ -623,6 +627,9 @@ const styles = StyleSheet.create({
     paddingRight: 16,
     backgroundColor: 'rgba(0,0,0,0.3)',
   },
+  menuBackdropInner: {
+    flex: 1,
+  },
   menuCard: {
     borderRadius: 14,
     paddingVertical: 4,
@@ -649,7 +656,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     paddingHorizontal: 16,
-    marginBottom: 4,
+    paddingVertical: 12,
   },
   selectionBackButton: {
     width: 36,

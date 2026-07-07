@@ -167,11 +167,7 @@ export default function InicioScreen() {
         </View>
       )}
 
-      <ListTitleFormSheet
-        isOpen={isTitleSheetOpen}
-        onSave={handleCreateList}
-        onClose={closeTitleSheet}
-      />
+      <ListTitleFormSheet isOpen={isTitleSheetOpen} onSave={handleCreateList} onClose={closeTitleSheet} />
 
       <BottomSheet isOpen={isDeleteSheetOpen} onClose={handleCancelDelete}>
         <Text style={[styles.deleteSheetTitle, { color: colors.text }]}>{t('lists.deleteModal.title')}</Text>

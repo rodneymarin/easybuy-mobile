@@ -18,7 +18,7 @@ function ShoppingListItemCard({ children, isSelected, isSelectionMode, onPress, 
   return (
     <PressableCard onPress={onPress} onLongPress={onLongPress} style={[styles.card, { borderColor: colors.border }]}>
       {isSelectionMode && (
-        <View style={styles.circle}>
+        <>
           {isSelected ? (
             <View style={[styles.circleFilled, { backgroundColor: colors.primary }]}>
               <Ionicons name="checkmark" size={14} color="#fff" />
@@ -26,7 +26,7 @@ function ShoppingListItemCard({ children, isSelected, isSelectionMode, onPress, 
           ) : (
             <View style={[styles.circleEmpty, { borderColor: colors.textSecondary }]} />
           )}
-        </View>
+        </>
       )}
       {children}
     </PressableCard>
@@ -43,14 +43,12 @@ const styles = StyleSheet.create({
     marginHorizontal: 16,
     marginBottom: 12,
   },
-  circle: {
-    marginRight: 10,
-  },
   circleEmpty: {
     width: 24,
     height: 24,
     borderRadius: 12,
     borderWidth: 2,
+    marginRight: 10,
   },
   circleFilled: {
     width: 24,
@@ -58,6 +56,7 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     justifyContent: 'center',
     alignItems: 'center',
+    marginRight: 10,
   },
 });
 
