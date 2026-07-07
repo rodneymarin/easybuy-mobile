@@ -18,26 +18,42 @@ export default function ProductPrices({ prices, stores, onPricesChange }: Produc
   const { colors } = useTheme();
   const { t } = useI18n();
   const [isAddingPrice, setIsAddingPrice] = useState(false);
+  const [editingStoreId, setEditingStoreId] = useState<string | null>(null);
   const [newStoreId, setNewStoreId] = useState<string | null>(null);
   const [newPriceText, setNewPriceText] = useState('');
 
   const usedStoreIds = new Set(prices.map((p) => p.storeId));
   const availableStores = stores.filter((s) => !usedStoreIds.has(s.id));
   const allStoresUsed = stores.length > 0 && availableStores.length === 0;
-  const storeOptions: DropdownOption[] = availableStores.map((s) => ({ label: s.description, value: s.id }));
+
+  const editingExcludedStoreIds = new Set(prices.map((p) => p.storeId));
+  if (editingStoreId) editingExcludedStoreIds.delete(editingStoreId);
+  const editAvailableStores = stores.filter((s) => !editingExcludedStoreIds.has(s.id));
+
+  const currentAvailableStores = editingStoreId !== null ? editAvailableStores : availableStores;
+  const storeOptions: DropdownOption[] = currentAvailableStores.map((s) => ({ label: s.description, value: s.id }));
 
   function handleRemovePrice(storeId: string) {
     onPricesChange(prices.filter((p) => p.storeId !== storeId));
   }
 
   function handleOpenAddPrice() {
+    setEditingStoreId(null);
     setNewStoreId(null);
     setNewPriceText('');
     setIsAddingPrice(true);
   }
 
-  function handleCancelAddPrice() {
+  function handleOpenEditPrice(price: Price) {
+    setEditingStoreId(price.storeId);
+    setNewStoreId(price.storeId);
+    setNewPriceText(price.value.toString());
     setIsAddingPrice(false);
+  }
+
+  function handleCancelPriceForm() {
+    setIsAddingPrice(false);
+    setEditingStoreId(null);
     setNewStoreId(null);
     setNewPriceText('');
   }
@@ -48,6 +64,19 @@ export default function ProductPrices({ prices, stores, onPricesChange }: Produc
     if (isNaN(value) || value < 0) return;
     onPricesChange([...prices, { storeId: newStoreId, value }]);
     setIsAddingPrice(false);
+    setNewStoreId(null);
+    setNewPriceText('');
+  }
+
+  function handleConfirmEditPrice() {
+    if (!editingStoreId || !newStoreId || !newPriceText.trim()) return;
+    const value = parseFloat(newPriceText.trim());
+    if (isNaN(value) || value < 0) return;
+    const updatedPrices = prices.map((p) =>
+      p.storeId === editingStoreId ? { storeId: newStoreId, value } : p
+    );
+    onPricesChange(updatedPrices);
+    setEditingStoreId(null);
     setNewStoreId(null);
     setNewPriceText('');
   }
@@ -70,8 +99,24 @@ export default function ProductPrices({ prices, stores, onPricesChange }: Produc
         <View style={styles.pricesList}>
           {prices.map((price) => {
             const store = stores.find((s) => s.id === price.storeId);
+            if (editingStoreId === price.storeId) {
+              return (
+                <View key={price.storeId} style={[styles.addPriceSection, { borderColor: colors.border }]}>
+                  <Dropdown value={newStoreId} options={storeOptions} onSelect={handleSelectStore} placeholder={t('products.addModal.storePlaceholder')} />
+                  <TextInput value={newPriceText} onChangeText={(text) => { const filtered = text.replace(/[^0-9.]/g, ''); if (filtered === '' || /^\d*\.?\d*$/.test(filtered)) setNewPriceText(filtered); }} placeholder={t('products.addModal.pricePlaceholder')} keyboardType="decimal-pad" placeholderTextColor={colors.placeholderText} style={[styles.priceInput, { color: colors.text, borderColor: colors.border, backgroundColor: colors.background }]} />
+                  <View style={styles.addActions}>
+                    <Button variant="primary" style={styles.addActionButton} onPress={handleConfirmEditPrice} disabled={!canConfirm}>
+                      <Text style={styles.confirmText}>✓</Text>
+                    </Button>
+                    <Button variant="secondary" style={styles.addActionButton} onPress={handleCancelPriceForm}>
+                      <Ionicons name="close" size={18} color={colors.text} />
+                    </Button>
+                  </View>
+                </View>
+              );
+            }
             return (
-              <View key={price.storeId} style={[styles.priceRow, { borderColor: colors.border }]}>
+              <Pressable key={price.storeId} onPress={() => handleOpenEditPrice(price)} style={[styles.priceRow, { borderColor: colors.border }]}>
                 <Text style={[styles.priceStoreName, { color: colors.text }]} numberOfLines={1}>
                   {store?.description ?? price.storeId}
                 </Text>
@@ -79,13 +124,13 @@ export default function ProductPrices({ prices, stores, onPricesChange }: Produc
                 <Pressable onPress={() => handleRemovePrice(price.storeId)} style={styles.removeButton} hitSlop={8}>
                   <Ionicons name="close" size={16} color={colors.textSecondary} />
                 </Pressable>
-              </View>
+              </Pressable>
             );
           })}
         </View>
       )}
 
-      {isAddingPrice ? (
+      {isAddingPrice && editingStoreId === null ? (
         <View style={[styles.addPriceSection, { borderColor: colors.border }]}>
           <Dropdown value={newStoreId} options={storeOptions} onSelect={handleSelectStore} placeholder={t('products.addModal.storePlaceholder')} />
           <TextInput value={newPriceText} onChangeText={(text) => { const filtered = text.replace(/[^0-9.]/g, ''); if (filtered === '' || /^\d*\.?\d*$/.test(filtered)) setNewPriceText(filtered); }} placeholder={t('products.addModal.pricePlaceholder')} keyboardType="decimal-pad" placeholderTextColor={colors.placeholderText} style={[styles.priceInput, { color: colors.text, borderColor: colors.border, backgroundColor: colors.background }]} />
@@ -93,21 +138,20 @@ export default function ProductPrices({ prices, stores, onPricesChange }: Produc
             <Button variant="primary" style={styles.addActionButton} onPress={handleConfirmAddPrice} disabled={!canConfirm}>
               <Text style={styles.confirmText}>✓</Text>
             </Button>
-            <Button variant="secondary" style={styles.addActionButton} onPress={handleCancelAddPrice}>
+            <Button variant="secondary" style={styles.addActionButton} onPress={handleCancelPriceForm}>
               <Ionicons name="close" size={18} color={colors.text} />
             </Button>
           </View>
         </View>
-      ) : (
-        !allStoresUsed && stores.length > 0 && (
+      ) : editingStoreId === null && !allStoresUsed && stores.length > 0 && (
           <Button variant="secondary" style={styles.addPriceButton} onPress={handleOpenAddPrice}>
             <Ionicons name="add" size={16} color={colors.text} />
             <Text style={[styles.addPriceButtonText, { color: colors.text }]}>{t('products.addPrice')}</Text>
           </Button>
         )
-      )}
+      }
 
-      {allStoresUsed && stores.length > 0 && (
+      {allStoresUsed && editingStoreId === null && stores.length > 0 && (
         <Text style={[styles.allUsedText, { color: colors.textSecondary }]}>{t('products.allStoresUsed')}</Text>
       )}
 

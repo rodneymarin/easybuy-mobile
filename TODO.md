@@ -2,12 +2,10 @@
 
 ## UI / UX
 - Mejorar fluidez del slide del BottomSheet y del panel del main menu.
-- Agregar "Lata" como unidad de medida
 - Agregar x en los inputs de search para borrar todo el input
 
 ## Features
 - Agregar toast
-- Colores para tags de tiendas en detalle de lista
 
 ## Refactors
 
