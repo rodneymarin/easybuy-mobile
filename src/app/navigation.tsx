@@ -1,5 +1,6 @@
 import { BottomTabBar, type BottomTabBarProps } from '@react-navigation/bottom-tabs';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
+import { CommonActions } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { Ionicons } from '@expo/vector-icons';
 import { StyleSheet, View } from 'react-native';
@@ -94,6 +95,22 @@ function CustomTabBar(props: BottomTabBarProps) {
   return <TabBarIndicator {...props} />;
 }
 
+function resetStackOnTabPress(e: any, navigation: any, route: any) {
+  if (route.state && route.state.index > 0) {
+    e.preventDefault();
+    const state = navigation.getState();
+    const pressedIndex = state.routes.findIndex((r: any) => r.key === route.key);
+    navigation.dispatch(CommonActions.reset({
+      index: pressedIndex,
+      routes: state.routes.map((r: any) =>
+        r.key === route.key
+          ? { ...r, state: { routes: [{ name: route.state.routes[0].name }] } }
+          : r
+      ),
+    }));
+  }
+}
+
 function TabNavigator() {
   const { colors } = useTheme();
   const { t } = useI18n();
@@ -105,19 +122,22 @@ function TabNavigator() {
           tabBarIcon: ({ focused, color, size }) => (
             <Ionicons name={focused ? 'list' : 'list-outline'} size={size} color={color} />
           ),
-        }} />
+        }}
+        listeners={({ navigation, route }) => ({ tabPress: (e) => resetStackOnTabPress(e, navigation, route) })} />
       <Tab.Screen name="productos" component={ProductsStackScreen} options={{
           tabBarLabel: t('tab.products'),
           tabBarIcon: ({ focused, color, size }) => (
             <Ionicons name={focused ? 'cube' : 'cube-outline'} size={size} color={color} />
           ),
-        }} />
+        }}
+        listeners={({ navigation, route }) => ({ tabPress: (e) => resetStackOnTabPress(e, navigation, route) })} />
       <Tab.Screen name="tiendas" component={StoresStackScreen} options={{
           tabBarLabel: t('tab.stores'),
           tabBarIcon: ({ focused, color, size }) => (
             <Ionicons name={focused ? 'storefront' : 'storefront-outline'} size={size} color={color} />
           ),
-        }} />
+        }}
+        listeners={({ navigation, route }) => ({ tabPress: (e) => resetStackOnTabPress(e, navigation, route) })} />
     </Tab.Navigator>
   );
 }
