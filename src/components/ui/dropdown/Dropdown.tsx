@@ -1,7 +1,7 @@
 import { useState } from 'react';
-import { FlatList, Modal as RNModal, Pressable, StyleSheet, Text, View, type StyleProp, type ViewStyle } from 'react-native';
+import { FlatList, Pressable, StyleSheet, Text, View, type StyleProp, type ViewStyle } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { FadeIn } from '@components/ui/fade-in';
+import { Modal } from '@components/ui/modal';
 import { useTheme } from '@lib/theme';
 
 export interface DropdownOption {
@@ -36,20 +36,15 @@ export default function Dropdown({ value, options, onSelect, placeholder, style 
         </Text>
         <Ionicons name="chevron-down" size={14} color={colors.text} />
       </Pressable>
-      <RNModal visible={isOpen} transparent animationType="none" onRequestClose={() => setIsOpen(false)}>
-        <FadeIn style={styles.backdrop}><Pressable style={styles.backdropInner} onPress={() => setIsOpen(false)}>
-          <View style={[styles.modal, { backgroundColor: colors.cardBackground }]}>
-            <FlatList data={options} keyExtractor={(item) => item.value}
-              renderItem={({ item }) => (
-                <Pressable onPress={() => handleSelect(item.value)} style={[styles.item, { borderColor: colors.border, backgroundColor: value === item.value ? colors.surface : 'transparent' }]}>
-                  <Text style={[styles.itemText, { color: colors.text }]}>{item.label}</Text>
-                </Pressable>
-              )}
-            />
-          </View>
-        </Pressable>
-        </FadeIn>
-      </RNModal>
+      <Modal isOpen={isOpen} onClose={() => setIsOpen(false)} cardStyle={[styles.modal, { backgroundColor: colors.cardBackground }]}>
+        <FlatList data={options} keyExtractor={(item) => item.value}
+          renderItem={({ item }) => (
+            <Pressable onPress={() => handleSelect(item.value)} style={[styles.item, { borderColor: colors.border, backgroundColor: value === item.value ? colors.surface : 'transparent' }]}>
+              <Text style={[styles.itemText, { color: colors.text }]}>{item.label}</Text>
+            </Pressable>
+          )}
+        />
+      </Modal>
     </>
   );
 }
@@ -66,19 +61,6 @@ const styles = StyleSheet.create({
   text: {
     flex: 1,
     fontSize: 15,
-  },
-  arrow: {
-    marginLeft: 4,
-  },
-  backdrop: {
-    flex: 1,
-    backgroundColor: 'rgba(0,0,0,0.5)',
-    justifyContent: 'center',
-    paddingHorizontal: 32,
-  },
-  backdropInner: {
-    flex: 1,
-    justifyContent: 'center',
   },
   modal: {
     borderRadius: 16,

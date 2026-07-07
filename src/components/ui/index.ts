@@ -12,3 +12,4 @@ export type { DropdownOption } from './dropdown';
 export { CloseButton } from './close-button';
 export { About } from './about';
 export { FadeIn } from './fade-in';
+export { Modal } from './modal';

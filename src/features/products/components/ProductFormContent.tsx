@@ -1,7 +1,7 @@
 import { useState } from 'react';
-import { FlatList, Modal as RNModal, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { FlatList, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { FadeIn, Input } from '@components/ui';
+import { Input, Modal } from '@components/ui';
 import ProductPrices from './ProductPrices';
 import { useI18n } from '@lib/i18n';
 import { useTheme } from '@lib/theme';
@@ -41,21 +41,16 @@ export default function ProductFormContent({ productName, unitOfMeasurement, pri
         <ProductPrices prices={prices} stores={stores} onPricesChange={onPricesChange} />
       </ScrollView>
 
-      <RNModal visible={isUnitSelectorOpen} transparent animationType="none" onRequestClose={() => setIsUnitSelectorOpen(false)}>
-        <FadeIn style={styles.backdrop}><Pressable style={styles.backdropInner} onPress={() => setIsUnitSelectorOpen(false)}>
-          <View style={[styles.selectorModal, { backgroundColor: colors.cardBackground }]}>
-            <Text style={[styles.selectorTitle, { color: colors.text }]}>{t('products.addModal.unitLabel')}</Text>
-            <FlatList data={UNIT_OF_MEASUREMENT} keyExtractor={(item) => item.id}
-              renderItem={({ item }) => (
-                <Pressable onPress={() => { onUnitOfMeasurementChange(item.id); setIsUnitSelectorOpen(false); }} style={[styles.selectorItem, { borderColor: colors.border, backgroundColor: unitOfMeasurement === item.id ? colors.surface : 'transparent' }]}>
-                  <Text style={[styles.selectorItemText, { color: colors.text }]}>{t(`unit.${item.id}`)}</Text>
-                </Pressable>
-              )}
-            />
-          </View>
-        </Pressable>
-        </FadeIn>
-      </RNModal>
+      <Modal isOpen={isUnitSelectorOpen} onClose={() => setIsUnitSelectorOpen(false)} cardStyle={[styles.selectorModal, { backgroundColor: colors.cardBackground }]}>
+        <Text style={[styles.selectorTitle, { color: colors.text }]}>{t('products.addModal.unitLabel')}</Text>
+        <FlatList data={UNIT_OF_MEASUREMENT} keyExtractor={(item) => item.id}
+          renderItem={({ item }) => (
+            <Pressable onPress={() => { onUnitOfMeasurementChange(item.id); setIsUnitSelectorOpen(false); }} style={[styles.selectorItem, { borderColor: colors.border, backgroundColor: unitOfMeasurement === item.id ? colors.surface : 'transparent' }]}>
+              <Text style={[styles.selectorItemText, { color: colors.text }]}>{t(`unit.${item.id}`)}</Text>
+            </Pressable>
+          )}
+        />
+      </Modal>
     </>
   );
 }
@@ -91,15 +86,6 @@ const styles = StyleSheet.create({
   },
   dropdownArrow: {
     marginLeft: 4,
-  },
-  backdrop: {
-    flex: 1,
-    backgroundColor: 'rgba(0,0,0,0.5)',
-    justifyContent: 'center',
-    paddingHorizontal: 32,
-  },
-  backdropInner: {
-    flex: 1,
   },
   selectorModal: {
     borderRadius: 16,

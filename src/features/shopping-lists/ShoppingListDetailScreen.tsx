@@ -1,10 +1,10 @@
 import { useCallback, useMemo, useRef, useState } from 'react';
-import { ActivityIndicator, Modal as RNModal, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { ActivityIndicator, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import * as Clipboard from 'expo-clipboard';
 import { Ionicons } from '@expo/vector-icons';
 import { useRoute, useNavigation, useFocusEffect } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import { BottomSheet, Button, FadeIn, ScreenTitle, Tag, Toggle } from '@components/ui';
+import { BottomSheet, Button, Modal, ScreenTitle, Tag, Toggle } from '@components/ui';
 import { ShoppingListCheckCircle, ShoppingListItemCard, ShoppingListItemTitle, ShoppingListTotals, ListTitleFormSheet } from '@features/shopping-lists/components';
 import { getShoppingListById, getAllShoppingLists, toggleItemDone, removeItemsFromList, moveItemsToList, updateShoppingListTitle, removeItemFromList } from '@lib/repositories/shopping-lists';
 import { getAllProducts } from '@lib/repositories/products';
@@ -457,24 +457,19 @@ export default function ShoppingListDetailScreen() {
         </View>
       )}
 
-      <RNModal visible={isMoreFilterOpen} transparent animationType="none" onRequestClose={() => setIsMoreFilterOpen(false)}>
-        <FadeIn style={styles.filterDropdownBackdrop}><Pressable style={styles.filterDropdownBackdropInner} onPress={() => setIsMoreFilterOpen(false)}>
-          <View style={[styles.filterDropdownCard, { backgroundColor: colors.cardBackground }]}>
-            {hiddenStores.map((store) => (
-              <Pressable key={store.id} style={styles.filterDropdownItem} onPress={() => { setIsMoreFilterOpen(false); handleSelectStore(store.id); }}>
-                <Text style={[styles.filterDropdownItemText, { color: colors.text }, activeStoreId === store.id && styles.filterDropdownItemTextActive]}>{store.description}</Text>
-                {activeStoreId === store.id && <Ionicons name="checkmark" size={18} color={colors.primary} />}
-              </Pressable>
-            ))}
-            <View style={[styles.filterDropdownDivider, { backgroundColor: colors.border }]} />
-            <Pressable style={styles.filterDropdownItem} onPress={() => { setIsMoreFilterOpen(false); handleSelectStore(null); }}>
-              <Text style={[styles.filterDropdownItemText, { color: colors.text }, activeStoreId === null && styles.filterDropdownItemTextActive]}>{t('listDetail.allStores')}</Text>
-              {activeStoreId === null && <Ionicons name="checkmark" size={18} color={colors.primary} />}
-            </Pressable>
-          </View>
+      <Modal isOpen={isMoreFilterOpen} onClose={() => setIsMoreFilterOpen(false)} cardStyle={[styles.filterDropdownCard, { backgroundColor: colors.cardBackground }]}>
+        {hiddenStores.map((store) => (
+          <Pressable key={store.id} style={styles.filterDropdownItem} onPress={() => { setIsMoreFilterOpen(false); handleSelectStore(store.id); }}>
+            <Text style={[styles.filterDropdownItemText, { color: colors.text }, activeStoreId === store.id && styles.filterDropdownItemTextActive]}>{store.description}</Text>
+            {activeStoreId === store.id && <Ionicons name="checkmark" size={18} color={colors.primary} />}
+          </Pressable>
+        ))}
+        <View style={[styles.filterDropdownDivider, { backgroundColor: colors.border }]} />
+        <Pressable style={styles.filterDropdownItem} onPress={() => { setIsMoreFilterOpen(false); handleSelectStore(null); }}>
+          <Text style={[styles.filterDropdownItemText, { color: colors.text }, activeStoreId === null && styles.filterDropdownItemTextActive]}>{t('listDetail.allStores')}</Text>
+          {activeStoreId === null && <Ionicons name="checkmark" size={18} color={colors.primary} />}
         </Pressable>
-        </FadeIn>
-      </RNModal>
+      </Modal>
 
       <ScrollView style={styles.scrollBody} contentContainerStyle={styles.scrollContent}>
         {pendingItems.length > 0 && (
@@ -543,22 +538,17 @@ export default function ShoppingListDetailScreen() {
 
       <ListTitleFormSheet isOpen={isTitleSheetOpen} initialTitle={shoppingList.title} onSave={handleSaveTitle} onClose={() => setIsTitleSheetOpen(false)} />
 
-      <RNModal visible={isMenuOpen} transparent animationType="none" onRequestClose={() => setIsMenuOpen(false)}>
-        <FadeIn style={styles.menuBackdrop}><Pressable style={styles.menuBackdropInner} onPress={() => setIsMenuOpen(false)}>
-          <View style={[styles.menuCard, { backgroundColor: colors.cardBackground }]}>
-            <Pressable style={styles.menuItem} onPress={handleCopyList}>
-              <Text style={[styles.menuItemText, { color: colors.text }]}>{t('listDetail.copyList')}</Text>
-            </Pressable>
-            <Pressable style={styles.menuItem} onPress={() => { setIsMenuOpen(false); handleUncheckAll(); }}>
-              <Text style={[styles.menuItemText, { color: colors.text }]}>{t('listDetail.menuUncheckAll')}</Text>
-            </Pressable>
-            <Pressable style={styles.menuItem} onPress={() => { setIsMenuOpen(false); handleRemoveCompletedPress(); }}>
-              <Text style={[styles.menuItemText, { color: colors.text }]}>{t('listDetail.removeCompleted')}</Text>
-            </Pressable>
-          </View>
+      <Modal isOpen={isMenuOpen} onClose={() => setIsMenuOpen(false)} cardStyle={[styles.menuCard, { backgroundColor: colors.cardBackground }]} backdropStyle={styles.menuBackdrop}>
+        <Pressable style={styles.menuItem} onPress={handleCopyList}>
+          <Text style={[styles.menuItemText, { color: colors.text }]}>{t('listDetail.copyList')}</Text>
         </Pressable>
-        </FadeIn>
-      </RNModal>
+        <Pressable style={styles.menuItem} onPress={() => { setIsMenuOpen(false); handleUncheckAll(); }}>
+          <Text style={[styles.menuItemText, { color: colors.text }]}>{t('listDetail.menuUncheckAll')}</Text>
+        </Pressable>
+        <Pressable style={styles.menuItem} onPress={() => { setIsMenuOpen(false); handleRemoveCompletedPress(); }}>
+          <Text style={[styles.menuItemText, { color: colors.text }]}>{t('listDetail.removeCompleted')}</Text>
+        </Pressable>
+      </Modal>
 
       <BottomSheet isOpen={isRemoveCompletedSheetOpen} onClose={() => setIsRemoveCompletedSheetOpen(false)}>
         <Text style={[styles.sheetTitle, { color: colors.text }]}>{t('listDetail.removeCompleted')}</Text>
@@ -629,17 +619,6 @@ const styles = StyleSheet.create({
     height: 32,
     borderRadius: 16,
     borderWidth: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  filterDropdownBackdrop: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    backgroundColor: 'rgba(0,0,0,0.3)',
-  },
-  filterDropdownBackdropInner: {
-    flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
   },
@@ -754,15 +733,10 @@ const styles = StyleSheet.create({
     opacity: 0.4,
   },
   menuBackdrop: {
-    flex: 1,
     justifyContent: 'flex-start',
     paddingTop: 100,
     alignItems: 'flex-end',
     paddingRight: 16,
-    backgroundColor: 'rgba(0,0,0,0.3)',
-  },
-  menuBackdropInner: {
-    flex: 1,
   },
   menuCard: {
     borderRadius: 14,
