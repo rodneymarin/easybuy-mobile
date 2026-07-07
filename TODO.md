@@ -1,10 +1,10 @@
 # TODO
 
 ## Animations & UX
-- [ ] Mejorar fluidez del slide del BottomSheet — usar `Animated.spring` con `useNativeDriver: true` y curvas de easing nativas
+- Mejorar fluidez del slide del BottomSheet — usar `Animated.spring` con `useNativeDriver: true` y curvas de easing nativas
 
 ## Features
-- 
+- Agregar toast
 
 ## Refactors
 - 

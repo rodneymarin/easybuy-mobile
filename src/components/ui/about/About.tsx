@@ -1,9 +1,7 @@
 import Constants from 'expo-constants';
-import { StyleSheet, Text, View } from 'react-native';
-import { SvgXml } from 'react-native-svg';
+import { Image, StyleSheet, Text, View } from 'react-native';
 import { BottomSheet } from '@components/ui/bottom-sheet';
 import { useTheme } from '@lib/theme';
-import LOGO_SVG from '@assets/logo';
 
 interface AboutProps {
   isOpen: boolean;
@@ -17,7 +15,7 @@ function About({ isOpen, onClose }: AboutProps) {
   return (
     <BottomSheet isOpen={isOpen} onClose={onClose}>
       <View style={styles.container}>
-        <SvgXml xml={LOGO_SVG} width={100} height={100} style={styles.logo} />
+        <Image source={require('@assets/logo.png')} style={[styles.logo, { width: 100, height: 100 }]} />
         <Text style={[styles.title, { color: colors.text }]}>EasyBuy</Text>
         <Text style={[styles.subtitle, { color: colors.textSecondary }]}>Desarrollado por Rodney Marín</Text>
         <Text style={[styles.version, { color: colors.placeholderText }]}>V{appVersion}</Text>
