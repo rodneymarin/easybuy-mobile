@@ -1,7 +1,8 @@
 import { useState } from 'react';
-import { FlatList, Modal as RNModal, Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
+import { Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { Button, FadeIn } from '@components/ui';
+import { Button, Dropdown } from '@components/ui';
+import type { DropdownOption } from '@components/ui';
 import { useI18n } from '@lib/i18n';
 import { useTheme } from '@lib/theme';
 import type { Price } from '@models/price.model';
@@ -17,13 +18,13 @@ export default function ProductPrices({ prices, stores, onPricesChange }: Produc
   const { colors } = useTheme();
   const { t } = useI18n();
   const [isAddingPrice, setIsAddingPrice] = useState(false);
-  const [isStoreSelectorOpen, setIsStoreSelectorOpen] = useState(false);
   const [newStoreId, setNewStoreId] = useState<string | null>(null);
   const [newPriceText, setNewPriceText] = useState('');
 
   const usedStoreIds = new Set(prices.map((p) => p.storeId));
   const availableStores = stores.filter((s) => !usedStoreIds.has(s.id));
   const allStoresUsed = stores.length > 0 && availableStores.length === 0;
+  const storeOptions: DropdownOption[] = availableStores.map((s) => ({ label: s.description, value: s.id }));
 
   function handleRemovePrice(storeId: string) {
     onPricesChange(prices.filter((p) => p.storeId !== storeId));
@@ -53,7 +54,6 @@ export default function ProductPrices({ prices, stores, onPricesChange }: Produc
 
   function handleSelectStore(storeId: string) {
     setNewStoreId(storeId);
-    setIsStoreSelectorOpen(false);
   }
 
   const canConfirm = (() => {
@@ -61,8 +61,6 @@ export default function ProductPrices({ prices, stores, onPricesChange }: Produc
     const value = parseFloat(newPriceText.trim());
     return !isNaN(value) && value >= 0;
   })();
-
-  const selectedStore = stores.find((s) => s.id === newStoreId);
 
   return (
     <View style={styles.container}>
@@ -89,12 +87,7 @@ export default function ProductPrices({ prices, stores, onPricesChange }: Produc
 
       {isAddingPrice ? (
         <View style={[styles.addPriceSection, { borderColor: colors.border }]}>
-          <Pressable onPress={() => setIsStoreSelectorOpen(true)} style={[styles.storeSelector, { borderColor: colors.border, backgroundColor: colors.background }]}>
-            <Text style={[styles.storeSelectorText, { color: newStoreId ? colors.text : colors.placeholderText }]}>
-              {selectedStore ? selectedStore.description : t('products.addModal.storePlaceholder')}
-            </Text>
-            <Ionicons name="chevron-down" size={14} color={colors.text} />
-          </Pressable>
+          <Dropdown value={newStoreId} options={storeOptions} onSelect={handleSelectStore} placeholder={t('products.addModal.storePlaceholder')} />
           <TextInput value={newPriceText} onChangeText={(text) => { const filtered = text.replace(/[^0-9.]/g, ''); if (filtered === '' || /^\d*\.?\d*$/.test(filtered)) setNewPriceText(filtered); }} placeholder={t('products.addModal.pricePlaceholder')} keyboardType="decimal-pad" placeholderTextColor={colors.placeholderText} style={[styles.priceInput, { color: colors.text, borderColor: colors.border, backgroundColor: colors.background }]} />
           <View style={styles.addActions}>
             <Button variant="primary" style={styles.addActionButton} onPress={handleConfirmAddPrice} disabled={!canConfirm}>
@@ -120,26 +113,6 @@ export default function ProductPrices({ prices, stores, onPricesChange }: Produc
       {stores.length === 0 && (
         <Text style={[styles.noStoresText, { color: colors.textSecondary }]}>{t('products.noStoresAvailable')}</Text>
       )}
-
-      <RNModal visible={isStoreSelectorOpen} transparent animationType="none" onRequestClose={() => setIsStoreSelectorOpen(false)}>
-        <FadeIn style={styles.backdrop}><Pressable style={styles.backdropInner} onPress={() => setIsStoreSelectorOpen(false)}>
-          <View style={[styles.selectorModal, { backgroundColor: colors.cardBackground }]}>
-            <Text style={[styles.selectorTitle, { color: colors.text }]}>{t('products.addModal.storePlaceholder')}</Text>
-            {availableStores.length > 0 ? (
-              <FlatList data={availableStores} keyExtractor={(item) => item.id}
-                renderItem={({ item }) => (
-                  <Pressable onPress={() => handleSelectStore(item.id)} style={[styles.selectorItem, { borderColor: colors.border }]}>
-                    <Text style={[styles.selectorItemText, { color: colors.text }]}>{item.description}</Text>
-                  </Pressable>
-                )}
-              />
-            ) : (
-              <Text style={[styles.noStoresText, { color: colors.textSecondary }]}>{t('products.noStoresAvailable')}</Text>
-            )}
-          </View>
-        </Pressable>
-        </FadeIn>
-      </RNModal>
     </View>
   );
 }
@@ -187,21 +160,6 @@ const styles = StyleSheet.create({
     padding: 12,
     gap: 8,
   },
-  storeSelector: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    borderWidth: 1,
-    borderRadius: 10,
-    paddingHorizontal: 12,
-    height: 44,
-  },
-  storeSelectorText: {
-    flex: 1,
-    fontSize: 15,
-  },
-  dropdownArrow: {
-    marginLeft: 4,
-  },
   priceInput: {
     height: 44,
     borderWidth: 1,
@@ -241,32 +199,5 @@ const styles = StyleSheet.create({
     marginTop: 8,
     textAlign: 'center',
   },
-  backdrop: {
-    flex: 1,
-    backgroundColor: 'rgba(0,0,0,0.5)',
-    justifyContent: 'center',
-    paddingHorizontal: 32,
-  },
-  backdropInner: {
-    flex: 1,
-  },
-  selectorModal: {
-    borderRadius: 16,
-    padding: 20,
-    maxHeight: 300,
-  },
-  selectorTitle: {
-    fontSize: 16,
-    fontWeight: '600',
-    marginBottom: 12,
-    textAlign: 'center',
-  },
-  selectorItem: {
-    paddingVertical: 12,
-    paddingHorizontal: 4,
-    borderBottomWidth: 1,
-  },
-  selectorItemText: {
-    fontSize: 15,
-  },
+
 });

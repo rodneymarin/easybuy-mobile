@@ -78,6 +78,7 @@ const styles = StyleSheet.create({
   },
   backdropInner: {
     flex: 1,
+    justifyContent: 'center',
   },
   modal: {
     borderRadius: 16,
