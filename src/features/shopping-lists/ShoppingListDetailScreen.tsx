@@ -36,7 +36,8 @@ export default function ShoppingListDetailScreen() {
   const route = useRoute<{ key: string; name: string; params: { shoppingListId: string } }>();
   const navigation = useNavigation<DetailNavigationProp>();
   const { shoppingListId } = route.params;
-  const { colors } = useTheme();
+  const { colors, isDark } = useTheme();
+  const noStoreColor = isDark ? colors.placeholderText : colors.textSecondary;
   const { t } = useI18n();
   const [isLoading, setIsLoading] = useState(true);
   const [shoppingList, setShoppingList] = useState<ShoppingList | null>(null);
@@ -392,13 +393,19 @@ export default function ShoppingListDetailScreen() {
               <View style={styles.itemContent}>
                 <ShoppingListItemTitle name={item.productName} isDone={false} />
                 <View style={styles.itemTags}>
-                  {!activeStoreId && item.storeDescription ? (
-                    <Tag size="sm" label={item.storeDescription} />
+                  {!activeStoreId ? (
+                    item.storeDescription ? (
+                      <Tag size="sm" label={item.storeDescription} />
+                    ) : (
+                      <Text style={[styles.noStoreTag, { color: noStoreColor, borderColor: colors.border }]}>{t('listDetail.noStore')}</Text>
+                    )
                   ) : null}
-                  <Tag size="sm" label={`${item.quantity} ${item.unitLabel}`} />
-                  {item.price * item.quantity > 0 ? (
-                    <Tag size="sm" label={`$${(item.price * item.quantity).toFixed(2)}`} />
-                  ) : null}
+                  <View style={styles.itemTagsRight}>
+                    {item.price * item.quantity > 0 ? (
+                      <Tag size="sm" label={`$${(item.price * item.quantity).toFixed(2)}`} />
+                    ) : null}
+                    <Tag size="sm" label={`${item.quantity} ${item.unitLabel}`} />
+                  </View>
                 </View>
               </View>
               <ShoppingListCheckCircle isDone={false} onToggle={() => handleToggleDone(item.rowId)} disabled={isSelectionMode} />
@@ -422,13 +429,19 @@ export default function ShoppingListDetailScreen() {
                 <View style={styles.itemContent}>
                   <ShoppingListItemTitle name={item.productName} isDone={true} />
                   <View style={styles.itemTags}>
-                    {!activeStoreId && item.storeDescription ? (
-                      <Tag size="sm" label={item.storeDescription} />
+                    {!activeStoreId ? (
+                      item.storeDescription ? (
+                        <Tag size="sm" label={item.storeDescription} />
+                      ) : (
+                        <Text style={[styles.noStoreTag, { color: noStoreColor, borderColor: colors.border }]}>{t('listDetail.noStore')}</Text>
+                      )
                     ) : null}
-                    <Tag size="sm" label={`${item.quantity} ${item.unitLabel}`} />
-                    {item.price * item.quantity > 0 ? (
-                      <Tag size="sm" label={`$${(item.price * item.quantity).toFixed(2)}`} />
-                    ) : null}
+                    <View style={styles.itemTagsRight}>
+                      {item.price * item.quantity > 0 ? (
+                        <Tag size="sm" label={`$${(item.price * item.quantity).toFixed(2)}`} />
+                      ) : null}
+                      <Tag size="sm" label={`${item.quantity} ${item.unitLabel}`} />
+                    </View>
                   </View>
                 </View>
                 <ShoppingListCheckCircle isDone={true} onToggle={() => handleToggleDone(item.rowId)} disabled={isSelectionMode} />
@@ -574,6 +587,21 @@ const styles = StyleSheet.create({
   itemTags: {
     flexDirection: 'row',
     gap: 6,
+  },
+  itemTagsRight: {
+    flexDirection: 'row',
+    gap: 6,
+    marginLeft: 'auto',
+  },
+  noStoreTag: {
+    fontSize: 11,
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    borderRadius: 999,
+    fontStyle: 'italic',
+    alignSelf: 'flex-start',
+    borderWidth: 1,
+    backgroundColor: 'transparent',
   },
   totalsRow: {
     flexDirection: 'row',
