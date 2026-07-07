@@ -4,7 +4,7 @@ import * as Clipboard from 'expo-clipboard';
 import { Ionicons } from '@expo/vector-icons';
 import { useRoute, useNavigation, useFocusEffect } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import { BottomSheet, Button, Modal, ScreenTitle, Tag, Toggle } from '@components/ui';
+import { BottomSheet, Button, DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, Modal, ScreenTitle, Tag, Toggle } from '@components/ui';
 import { ShoppingListCheckCircle, ShoppingListItemCard, ShoppingListItemTitle, ShoppingListTotals, ListTitleFormSheet } from '@features/shopping-lists/components';
 import { getShoppingListById, getAllShoppingLists, toggleItemDone, removeItemsFromList, moveItemsToList, updateShoppingListTitle, removeItemFromList } from '@lib/repositories/shopping-lists';
 import { getAllProducts } from '@lib/repositories/products';
@@ -51,7 +51,6 @@ export default function ShoppingListDetailScreen() {
   const [isMoveSheetOpen, setIsMoveSheetOpen] = useState(false);
   const [availableLists, setAvailableLists] = useState<{ id: string; title: string }[]>([]);
   const [isRemoveCompletedSheetOpen, setIsRemoveCompletedSheetOpen] = useState(false);
-  const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isTitleSheetOpen, setIsTitleSheetOpen] = useState(false);
 
   const loadData = useCallback(async () => {
@@ -373,7 +372,6 @@ export default function ShoppingListDetailScreen() {
     ];
     const text = lines.join('\n');
     await Clipboard.setStringAsync(text);
-    setIsMenuOpen(false);
   }
 
   if (isLoading) {
@@ -437,9 +435,16 @@ export default function ShoppingListDetailScreen() {
           <View style={styles.totalsFlex}>
             <ShoppingListTotals globalTotal={globalTotal} cartTotal={cartTotal} onAddPress={handleAddPress} />
           </View>
-          <Pressable onPress={() => setIsMenuOpen(true)} style={[styles.menuButton, items.length === 0 && styles.menuButtonDisabled]} hitSlop={8} disabled={items.length === 0}>
-            <Ionicons name="ellipsis-vertical" size={20} color={items.length === 0 ? colors.textSecondary : colors.text} />
-          </Pressable>
+          <DropdownMenu>
+            <DropdownMenuTrigger disabled={items.length === 0} hitSlop={8} style={styles.menuButton}>
+              <Ionicons name="ellipsis-vertical" size={20} color={items.length === 0 ? colors.textSecondary : colors.text} />
+            </DropdownMenuTrigger>
+            <DropdownMenuContent cardStyle={{ minWidth: 200 }}>
+              <DropdownMenuItem label={t('listDetail.copyList')} onSelect={handleCopyList} />
+              <DropdownMenuItem label={t('listDetail.menuUncheckAll')} onSelect={handleUncheckAll} />
+              <DropdownMenuItem label={t('listDetail.removeCompleted')} onSelect={handleRemoveCompletedPress} />
+            </DropdownMenuContent>
+          </DropdownMenu>
         </View>
       )}
 
@@ -538,17 +543,7 @@ export default function ShoppingListDetailScreen() {
 
       <ListTitleFormSheet isOpen={isTitleSheetOpen} initialTitle={shoppingList.title} onSave={handleSaveTitle} onClose={() => setIsTitleSheetOpen(false)} />
 
-      <Modal isOpen={isMenuOpen} onClose={() => setIsMenuOpen(false)} cardStyle={[styles.menuCard, { backgroundColor: colors.cardBackground }]} backdropStyle={styles.menuBackdrop}>
-        <Pressable style={styles.menuItem} onPress={handleCopyList}>
-          <Text style={[styles.menuItemText, { color: colors.text }]}>{t('listDetail.copyList')}</Text>
-        </Pressable>
-        <Pressable style={styles.menuItem} onPress={() => { setIsMenuOpen(false); handleUncheckAll(); }}>
-          <Text style={[styles.menuItemText, { color: colors.text }]}>{t('listDetail.menuUncheckAll')}</Text>
-        </Pressable>
-        <Pressable style={styles.menuItem} onPress={() => { setIsMenuOpen(false); handleRemoveCompletedPress(); }}>
-          <Text style={[styles.menuItemText, { color: colors.text }]}>{t('listDetail.removeCompleted')}</Text>
-        </Pressable>
-      </Modal>
+
 
       <BottomSheet isOpen={isRemoveCompletedSheetOpen} onClose={() => setIsRemoveCompletedSheetOpen(false)}>
         <Text style={[styles.sheetTitle, { color: colors.text }]}>{t('listDetail.removeCompleted')}</Text>
@@ -731,34 +726,6 @@ const styles = StyleSheet.create({
   },
   menuButtonDisabled: {
     opacity: 0.4,
-  },
-  menuBackdrop: {
-    justifyContent: 'flex-start',
-    paddingTop: 100,
-    alignItems: 'flex-end',
-    paddingRight: 16,
-  },
-  menuCard: {
-    borderRadius: 14,
-    paddingVertical: 4,
-    minWidth: 200,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.15,
-    shadowRadius: 12,
-    elevation: 8,
-  },
-  menuItem: {
-    paddingVertical: 14,
-    paddingHorizontal: 16,
-  },
-  menuItemText: {
-    fontSize: 16,
-    fontWeight: '500',
-  },
-  menuDivider: {
-    height: 1,
-    marginHorizontal: 16,
   },
   selectionHeader: {
     flexDirection: 'row',

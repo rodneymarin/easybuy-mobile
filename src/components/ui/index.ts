@@ -13,3 +13,5 @@ export { CloseButton } from './close-button';
 export { About } from './about';
 export { FadeIn } from './fade-in';
 export { Modal } from './modal';
+export { Select, SelectTrigger, SelectContent, SelectItem } from './select';
+export { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem, DropdownMenuDivider } from './dropdown-menu';
