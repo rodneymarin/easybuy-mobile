@@ -1,19 +1,32 @@
 import { useEffect, useState } from 'react';
 import { Keyboard, KeyboardAvoidingView, Pressable, StyleSheet, Text, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import { useRoute, useNavigation } from '@react-navigation/native';
 import { Button, Input, BottomSheet, ScreenTitle } from '@components/ui';
+import { createStore, updateStore, deleteStore } from '@lib/repositories/stores';
 import { useI18n } from '@lib/i18n';
 import { useTheme } from '@lib/theme';
 
-interface StoreFormScreenProps {
-  store?: { id: string; description: string };
-  onBack: () => void;
-  onSave: (description: string) => void;
-  onUpdate: (id: string, description: string) => void;
-  onDelete: (id: string) => void;
+function generateUUID(): string {
+  let d = new Date().getTime();
+  let d2 = 0;
+  return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function (c) {
+    let r = Math.random() * 16;
+    if (d > 0) {
+      r = (d + r) % 16 | 0;
+      d = Math.floor(d / 16);
+    } else {
+      r = (d2 + r) % 16 | 0;
+      d2 = Math.floor(d2 / 16);
+    }
+    return (c === 'x' ? r : (r & 0x3) | 0x8).toString(16);
+  });
 }
 
-export default function StoreFormScreen({ store, onBack, onSave, onUpdate, onDelete }: StoreFormScreenProps) {
+export default function StoreFormScreen() {
+  const route = useRoute<{ key: string; name: string; params: { store?: { id: string; description: string } } }>();
+  const navigation = useNavigation();
+  const { store } = route.params;
   const { colors } = useTheme();
   const { t } = useI18n();
   const [description, setDescription] = useState('');
@@ -26,14 +39,15 @@ export default function StoreFormScreen({ store, onBack, onSave, onUpdate, onDel
     setDescription(store?.description ?? '');
   }, [store]);
 
-  function handleSave() {
+  async function handleSave() {
     if (!isFormValid) return;
     Keyboard.dismiss();
     if (store) {
-      onUpdate(store.id, description.trim());
+      await updateStore(store.id, description.trim());
     } else {
-      onSave(description.trim());
+      await createStore(generateUUID(), description.trim());
     }
+    navigation.goBack();
   }
 
   function handleDeletePress() {
@@ -41,16 +55,17 @@ export default function StoreFormScreen({ store, onBack, onSave, onUpdate, onDel
     setIsDeleteSheetOpen(true);
   }
 
-  function handleConfirmDelete() {
+  async function handleConfirmDelete() {
     if (!store) return;
     Keyboard.dismiss();
-    onDelete(store.id);
+    await deleteStore(store.id);
     setIsDeleteSheetOpen(false);
+    navigation.goBack();
   }
 
   function handleGoBack() {
     Keyboard.dismiss();
-    onBack();
+    navigation.goBack();
   }
 
   return (

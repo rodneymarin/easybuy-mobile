@@ -1,23 +1,35 @@
 import { useEffect, useState } from 'react';
 import { Keyboard, KeyboardAvoidingView, Pressable, StyleSheet, Text, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import { useRoute, useNavigation } from '@react-navigation/native';
 import { Button, BottomSheet, ScreenTitle } from '@components/ui';
 import { ProductFormContent } from '@features/products/components';
+import { createProduct, updateProduct, deleteProduct } from '@lib/repositories/products';
 import { useI18n } from '@lib/i18n';
 import { useTheme } from '@lib/theme';
 import type { Price } from '@models/price.model';
 import type { StoreListData } from '@features/stores';
 
-interface ProductFormScreenProps {
-  product?: { id: string; productName: string; unitOfMeasurement: string; prices?: Price[] };
-  stores: StoreListData[];
-  onBack: () => void;
-  onSave: (productName: string, unitOfMeasurement: string, prices: Price[]) => void;
-  onUpdate: (id: string, productName: string, unitOfMeasurement: string, prices: Price[]) => void;
-  onDelete: (id: string) => void;
+function generateUUID(): string {
+  let d = new Date().getTime();
+  let d2 = 0;
+  return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function (c) {
+    let r = Math.random() * 16;
+    if (d > 0) {
+      r = (d + r) % 16 | 0;
+      d = Math.floor(d / 16);
+    } else {
+      r = (d2 + r) % 16 | 0;
+      d2 = Math.floor(d2 / 16);
+    }
+    return (c === 'x' ? r : (r & 0x3) | 0x8).toString(16);
+  });
 }
 
-export default function ProductFormScreen({ product, stores, onBack, onSave, onUpdate, onDelete }: ProductFormScreenProps) {
+export default function ProductFormScreen() {
+  const route = useRoute<{ key: string; name: string; params: { product?: { id: string; productName: string; unitOfMeasurement: string; prices?: Price[] }; stores: StoreListData[] } }>();
+  const navigation = useNavigation();
+  const { product, stores } = route.params;
   const { colors } = useTheme();
   const { t } = useI18n();
   const [productName, setProductName] = useState('');
@@ -34,14 +46,15 @@ export default function ProductFormScreen({ product, stores, onBack, onSave, onU
     setPrices(product?.prices ?? []);
   }, [product]);
 
-  function handleSave() {
+  async function handleSave() {
     if (!isFormValid) return;
     Keyboard.dismiss();
     if (product) {
-      onUpdate(product.id, productName.trim(), unitOfMeasurement, prices);
+      await updateProduct(product.id, productName.trim(), unitOfMeasurement, prices);
     } else {
-      onSave(productName.trim(), unitOfMeasurement, prices);
+      await createProduct(generateUUID(), productName.trim(), unitOfMeasurement, prices);
     }
+    navigation.goBack();
   }
 
   function handleDeletePress() {
@@ -49,16 +62,17 @@ export default function ProductFormScreen({ product, stores, onBack, onSave, onU
     setIsDeleteSheetOpen(true);
   }
 
-  function handleConfirmDelete() {
+  async function handleConfirmDelete() {
     if (!product) return;
     Keyboard.dismiss();
-    onDelete(product.id);
+    await deleteProduct(product.id);
     setIsDeleteSheetOpen(false);
+    navigation.goBack();
   }
 
   function handleGoBack() {
     Keyboard.dismiss();
-    onBack();
+    navigation.goBack();
   }
 
   return (

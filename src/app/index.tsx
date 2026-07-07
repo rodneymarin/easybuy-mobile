@@ -1,22 +1,37 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { StyleSheet, View, Text } from 'react-native';
 import { useTheme, ThemeProvider } from '@lib/theme';
 import { DrawerProvider } from '@lib/drawer';
 import { I18nProvider } from '@lib/i18n';
 import { MainMenu } from '@components/ui/main-menu';
-import { NavigationContainer } from '@react-navigation/native';
+import { DefaultTheme, DarkTheme, NavigationContainer } from '@react-navigation/native';
 import { StatusBar } from 'expo-status-bar';
 import { getDatabase } from '@lib/database';
 import { TabNavigator } from './navigation';
 
 function AppContent() {
-  const { isDark } = useTheme();
+  const { isDark, colors } = useTheme();
+
+  const navigationTheme = useMemo(() => {
+    const base = isDark ? DarkTheme : DefaultTheme;
+    return {
+      ...base,
+      colors: {
+        ...base.colors,
+        background: colors.background,
+        card: colors.cardBackground,
+        text: colors.text,
+        border: colors.border,
+        primary: colors.primary,
+      },
+    };
+  }, [isDark, colors]);
 
   return (
     <DrawerProvider>
       <SafeAreaProvider>
-        <NavigationContainer>
+        <NavigationContainer theme={navigationTheme}>
           <StatusBar style={isDark ? 'light' : 'dark'} />
           <TabNavigator />
         </NavigationContainer>

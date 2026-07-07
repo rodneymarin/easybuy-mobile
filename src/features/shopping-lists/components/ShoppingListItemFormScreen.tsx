@@ -1,22 +1,21 @@
 import { useEffect, useState } from 'react';
 import { KeyboardAvoidingView, Platform, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import { useRoute, useNavigation } from '@react-navigation/native';
 import { Button, BottomSheet, Dropdown, ScreenTitle, type DropdownOption } from '@components/ui';
 import { ProductFormSheet } from '@features/products/components';
+import { addItemToList, updateItemInList, removeItemFromList } from '@lib/repositories/shopping-lists';
 import { createProduct } from '@lib/repositories/products';
 import { useI18n } from '@lib/i18n';
 import { useTheme } from '@lib/theme';
 import type { Product } from '@models/product.model';
 import type { Store } from '@models/store.model';
 
-interface ShoppingListItemFormScreenProps {
+interface ItemFormParams {
   item?: { rowId: number; productId: string; quantity: number; storeId?: string };
+  shoppingListId: string;
   products: Product[];
   stores: Store[];
-  onBack: () => void;
-  onSave: (productId: string, quantity: number, storeId?: string) => void;
-  onUpdate: (rowId: number, productId: string, quantity: number, storeId?: string) => void;
-  onDelete: (rowId: number) => void;
 }
 
 function generateUUID(): string {
@@ -27,7 +26,10 @@ function generateUUID(): string {
   });
 }
 
-export default function ShoppingListItemFormScreen({ item, products, stores, onBack, onSave, onUpdate, onDelete }: ShoppingListItemFormScreenProps) {
+export default function ShoppingListItemFormScreen() {
+  const route = useRoute<{ key: string; name: string; params: ItemFormParams }>();
+  const navigation = useNavigation();
+  const { item, shoppingListId, products: initialProducts, stores } = route.params;
   const { colors } = useTheme();
   const { t } = useI18n();
   const [selectedProductId, setSelectedProductId] = useState<string | null>(null);
@@ -35,11 +37,11 @@ export default function ShoppingListItemFormScreen({ item, products, stores, onB
   const [quantityText, setQuantityText] = useState('1');
   const [isDeleteSheetOpen, setIsDeleteSheetOpen] = useState(false);
   const [isProductSheetOpen, setIsProductSheetOpen] = useState(false);
-  const [localProducts, setLocalProducts] = useState<Product[]>(products);
+  const [localProducts, setLocalProducts] = useState<Product[]>(initialProducts);
 
   useEffect(() => {
-    setLocalProducts(products);
-  }, [products]);
+    setLocalProducts(initialProducts);
+  }, [initialProducts]);
 
   const isEditMode = item !== undefined;
   const quantity = quantityText === '' ? 0 : parseFloat(quantityText);
@@ -80,24 +82,26 @@ export default function ShoppingListItemFormScreen({ item, products, stores, onB
     }
   }
 
-  function handleSave() {
+  async function handleSave() {
     if (!isFormValid || !selectedProductId) return;
     const qty = parseFloat(quantityText);
     if (item) {
-      onUpdate(item.rowId, selectedProductId, qty, selectedStoreId ?? undefined);
+      await updateItemInList(item.rowId, selectedProductId, qty, selectedStoreId ?? undefined);
     } else {
-      onSave(selectedProductId, qty, selectedStoreId ?? undefined);
+      await addItemToList(shoppingListId, { productId: selectedProductId, quantity: qty, storeId: selectedStoreId ?? undefined });
     }
+    navigation.goBack();
   }
 
   function handleDeletePress() {
     setIsDeleteSheetOpen(true);
   }
 
-  function handleConfirmDelete() {
+  async function handleConfirmDelete() {
     if (!item) return;
-    onDelete(item.rowId);
+    await removeItemFromList(item.rowId);
     setIsDeleteSheetOpen(false);
+    navigation.goBack();
   }
 
   async function handleCreateProduct(productName: string, unitOfMeasurement: string, prices: { storeId: string; value: number }[]) {
@@ -105,8 +109,7 @@ export default function ShoppingListItemFormScreen({ item, products, stores, onB
     try {
       await createProduct(id, productName, unitOfMeasurement, prices);
       const newProduct: Product = { id, productName, unitOfMeasurement, prices };
-      const updatedProducts = [...localProducts, newProduct];
-      setLocalProducts(updatedProducts);
+      setLocalProducts((prev) => [...prev, newProduct]);
       setSelectedProductId(id);
       setIsProductSheetOpen(false);
     } catch (error) {
@@ -118,7 +121,7 @@ export default function ShoppingListItemFormScreen({ item, products, stores, onB
     <KeyboardAvoidingView style={[styles.container, { backgroundColor: colors.background }]} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
       <View style={styles.headerWrapper}>
         <ScreenTitle>{isEditMode ? t('listItem.editTitle') : t('listItem.addTitle')}</ScreenTitle>
-        <Pressable onPress={onBack} style={styles.backButton} hitSlop={8}>
+        <Pressable onPress={() => navigation.goBack()} style={styles.backButton} hitSlop={8}>
           <Ionicons name="arrow-back" size={24} color={colors.text} />
         </Pressable>
       </View>
@@ -157,7 +160,7 @@ export default function ShoppingListItemFormScreen({ item, products, stores, onB
             <Text style={[styles.destructiveButtonText, { color: colors.destructiveBorder }]}>{t('listItem.delete')}</Text>
           </Button>
         )}
-        <Button variant="secondary" style={styles.actionButton} onPress={onBack}>
+        <Button variant="secondary" style={styles.actionButton} onPress={() => navigation.goBack()}>
           <Text style={[styles.buttonTextSecondary, { color: colors.text }]}>{t('listItem.cancel')}</Text>
         </Button>
         <Button variant="primary" style={styles.actionButton} onPress={handleSave} disabled={!isFormValid}>

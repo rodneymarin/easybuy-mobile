@@ -1,14 +1,16 @@
 import { useCallback, useMemo, useRef, useState } from 'react';
 import { ActivityIndicator, Pressable, StyleSheet, Text, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { useFocusEffect } from '@react-navigation/native';
+import { useFocusEffect, useNavigation } from '@react-navigation/native';
+import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { ScreenTitle } from '@components/ui/screen-title';
 import { BottomSheet, Button, SearchInput } from '@components/ui';
-import { StoreList, StoreFormScreen, type StoreListData } from '@features/stores';
+import { StoreList, type StoreListData } from '@features/stores';
 import { createStore, deleteStore, deleteStores, getAllStores, updateStore } from '@lib/repositories/stores';
 import { useDebounce } from '@lib/hooks';
 import { useI18n } from '@lib/i18n';
 import { useTheme } from '@lib/theme';
+import type { StoresStackParamList } from '../navigation';
 
 function generateUUID(): string {
   let d = new Date().getTime();
@@ -26,14 +28,15 @@ function generateUUID(): string {
   });
 }
 
+type TiendasNavigationProp = NativeStackNavigationProp<StoresStackParamList, 'StoreList'>;
+
 export default function TiendasScreen() {
   const { colors } = useTheme();
   const { t } = useI18n();
+  const navigation = useNavigation<TiendasNavigationProp>();
   const [isLoading, setIsLoading] = useState(true);
   const [stores, setStores] = useState<StoreListData[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
-  const [isFormOpen, setIsFormOpen] = useState(false);
-  const [selectedStore, setSelectedStore] = useState<StoreListData | undefined>(undefined);
   const [isSelectionMode, setIsSelectionMode] = useState(false);
   const [selectedStoreIds, setSelectedStoreIds] = useState<Set<string>>(new Set());
   const [isDeleteSelectedSheetOpen, setIsDeleteSelectedSheetOpen] = useState(false);
@@ -67,53 +70,25 @@ export default function TiendasScreen() {
       if (isFirstFocus.current) {
         isFirstFocus.current = false;
         loadStores(true);
-        return () => {
-          setIsFormOpen(false);
-          setSelectedStore(undefined);
-          resetSelection();
-        };
+        return;
       }
       loadStores();
-      return () => {
-        setIsFormOpen(false);
-        setSelectedStore(undefined);
-        resetSelection();
-      };
     }, [loadStores])
   );
 
   function openAddForm() {
-    setSelectedStore(undefined);
-    setIsFormOpen(true);
+    navigation.navigate('StoreForm', { store: undefined });
   }
 
   function openEditForm(storeId: string) {
     const store = stores.find((s) => s.id === storeId);
     if (store) {
-      setSelectedStore(store);
-      setIsFormOpen(true);
+      navigation.navigate('StoreForm', { store });
     }
   }
 
-  function closeForm() {
-    setIsFormOpen(false);
-  }
-
-  const handleAddStore = useCallback(async (description: string) => {
-    await createStore(generateUUID(), description);
-    closeForm();
-    await loadStores();
-  }, []);
-
-  const handleUpdateStore = useCallback(async (id: string, description: string) => {
-    await updateStore(id, description);
-    closeForm();
-    await loadStores();
-  }, []);
-
   async function handleDeleteStore(storeId: string) {
     await deleteStore(storeId);
-    closeForm();
     await loadStores();
   }
 
@@ -175,12 +150,6 @@ export default function TiendasScreen() {
         <ActivityIndicator size="large" color={colors.text} />
         <Text style={[styles.loadingText, { color: colors.textSecondary }]}>{t('common.loading')}</Text>
       </View>
-    );
-  }
-
-  if (isFormOpen) {
-    return (
-      <StoreFormScreen store={selectedStore} onBack={closeForm} onSave={handleAddStore} onUpdate={handleUpdateStore} onDelete={handleDeleteStore} />
     );
   }
 

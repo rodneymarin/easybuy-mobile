@@ -1,9 +1,10 @@
 import { useCallback, useMemo, useRef, useState } from 'react';
 import { ActivityIndicator, StyleSheet, Text, View } from 'react-native';
-import { useFocusEffect } from '@react-navigation/native';
+import { useFocusEffect, useNavigation } from '@react-navigation/native';
+import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { ScreenTitle } from '@components/ui/screen-title';
 import { BottomSheet, Button, SearchInput } from '@components/ui';
-import { ShoppingList, ShoppingListDetailScreen, ListTitleFormSheet, type ShoppingListData } from '@features/shopping-lists';
+import { ShoppingList, ListTitleFormSheet, type ShoppingListData } from '@features/shopping-lists';
 import { createShoppingList, deleteShoppingList, getAllShoppingLists } from '@lib/repositories/shopping-lists';
 import { getAllProducts } from '@lib/repositories/products';
 import { useDebounce } from '@lib/hooks';
@@ -27,14 +28,20 @@ function generateUUID(): string {
   });
 }
 
+type InicioStackParamList = {
+  InicioList: undefined;
+  ShoppingListDetail: { shoppingListId: string };
+};
+
+type InicioNavigationProp = NativeStackNavigationProp<InicioStackParamList, 'InicioList'>;
+
 export default function InicioScreen() {
   const { colors } = useTheme();
   const { t } = useI18n();
+  const navigation = useNavigation<InicioNavigationProp>();
   const [isLoading, setIsLoading] = useState(true);
   const [lists, setLists] = useState<ShoppingListData[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
-  const [isDetailOpen, setIsDetailOpen] = useState(false);
-  const [selectedListId, setSelectedListId] = useState<string | null>(null);
   const [isTitleSheetOpen, setIsTitleSheetOpen] = useState(false);
   const [isDeleteSheetOpen, setIsDeleteSheetOpen] = useState(false);
   const [listToDelete, setListToDelete] = useState<{ id: string; title: string } | null>(null);
@@ -64,17 +71,8 @@ export default function InicioScreen() {
     useCallback(() => {
       if (isFirstFocus.current) {
         isFirstFocus.current = false;
-        loadLists();
-        return () => {
-          setIsDetailOpen(false);
-          setSelectedListId(null);
-        };
       }
       loadLists();
-      return () => {
-        setIsDetailOpen(false);
-        setSelectedListId(null);
-      };
     }, [loadLists])
   );
 
@@ -91,19 +89,11 @@ export default function InicioScreen() {
     await createShoppingList(newId, title);
     closeTitleSheet();
     await loadLists();
-    setSelectedListId(newId);
-    setIsDetailOpen(true);
+    navigation.navigate('ShoppingListDetail', { shoppingListId: newId });
   }
 
   function openDetail(listId: string) {
-    setSelectedListId(listId);
-    setIsDetailOpen(true);
-  }
-
-  function closeDetail() {
-    setIsDetailOpen(false);
-    setSelectedListId(null);
-    loadLists();
+    navigation.navigate('ShoppingListDetail', { shoppingListId: listId });
   }
 
   function handleRemovePress(listId: string) {
@@ -139,10 +129,6 @@ export default function InicioScreen() {
         <Text style={[styles.loadingText, { color: colors.textSecondary }]}>{t('common.loading')}</Text>
       </View>
     );
-  }
-
-  if (isDetailOpen && selectedListId) {
-    return <ShoppingListDetailScreen shoppingListId={selectedListId} onBack={closeDetail} />;
   }
 
   return (

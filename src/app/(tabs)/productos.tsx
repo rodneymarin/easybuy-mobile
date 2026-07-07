@@ -1,11 +1,11 @@
 import { useCallback, useMemo, useRef, useState } from 'react';
 import { ActivityIndicator, Pressable, StyleSheet, Text, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { useFocusEffect } from '@react-navigation/native';
+import { useFocusEffect, useNavigation } from '@react-navigation/native';
+import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { ScreenTitle } from '@components/ui/screen-title';
 import { BottomSheet, Button, SearchInput } from '@components/ui';
 import { ProductList, type ProductListData } from '@features/products';
-import { ProductFormScreen } from '@features/products';
 import { createProduct, deleteProduct, deleteProducts, getAllProducts, updateProduct } from '@lib/repositories/products';
 import { getAllStores } from '@lib/repositories/stores';
 import { useDebounce } from '@lib/hooks';
@@ -14,6 +14,7 @@ import { useTheme } from '@lib/theme';
 import type { Product } from '@models/product.model';
 import type { Price } from '@models/price.model';
 import type { StoreListData } from '@features/stores';
+import type { ProductsStackParamList } from '../navigation';
 
 function generateUUID(): string {
   let d = new Date().getTime();
@@ -31,15 +32,16 @@ function generateUUID(): string {
   });
 }
 
+type ProductosNavigationProp = NativeStackNavigationProp<ProductsStackParamList, 'ProductList'>;
+
 export default function ProductosScreen() {
   const { colors } = useTheme();
   const { t } = useI18n();
+  const navigation = useNavigation<ProductosNavigationProp>();
   const [isLoading, setIsLoading] = useState(true);
   const [products, setProducts] = useState<Product[]>([]);
   const [stores, setStores] = useState<StoreListData[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
-  const [isFormOpen, setIsFormOpen] = useState(false);
-  const [selectedProduct, setSelectedProduct] = useState<Product | undefined>(undefined);
   const [isSelectionMode, setIsSelectionMode] = useState(false);
   const [selectedProductIds, setSelectedProductIds] = useState<Set<string>>(new Set());
   const [isDeleteSelectedSheetOpen, setIsDeleteSelectedSheetOpen] = useState(false);
@@ -70,53 +72,25 @@ export default function ProductosScreen() {
       if (isFirstFocus.current) {
         isFirstFocus.current = false;
         loadData(true);
-        return () => {
-          setIsFormOpen(false);
-          setSelectedProduct(undefined);
-          resetSelection();
-        };
+        return;
       }
       loadData();
-      return () => {
-        setIsFormOpen(false);
-        setSelectedProduct(undefined);
-        resetSelection();
-      };
     }, [loadData])
   );
 
   function openAddForm() {
-    setSelectedProduct(undefined);
-    setIsFormOpen(true);
+    navigation.navigate('ProductForm', { product: undefined, stores });
   }
 
   function openEditForm(productId: string) {
     const product = products.find((p) => p.id === productId);
     if (product) {
-      setSelectedProduct(product);
-      setIsFormOpen(true);
+      navigation.navigate('ProductForm', { product, stores });
     }
   }
 
-  function closeForm() {
-    setIsFormOpen(false);
-  }
-
-  const handleSave = useCallback(async (productName: string, unitOfMeasurement: string, prices: Price[]) => {
-    await createProduct(generateUUID(), productName, unitOfMeasurement, prices);
-    closeForm();
-    await loadData();
-  }, []);
-
-  const handleUpdate = useCallback(async (id: string, productName: string, unitOfMeasurement: string, prices: Price[]) => {
-    await updateProduct(id, productName, unitOfMeasurement, prices);
-    closeForm();
-    await loadData();
-  }, []);
-
   async function handleDelete(productId: string) {
     await deleteProduct(productId);
-    closeForm();
     await loadData();
   }
 
@@ -184,12 +158,6 @@ export default function ProductosScreen() {
         <ActivityIndicator size="large" color={colors.text} />
         <Text style={[styles.loadingText, { color: colors.textSecondary }]}>{t('common.loading')}</Text>
       </View>
-    );
-  }
-
-  if (isFormOpen) {
-    return (
-      <ProductFormScreen product={selectedProduct} stores={stores} onBack={closeForm} onSave={handleSave} onUpdate={handleUpdate} onDelete={handleDelete} />
     );
   }
 

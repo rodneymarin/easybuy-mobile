@@ -1,9 +1,11 @@
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useMemo, useState } from 'react';
 import { ActivityIndicator, Modal as RNModal, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import { useRoute, useNavigation, useFocusEffect } from '@react-navigation/native';
+import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { BottomSheet, Button, FadeIn, ScreenTitle, Tag, Toggle } from '@components/ui';
-import { ShoppingListCheckCircle, ShoppingListItemCard, ShoppingListItemTitle, ShoppingListTotals, ListTitleFormSheet, ShoppingListItemFormScreen } from '@features/shopping-lists/components';
-import { getShoppingListById, getAllShoppingLists, toggleItemDone, removeItemFromList, removeItemsFromList, moveItemsToList, updateShoppingListTitle, addItemToList, updateItemInList } from '@lib/repositories/shopping-lists';
+import { ShoppingListCheckCircle, ShoppingListItemCard, ShoppingListItemTitle, ShoppingListTotals, ListTitleFormSheet } from '@features/shopping-lists/components';
+import { getShoppingListById, getAllShoppingLists, toggleItemDone, removeItemsFromList, moveItemsToList, updateShoppingListTitle, removeItemFromList } from '@lib/repositories/shopping-lists';
 import { getAllProducts } from '@lib/repositories/products';
 import { getAllStores } from '@lib/repositories/stores';
 import { useI18n } from '@lib/i18n';
@@ -23,12 +25,16 @@ interface ItemDisplayData {
   isDone: boolean;
 }
 
-interface ShoppingListDetailScreenProps {
-  shoppingListId: string;
-  onBack: () => void;
-}
+type ListsNavigationParamList = {
+  ShoppingListItemForm: { item?: { rowId: number; productId: string; quantity: number; storeId?: string }; shoppingListId: string; products: Product[]; stores: Store[] };
+};
 
-export default function ShoppingListDetailScreen({ shoppingListId, onBack }: ShoppingListDetailScreenProps) {
+type DetailNavigationProp = NativeStackNavigationProp<ListsNavigationParamList>;
+
+export default function ShoppingListDetailScreen() {
+  const route = useRoute<{ key: string; name: string; params: { shoppingListId: string } }>();
+  const navigation = useNavigation<DetailNavigationProp>();
+  const { shoppingListId } = route.params;
   const { colors } = useTheme();
   const { t } = useI18n();
   const [isLoading, setIsLoading] = useState(true);
@@ -44,8 +50,6 @@ export default function ShoppingListDetailScreen({ shoppingListId, onBack }: Sho
   const [isRemoveCompletedSheetOpen, setIsRemoveCompletedSheetOpen] = useState(false);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isTitleSheetOpen, setIsTitleSheetOpen] = useState(false);
-  const [isItemFormOpen, setIsItemFormOpen] = useState(false);
-  const [editingItemRowId, setEditingItemRowId] = useState<number | null>(null);
 
   const loadData = useCallback(async () => {
     try {
@@ -64,9 +68,11 @@ export default function ShoppingListDetailScreen({ shoppingListId, onBack }: Sho
     }
   }, [shoppingListId]);
 
-  useEffect(() => {
-    loadData();
-  }, [loadData]);
+  useFocusEffect(
+    useCallback(() => {
+      loadData();
+    }, [loadData])
+  );
 
   const storeMap = useMemo(() => {
     const map = new Map<string, string>();
@@ -175,8 +181,10 @@ export default function ShoppingListDetailScreen({ shoppingListId, onBack }: Sho
   }
 
   function handleEditPress(item: ItemDisplayData) {
-    setEditingItemRowId(item.rowId);
-    setIsItemFormOpen(true);
+    if (!shoppingList) return;
+    const listItem = shoppingList.items.find((i) => i.rowId === item.rowId);
+    if (!listItem) return;
+    navigation.navigate('ShoppingListItemForm', { item: { rowId: listItem.rowId, productId: listItem.productId, quantity: listItem.quantity, storeId: listItem.storeId }, shoppingListId, products, stores });
   }
 
   function handleItemPress(item: ItemDisplayData) {
@@ -191,11 +199,13 @@ export default function ShoppingListDetailScreen({ shoppingListId, onBack }: Sho
     if (!isSelectionMode) {
       setIsSelectionMode(true);
       setSelectedItemRowIds(new Set([item.rowId]));
-      getAllShoppingLists().then((allLists) => {
-        setAvailableLists(allLists.filter((l) => l.id !== shoppingListId));
-      }).catch((error) => {
-        console.error("Failed to load lists for move:", error);
-      });
+      getAllShoppingLists()
+        .then((allLists) => {
+          setAvailableLists(allLists.filter((l) => l.id !== shoppingListId));
+        })
+        .catch((error) => {
+          console.error("Failed to load lists for move:", error);
+        });
     }
   }
 
@@ -282,67 +292,7 @@ export default function ShoppingListDetailScreen({ shoppingListId, onBack }: Sho
   }
 
   function handleAddPress() {
-    setEditingItemRowId(null);
-    setIsItemFormOpen(true);
-  }
-
-  async function handleSaveItem(productId: string, quantity: number, storeId?: string) {
-    try {
-      await addItemToList(shoppingListId, { productId, quantity, storeId });
-      await loadData();
-      setIsItemFormOpen(false);
-    } catch (error) {
-      console.error("Failed to add item:", error);
-    }
-  }
-
-  async function handleUpdateItem(rowId: number, productId: string, quantity: number, storeId?: string) {
-    setShoppingList((prev) => {
-      if (!prev) return prev;
-      return {
-        ...prev,
-        items: prev.items.map((item) =>
-          item.rowId === rowId ? { ...item, productId, quantity, storeId } : item
-        ),
-      };
-    });
-    setIsItemFormOpen(false);
-    setEditingItemRowId(null);
-    try {
-      await updateItemInList(rowId, productId, quantity, storeId);
-    } catch (error) {
-      console.error("Failed to update item:", error);
-    }
-  }
-
-  async function handleDeleteItem(rowId: number) {
-    setShoppingList((prev) => {
-      if (!prev) return prev;
-      return {
-        ...prev,
-        items: prev.items.filter((item) => item.rowId !== rowId),
-      };
-    });
-    setIsItemFormOpen(false);
-    setEditingItemRowId(null);
-    try {
-      await removeItemFromList(rowId);
-    } catch (error) {
-      console.error("Failed to remove item:", error);
-    }
-  }
-
-  const editingItem = useMemo(() => {
-    if (editingItemRowId === null || !shoppingList) return undefined;
-    const item = shoppingList.items.find((i) => i.rowId === editingItemRowId);
-    if (!item) return undefined;
-    return { rowId: item.rowId, productId: item.productId, quantity: item.quantity, storeId: item.storeId };
-  }, [editingItemRowId, shoppingList]);
-
-  if (isItemFormOpen) {
-    return (
-      <ShoppingListItemFormScreen item={editingItem} products={products} stores={stores} onBack={() => { setIsItemFormOpen(false); setEditingItemRowId(null); }} onSave={handleSaveItem} onUpdate={handleUpdateItem} onDelete={handleDeleteItem} />
-    );
+    navigation.navigate('ShoppingListItemForm', { item: undefined, shoppingListId, products, stores });
   }
 
   if (isLoading) {
@@ -350,7 +300,7 @@ export default function ShoppingListDetailScreen({ shoppingListId, onBack }: Sho
       <View style={[styles.container, { backgroundColor: colors.background }]}>
         <View style={styles.headerWrapper}>
           <ScreenTitle>{t('common.loading')}</ScreenTitle>
-          <Pressable onPress={onBack} style={styles.backButton} hitSlop={8}>
+          <Pressable onPress={navigation.goBack} style={styles.backButton} hitSlop={8}>
             <Ionicons name="arrow-back" size={24} color={colors.text} />
           </Pressable>
         </View>
@@ -364,7 +314,7 @@ export default function ShoppingListDetailScreen({ shoppingListId, onBack }: Sho
       <View style={[styles.container, { backgroundColor: colors.background }]}>
         <View style={styles.headerWrapper}>
           <ScreenTitle>{t('common.error')}</ScreenTitle>
-          <Pressable onPress={onBack} style={styles.backButton} hitSlop={8}>
+          <Pressable onPress={navigation.goBack} style={styles.backButton} hitSlop={8}>
             <Ionicons name="arrow-back" size={24} color={colors.text} />
           </Pressable>
         </View>
@@ -379,7 +329,7 @@ export default function ShoppingListDetailScreen({ shoppingListId, onBack }: Sho
         <Pressable onPress={handleTitlePress}>
           <ScreenTitle>{shoppingList.title}</ScreenTitle>
         </Pressable>
-        <Pressable onPress={onBack} style={styles.backButton} hitSlop={8}>
+        <Pressable onPress={navigation.goBack} style={styles.backButton} hitSlop={8}>
           <Ionicons name="arrow-back" size={24} color={colors.text} />
         </Pressable>
       </View>
