@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 import { BottomSheet, Button } from '@components/ui';
-import { ProductFormContent } from '@features/products/components';
+import ProductFormContent from './ProductFormContent';
 import { useI18n } from '@lib/i18n';
 import { useTheme } from '@lib/theme';
 import type { Price } from '@models/price.model';

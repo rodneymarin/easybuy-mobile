@@ -2,7 +2,7 @@
 
 ## UI / UX
 - Mejorar fluidez del slide del BottomSheet y del panel del main menu.
-- 
+- Editar precio
 
 ## Features
 - Agregar toast
@@ -12,7 +12,8 @@
 
 
 ## Bugs
-- 
+- Mientras está en editar precio, boton de guardar disabled.
+- Order listas alfabético
 
 ## Performance
 - 

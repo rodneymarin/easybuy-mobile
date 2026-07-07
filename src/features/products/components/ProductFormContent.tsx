@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { FlatList, Modal as RNModal, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { FadeIn, Input } from '@components/ui';
-import { ProductPrices } from '@features/products/components';
+import ProductPrices from './ProductPrices';
 import { useI18n } from '@lib/i18n';
 import { useTheme } from '@lib/theme';
 import { UNIT_OF_MEASUREMENT } from '@models/product.model';

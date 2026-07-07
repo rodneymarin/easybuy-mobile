@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { FlatList, Modal as RNModal, Pressable, StyleSheet, Text, View, type StyleProp, type ViewStyle } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { FadeIn } from '@components/ui';
+import { FadeIn } from '@components/ui/fade-in';
 import { useTheme } from '@lib/theme';
 
 export interface DropdownOption {
