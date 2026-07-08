@@ -1,7 +1,10 @@
-import { Pressable, StyleSheet, View, type ReactNode, type StyleProp, type ViewStyle } from 'react-native';
+import { useCallback, useState } from 'react';
+import { LayoutChangeEvent, Pressable, StyleSheet, View, type ReactNode, type StyleProp, type ViewStyle } from 'react-native';
 import { FadeIn } from '@components/ui/fade-in';
 import { useTheme } from '@lib/theme';
 import { useDialogContext } from './Dialog';
+
+const MAX_CARD_HEIGHT = 350;
 
 interface DialogContentProps {
   children: ReactNode;
@@ -11,11 +14,18 @@ interface DialogContentProps {
 export default function DialogContent({ children, style }: DialogContentProps) {
   const { colors } = useTheme();
   const { onClose } = useDialogContext();
+  const [isContentTall, setIsContentTall] = useState(false);
+
+  const handleLayout = useCallback((e: LayoutChangeEvent) => {
+    if (e.nativeEvent.layout.height >= MAX_CARD_HEIGHT) {
+      setIsContentTall(true);
+    }
+  }, []);
 
   return (
     <FadeIn style={styles.backdrop}>
       <Pressable style={StyleSheet.absoluteFill} onPress={onClose} />
-      <View style={[styles.card, { backgroundColor: colors.cardBackground }, style]}>
+      <View onLayout={handleLayout} style={[styles.card, { backgroundColor: colors.cardBackground }, style, isContentTall && { height: MAX_CARD_HEIGHT }]}>
         {children}
       </View>
     </FadeIn>
@@ -34,5 +44,6 @@ const styles = StyleSheet.create({
     borderRadius: 16,
     padding: 20,
     maxHeight: 350,
+    overflow: 'hidden',
   },
 });

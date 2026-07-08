@@ -1,8 +1,8 @@
 import { useEffect, useMemo, useState } from 'react';
-import { Keyboard, KeyboardAvoidingView, Platform, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
+import { FlatList, Keyboard, KeyboardAvoidingView, Platform, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useRoute, useNavigation } from '@react-navigation/native';
-import { Button, BottomSheet, Dropdown, ScreenTitle, useToast, type DropdownOption } from '@components/ui';
+import { Button, BottomSheet, ProductPicker, ScreenTitle, Select, SelectContent, SelectItem, SelectTrigger, useToast } from '@components/ui';
 import { ProductFormSheet } from '@features/products/components';
 import { addItemToList, updateItemInList, removeItemFromList } from '@lib/repositories/shopping-lists';
 import { createProduct, getProductByName } from '@lib/repositories/products';
@@ -54,7 +54,7 @@ export default function ShoppingListItemFormScreen() {
     };
   }, []);
 
-  const footerStyle = useMemo(() => [styles.footer, { borderTopColor: colors.border, paddingBottom: keyboardHeight + 16 }] as const, [colors.border, keyboardHeight]);
+  const footerStyle = useMemo(() => [styles.footer, { borderTopColor: colors.border, paddingBottom: keyboardHeight + 16 }], [colors.border, keyboardHeight]);
 
   useEffect(() => {
     setLocalProducts(initialProducts);
@@ -78,8 +78,7 @@ export default function ShoppingListItemFormScreen() {
 
   const total = unitPrice * quantity;
 
-  const productOptions: DropdownOption[] = localProducts.map((p) => ({ label: p.productName, value: p.id }));
-  const storeOptions: DropdownOption[] = [
+  const storeOptions: Array<{ label: string; value: string }> = [
     { label: t('listItem.storeNone'), value: '' },
     ...stores.map((s) => ({ label: s.description, value: s.id })),
   ];
@@ -162,14 +161,31 @@ export default function ShoppingListItemFormScreen() {
       <ScrollView style={styles.body} contentContainerStyle={styles.bodyContent} keyboardShouldPersistTaps="handled">
         <Text style={[styles.fieldLabel, { color: colors.text }]}>{t('listItem.productLabel')}</Text>
         <View style={styles.productRow}>
-          <Dropdown style={styles.productDropdown} value={selectedProductId} options={productOptions} onSelect={setSelectedProductId} placeholder={t('listItem.productPlaceholder')} />
+          <ProductPicker
+            value={selectedProductId}
+            onValueChange={setSelectedProductId}
+            placeholder={t('listItem.productPlaceholder')}
+            products={localProducts}
+            label={selectedProduct?.productName}
+            style={styles.productDropdown}
+          />
           <Button variant="secondary" onPress={() => setIsProductSheetOpen(true)} size="icon">
             <Ionicons name="add" size={20} color={colors.text} />
           </Button>
         </View>
 
         <Text style={[styles.fieldLabel, { color: colors.text }]}>{t('listItem.storeLabel')}</Text>
-        <Dropdown value={selectedStoreId} options={storeOptions} onSelect={(value) => setSelectedStoreId(value || null)} placeholder={t('listItem.storePlaceholder')} />
+        <Select value={selectedStoreId} onValueChange={(value) => setSelectedStoreId(value || null)}>
+          <SelectTrigger placeholder={t('listItem.storePlaceholder')} />
+<SelectContent>
+              <FlatList data={storeOptions} keyExtractor={(item) => item.value}
+                keyboardShouldPersistTaps="handled"
+                renderItem={({ item }) => (
+                  <SelectItem label={item.label} value={item.value} />
+                )}
+              />
+            </SelectContent>
+        </Select>
 
         <Text style={[styles.fieldLabel, { color: colors.text }]}>{t('listItem.quantityLabel')}</Text>
         <View style={styles.quantityRow}>

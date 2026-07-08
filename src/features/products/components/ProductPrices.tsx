@@ -1,8 +1,7 @@
 import { forwardRef, useImperativeHandle, useState } from 'react';
-import { Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
+import { FlatList, Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { Button, Dropdown } from '@components/ui';
-import type { DropdownOption } from '@components/ui';
+import { Button, Select, SelectContent, SelectItem, SelectTrigger } from '@components/ui';
 import { useI18n } from '@lib/i18n';
 import { useTheme } from '@lib/theme';
 import type { Price } from '@models/price.model';
@@ -35,7 +34,7 @@ export default forwardRef<ProductPricesHandle, ProductPricesProps>(function Prod
   const editAvailableStores = stores.filter((s) => !editingExcludedStoreIds.has(s.id));
 
   const currentAvailableStores = editingStoreId !== null ? editAvailableStores : availableStores;
-  const storeOptions: DropdownOption[] = currentAvailableStores.map((s) => ({ label: s.description, value: s.id }));
+  const storeOptions: Array<{ label: string; value: string }> = currentAvailableStores.map((s) => ({ label: s.description, value: s.id }));
 
   function handleRemovePrice(storeId: string) {
     onPricesChange(prices.filter((p) => p.storeId !== storeId));
@@ -116,7 +115,16 @@ export default forwardRef<ProductPricesHandle, ProductPricesProps>(function Prod
             if (editingStoreId === price.storeId) {
               return (
                 <View key={price.storeId} style={[styles.addPriceSection, { borderColor: colors.border }]}>
-                  <Dropdown value={newStoreId} options={storeOptions} onSelect={handleSelectStore} placeholder={t('products.addModal.storePlaceholder')} />
+                  <Select value={newStoreId} onValueChange={handleSelectStore}>
+                    <SelectTrigger placeholder={t('products.addModal.storePlaceholder')} />
+                    <SelectContent>
+                      <FlatList data={storeOptions} keyExtractor={(item) => item.value}
+                        renderItem={({ item }) => (
+                          <SelectItem label={item.label} value={item.value} />
+                        )}
+                      />
+                    </SelectContent>
+                  </Select>
                   <TextInput value={newPriceText} onChangeText={(text) => { const filtered = text.replace(/[^0-9.]/g, ''); if (filtered === '' || /^\d*\.?\d*$/.test(filtered)) setNewPriceText(filtered); }} placeholder={t('products.addModal.pricePlaceholder')} keyboardType="decimal-pad" placeholderTextColor={colors.placeholderText} style={[styles.priceInput, { color: colors.text, borderColor: colors.border, backgroundColor: colors.background }]} />
                   <View style={styles.addActions}>
                     <Button variant="primary" style={styles.addActionButton} onPress={handleConfirmEditPrice} disabled={!canConfirm}>
@@ -146,7 +154,16 @@ export default forwardRef<ProductPricesHandle, ProductPricesProps>(function Prod
 
       {isAddingPrice && editingStoreId === null ? (
         <View style={[styles.addPriceSection, { borderColor: colors.border }]}>
-          <Dropdown value={newStoreId} options={storeOptions} onSelect={handleSelectStore} placeholder={t('products.addModal.storePlaceholder')} />
+          <Select value={newStoreId} onValueChange={handleSelectStore}>
+            <SelectTrigger placeholder={t('products.addModal.storePlaceholder')} />
+            <SelectContent>
+              <FlatList data={storeOptions} keyExtractor={(item) => item.value}
+                renderItem={({ item }) => (
+                  <SelectItem label={item.label} value={item.value} />
+                )}
+              />
+            </SelectContent>
+          </Select>
           <TextInput value={newPriceText} onChangeText={(text) => { const filtered = text.replace(/[^0-9.]/g, ''); if (filtered === '' || /^\d*\.?\d*$/.test(filtered)) setNewPriceText(filtered); }} placeholder={t('products.addModal.pricePlaceholder')} keyboardType="decimal-pad" placeholderTextColor={colors.placeholderText} style={[styles.priceInput, { color: colors.text, borderColor: colors.border, backgroundColor: colors.background }]} />
           <View style={styles.addActions}>
             <Button variant="primary" style={styles.addActionButton} onPress={handleConfirmAddPrice} disabled={!canConfirm}>
