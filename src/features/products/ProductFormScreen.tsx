@@ -1,9 +1,10 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Keyboard, KeyboardAvoidingView, Pressable, StyleSheet, Text, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useRoute, useNavigation } from '@react-navigation/native';
 import { Button, BottomSheet, ScreenTitle } from '@components/ui';
 import { ProductFormContent } from '@features/products/components';
+import type { ProductPricesHandle } from '@features/products/components/ProductPrices';
 import { createProduct, updateProduct, deleteProduct } from '@lib/repositories/products';
 import { useI18n } from '@lib/i18n';
 import { useTheme } from '@lib/theme';
@@ -32,27 +33,38 @@ export default function ProductFormScreen() {
   const { product, stores } = route.params;
   const { colors } = useTheme();
   const { t } = useI18n();
+  const pricesRef = useRef<ProductPricesHandle>(null);
+  const latestPricesRef = useRef<Price[]>([]);
   const [productName, setProductName] = useState('');
   const [unitOfMeasurement, setUnitOfMeasurement] = useState('');
   const [prices, setPrices] = useState<Price[]>([]);
+  
+  function handlePricesChange(newPrices: Price[]) {
+    latestPricesRef.current = newPrices;
+    setPrices(newPrices);
+  }
   const [isDeleteSheetOpen, setIsDeleteSheetOpen] = useState(false);
 
   const isEditMode = product !== undefined;
   const isFormValid = productName.trim().length > 0 && unitOfMeasurement.length > 0;
 
   useEffect(() => {
+    const initialPrices = product?.prices ?? [];
     setProductName(product?.productName ?? '');
     setUnitOfMeasurement(product?.unitOfMeasurement ?? '');
-    setPrices(product?.prices ?? []);
+    setPrices(initialPrices);
+    latestPricesRef.current = initialPrices;
   }, [product]);
 
   async function handleSave() {
     if (!isFormValid) return;
+    pricesRef.current?.confirmPendingPrice();
     Keyboard.dismiss();
+    const pricesToSave = latestPricesRef.current;
     if (product) {
-      await updateProduct(product.id, productName.trim(), unitOfMeasurement, prices);
+      await updateProduct(product.id, productName.trim(), unitOfMeasurement, pricesToSave);
     } else {
-      await createProduct(generateUUID(), productName.trim(), unitOfMeasurement, prices);
+      await createProduct(generateUUID(), productName.trim(), unitOfMeasurement, pricesToSave);
     }
     navigation.goBack();
   }
@@ -84,7 +96,7 @@ export default function ProductFormScreen() {
         </Pressable>
       </View>
 
-      <ProductFormContent productName={productName} unitOfMeasurement={unitOfMeasurement} prices={prices} stores={stores} onProductNameChange={setProductName} onUnitOfMeasurementChange={setUnitOfMeasurement} onPricesChange={setPrices} />
+      <ProductFormContent ref={pricesRef} productName={productName} unitOfMeasurement={unitOfMeasurement} prices={prices} stores={stores} onProductNameChange={setProductName} onUnitOfMeasurementChange={setUnitOfMeasurement} onPricesChange={handlePricesChange} />
 
       <View style={[styles.footer, { borderTopColor: colors.border }]}>
         {isEditMode && (

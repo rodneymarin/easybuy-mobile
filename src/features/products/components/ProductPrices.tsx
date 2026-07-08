@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { forwardRef, useImperativeHandle, useState } from 'react';
 import { Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { Button, Dropdown } from '@components/ui';
@@ -14,7 +14,11 @@ interface ProductPricesProps {
   onPricesChange: (prices: Price[]) => void;
 }
 
-export default function ProductPrices({ prices, stores, onPricesChange }: ProductPricesProps) {
+export interface ProductPricesHandle {
+  confirmPendingPrice: () => void;
+}
+
+export default forwardRef<ProductPricesHandle, ProductPricesProps>(function ProductPrices({ prices, stores, onPricesChange }, ref) {
   const { colors } = useTheme();
   const { t } = useI18n();
   const [isAddingPrice, setIsAddingPrice] = useState(false);
@@ -91,6 +95,16 @@ export default function ProductPrices({ prices, stores, onPricesChange }: Produc
     return !isNaN(value) && value >= 0;
   })();
 
+  useImperativeHandle(ref, () => ({
+    confirmPendingPrice() {
+      if (isAddingPrice && canConfirm) {
+        handleConfirmAddPrice();
+      } else if (editingStoreId !== null && canConfirm) {
+        handleConfirmEditPrice();
+      }
+    },
+  }), [isAddingPrice, canConfirm, editingStoreId, handleConfirmAddPrice, handleConfirmEditPrice]);
+
   return (
     <View style={styles.container}>
       <Text style={[styles.sectionTitle, { color: colors.text }]}>{t('products.pricesSection')}</Text>
@@ -160,7 +174,7 @@ export default function ProductPrices({ prices, stores, onPricesChange }: Produc
       )}
     </View>
   );
-}
+});
 
 const styles = StyleSheet.create({
   container: {

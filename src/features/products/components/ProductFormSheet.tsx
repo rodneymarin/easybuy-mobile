@@ -1,7 +1,8 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 import { BottomSheet, Button } from '@components/ui';
 import ProductFormContent from './ProductFormContent';
+import type { ProductPricesHandle } from './ProductPrices';
 import { useI18n } from '@lib/i18n';
 import { useTheme } from '@lib/theme';
 import type { Price } from '@models/price.model';
@@ -17,23 +18,32 @@ interface ProductFormSheetProps {
 export default function ProductFormSheet({ isOpen, stores, onSave, onClose }: ProductFormSheetProps) {
   const { colors } = useTheme();
   const { t } = useI18n();
+  const pricesRef = useRef<ProductPricesHandle>(null);
+  const latestPricesRef = useRef<Price[]>([]);
   const [productName, setProductName] = useState('');
   const [unitOfMeasurement, setUnitOfMeasurement] = useState('');
   const [prices, setPrices] = useState<Price[]>([]);
 
   const isFormValid = productName.trim().length > 0 && unitOfMeasurement.length > 0;
 
+  function handlePricesChange(newPrices: Price[]) {
+    latestPricesRef.current = newPrices;
+    setPrices(newPrices);
+  }
+
   useEffect(() => {
     if (isOpen) {
       setProductName('');
       setUnitOfMeasurement('');
       setPrices([]);
+      latestPricesRef.current = [];
     }
   }, [isOpen]);
 
   function handleSave() {
     if (!isFormValid) return;
-    onSave(productName.trim(), unitOfMeasurement, prices);
+    pricesRef.current?.confirmPendingPrice();
+    onSave(productName.trim(), unitOfMeasurement, latestPricesRef.current);
   }
 
   function handleClose() {
@@ -47,7 +57,7 @@ export default function ProductFormSheet({ isOpen, stores, onSave, onClose }: Pr
     <BottomSheet isOpen={isOpen} onClose={handleClose} percentage={0.75}>
       <Text style={[styles.title, { color: colors.text }]}>{t('products.addTitle')}</Text>
       <View style={styles.content}>
-        <ProductFormContent productName={productName} unitOfMeasurement={unitOfMeasurement} prices={prices} stores={stores} noPadding onProductNameChange={setProductName} onUnitOfMeasurementChange={setUnitOfMeasurement} onPricesChange={setPrices} />
+        <ProductFormContent ref={pricesRef} productName={productName} unitOfMeasurement={unitOfMeasurement} prices={prices} stores={stores} noPadding onProductNameChange={setProductName} onUnitOfMeasurementChange={setUnitOfMeasurement} onPricesChange={handlePricesChange} />
       </View>
       <Button variant="primary" style={styles.saveButton} onPress={handleSave} disabled={!isFormValid}>
         <Text style={styles.buttonTextPrimary}>{t('products.addModal.save')}</Text>

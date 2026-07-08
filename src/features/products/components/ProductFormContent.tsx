@@ -1,6 +1,7 @@
+import { forwardRef } from 'react';
 import { FlatList, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { Input, Select, SelectContent, SelectItem, SelectTrigger } from '@components/ui';
-import ProductPrices from './ProductPrices';
+import ProductPrices, { ProductPricesHandle } from './ProductPrices';
 import { useI18n } from '@lib/i18n';
 import { useTheme } from '@lib/theme';
 import { UNIT_OF_MEASUREMENT } from '@models/product.model';
@@ -18,7 +19,7 @@ interface ProductFormContentProps {
   onPricesChange: (prices: Price[]) => void;
 }
 
-export default function ProductFormContent({ productName, unitOfMeasurement, prices, stores, noPadding, onProductNameChange, onUnitOfMeasurementChange, onPricesChange }: ProductFormContentProps) {
+export default forwardRef<ProductPricesHandle, ProductFormContentProps>(function ProductFormContent({ productName, unitOfMeasurement, prices, stores, noPadding, onProductNameChange, onUnitOfMeasurementChange, onPricesChange }, ref) {
   const { colors } = useTheme();
   const { t } = useI18n();
 
@@ -38,10 +39,10 @@ export default function ProductFormContent({ productName, unitOfMeasurement, pri
           />
         </SelectContent>
       </Select>
-      <ProductPrices prices={prices} stores={stores} onPricesChange={onPricesChange} />
+      <ProductPrices ref={ref} prices={prices} stores={stores} onPricesChange={onPricesChange} />
     </ScrollView>
   );
-}
+});
 
 const styles = StyleSheet.create({
   body: {
