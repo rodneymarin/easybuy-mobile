@@ -2,7 +2,7 @@ import { StyleSheet, Text, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { PressableCard } from '@components/ui/pressable-card';
 import { Tag } from '@components/ui';
-import { useI18n } from '@lib/i18n';
+import { tUnit, useI18n } from '@lib/i18n';
 import { useTheme } from '@lib/theme';
 
 interface ProductListItemProps {
@@ -18,10 +18,7 @@ export default function ProductListItem({ productName, unitOfMeasurement, isSele
 	const { colors } = useTheme();
 	const { t } = useI18n();
 
-	const unitLabel = (() => {
-		const label = t(`unit.${unitOfMeasurement}`);
-		return label !== `unit.${unitOfMeasurement}` ? label : unitOfMeasurement;
-	})();
+	const unitLabel = tUnit(t, unitOfMeasurement);
 
 	return (
 		<PressableCard onPress={onPress} onLongPress={onLongPress} style={[styles.card, { borderColor: colors.border }]}>

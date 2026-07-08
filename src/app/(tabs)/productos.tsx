@@ -4,33 +4,18 @@ import { Ionicons } from '@expo/vector-icons';
 import { useFocusEffect, useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { ScreenTitle } from '@components/ui/screen-title';
-import { BottomSheet, Button, SearchInput, useToast } from '@components/ui';
+import { Button, ConfirmDeleteSheet, SearchInput, useToast } from '@components/ui';
 import { ProductList, type ProductListData } from '@features/products';
-import { createProduct, deleteProduct, deleteProducts, getAllProducts, updateProduct } from '@lib/repositories/products';
+import { deleteProducts, getAllProducts } from '@lib/repositories/products';
 import { getAllStores } from '@lib/repositories/stores';
-import { useDebounce } from '@lib/hooks';
+import { useDebounce, useSelectionMode } from '@lib/hooks';
 import { useI18n } from '@lib/i18n';
 import { useTheme } from '@lib/theme';
+import { generateUUID } from '@lib/uuid';
 import type { Product } from '@models/product.model';
 import type { Price } from '@models/price.model';
 import type { StoreListData } from '@features/stores';
 import type { ProductsStackParamList } from '../navigation';
-
-function generateUUID(): string {
-  let d = new Date().getTime();
-  let d2 = 0;
-  return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function (c) {
-    let r = Math.random() * 16;
-    if (d > 0) {
-      r = (d + r) % 16 | 0;
-      d = Math.floor(d / 16);
-    } else {
-      r = (d2 + r) % 16 | 0;
-      d2 = Math.floor(d2 / 16);
-    }
-    return (c === 'x' ? r : (r & 0x3) | 0x8).toString(16);
-  });
-}
 
 type ProductosNavigationProp = NativeStackNavigationProp<ProductsStackParamList, 'ProductList'>;
 
@@ -42,8 +27,7 @@ export default function ProductosScreen() {
   const [products, setProducts] = useState<Product[]>([]);
   const [stores, setStores] = useState<StoreListData[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
-  const [isSelectionMode, setIsSelectionMode] = useState(false);
-  const [selectedProductIds, setSelectedProductIds] = useState<Set<string>>(new Set());
+  const { isSelectionMode, setIsSelectionMode, selectedIds: selectedProductIds, setSelectedIds: setSelectedProductIds, resetSelection, toggleSelection, handlePress, exitSelectionMode } = useSelectionMode();
   const [isDeleteSelectedSheetOpen, setIsDeleteSelectedSheetOpen] = useState(false);
   const debouncedSearch = useDebounce(searchQuery, 300);
   const toast = useToast();
@@ -62,11 +46,6 @@ export default function ProductosScreen() {
       if (isInitial) setIsLoading(false);
     }
   }, []);
-
-  function resetSelection() {
-    setIsSelectionMode(false);
-    setSelectedProductIds(new Set());
-  }
 
   useFocusEffect(
     useCallback(() => {
@@ -90,17 +69,8 @@ export default function ProductosScreen() {
     }
   }
 
-  async function handleDelete(productId: string) {
-    await deleteProduct(productId);
-    await loadData();
-  }
-
   function handleProductPress(productId: string) {
-    if (isSelectionMode) {
-      toggleProductSelection(productId);
-    } else {
-      openEditForm(productId);
-    }
+    handlePress(productId, openEditForm);
   }
 
   function handleProductLongPress(productId: string) {
@@ -108,25 +78,6 @@ export default function ProductosScreen() {
       setIsSelectionMode(true);
       setSelectedProductIds(new Set([productId]));
     }
-  }
-
-  function toggleProductSelection(productId: string) {
-    setSelectedProductIds((prev) => {
-      const next = new Set(prev);
-      if (next.has(productId)) {
-        next.delete(productId);
-        if (next.size === 0) {
-          setIsSelectionMode(false);
-        }
-      } else {
-        next.add(productId);
-      }
-      return next;
-    });
-  }
-
-  function handleExitSelectionMode() {
-    resetSelection();
   }
 
   function handleDeleteSelectedPress() {
@@ -168,7 +119,7 @@ export default function ProductosScreen() {
       <ScreenTitle>{t('tab.products')}</ScreenTitle>
       {isSelectionMode ? (
         <View style={styles.selectionHeader}>
-          <Pressable onPress={handleExitSelectionMode} hitSlop={8} style={styles.selectionBackButton}>
+          <Pressable onPress={exitSelectionMode} hitSlop={8} style={styles.selectionBackButton}>
             <Ionicons name="close" size={24} color={colors.text} />
           </Pressable>
           <Text style={[styles.selectionCount, { color: colors.text }]}>{selectedProductIds.size} {t('common.selected')}</Text>
@@ -196,16 +147,7 @@ export default function ProductosScreen() {
         </View>
       )}
 
-      <BottomSheet isOpen={isDeleteSelectedSheetOpen} onClose={() => setIsDeleteSelectedSheetOpen(false)}>
-        <Text style={[styles.deleteSheetTitle, { color: colors.text }]}>{t('products.deleteSelected.title')}</Text>
-        <Text style={[styles.deleteSheetMessage, { color: colors.textSecondary }]}>
-          {t('products.deleteSelected.confirmMessage', { count: selectedProductIds.size })}
-        </Text>
-        <Text style={[styles.deleteSheetWarning, { color: colors.textSecondary }]}>{t('products.deleteSelected.warning')}</Text>
-        <Button variant="destructive" style={styles.deleteSheetButton} onPress={handleConfirmDeleteSelected}>
-          <Text style={[styles.destructiveButtonText, { color: colors.destructiveBorder }]}>{t('products.deleteSelected.confirm')}</Text>
-        </Button>
-      </BottomSheet>
+      <ConfirmDeleteSheet isOpen={isDeleteSelectedSheetOpen} onClose={() => setIsDeleteSelectedSheetOpen(false)} onConfirm={handleConfirmDeleteSelected} title={t('products.deleteSelected.title')} message={t('products.deleteSelected.confirmMessage', { count: selectedProductIds.size })} warning={t('products.deleteSelected.warning')} confirmLabel={t('products.deleteSelected.confirm')} />
     </View>
   );
 }
@@ -260,25 +202,5 @@ const styles = StyleSheet.create({
   destructiveButtonText: {
     fontSize: 15,
     fontWeight: '600',
-  },
-  deleteSheetTitle: {
-    fontSize: 17,
-    fontWeight: '700',
-    marginBottom: 8,
-    textAlign: 'center',
-  },
-  deleteSheetMessage: {
-    fontSize: 15,
-    textAlign: 'center',
-    marginBottom: 8,
-  },
-  deleteSheetWarning: {
-    fontSize: 13,
-    textAlign: 'center',
-    marginBottom: 24,
-    lineHeight: 18,
-  },
-  deleteSheetButton: {
-    justifyContent: 'center',
   },
 });

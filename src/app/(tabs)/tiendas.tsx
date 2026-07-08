@@ -4,29 +4,14 @@ import { Ionicons } from '@expo/vector-icons';
 import { useFocusEffect, useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { ScreenTitle } from '@components/ui/screen-title';
-import { BottomSheet, Button, SearchInput, useToast } from '@components/ui';
+import { Button, ConfirmDeleteSheet, SearchInput, useToast } from '@components/ui';
 import { StoreList, type StoreListData } from '@features/stores';
-import { createStore, deleteStore, deleteStores, getAllStores, updateStore } from '@lib/repositories/stores';
-import { useDebounce } from '@lib/hooks';
+import { deleteStores, getAllStores } from '@lib/repositories/stores';
+import { useDebounce, useSelectionMode } from '@lib/hooks';
 import { useI18n } from '@lib/i18n';
 import { useTheme } from '@lib/theme';
+import { generateUUID } from '@lib/uuid';
 import type { StoresStackParamList } from '../navigation';
-
-function generateUUID(): string {
-  let d = new Date().getTime();
-  let d2 = 0;
-  return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function (c) {
-    let r = Math.random() * 16;
-    if (d > 0) {
-      r = (d + r) % 16 | 0;
-      d = Math.floor(d / 16);
-    } else {
-      r = (d2 + r) % 16 | 0;
-      d2 = Math.floor(d2 / 16);
-    }
-    return (c === 'x' ? r : (r & 0x3) | 0x8).toString(16);
-  });
-}
 
 type TiendasNavigationProp = NativeStackNavigationProp<StoresStackParamList, 'StoreList'>;
 
@@ -37,8 +22,7 @@ export default function TiendasScreen() {
   const [isLoading, setIsLoading] = useState(true);
   const [stores, setStores] = useState<StoreListData[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
-  const [isSelectionMode, setIsSelectionMode] = useState(false);
-  const [selectedStoreIds, setSelectedStoreIds] = useState<Set<string>>(new Set());
+  const { isSelectionMode, setIsSelectionMode, selectedIds: selectedStoreIds, setSelectedIds: setSelectedStoreIds, resetSelection, toggleSelection, handlePress, exitSelectionMode } = useSelectionMode();
   const [isDeleteSelectedSheetOpen, setIsDeleteSelectedSheetOpen] = useState(false);
   const debouncedSearch = useDebounce(searchQuery, 300);
   const toast = useToast();
@@ -62,11 +46,6 @@ export default function TiendasScreen() {
     }
   }, []);
 
-  function resetSelection() {
-    setIsSelectionMode(false);
-    setSelectedStoreIds(new Set());
-  }
-
   useFocusEffect(
     useCallback(() => {
       if (isFirstFocus.current) {
@@ -89,17 +68,8 @@ export default function TiendasScreen() {
     }
   }
 
-  async function handleDeleteStore(storeId: string) {
-    await deleteStore(storeId);
-    await loadStores();
-  }
-
   function handleStorePress(storeId: string) {
-    if (isSelectionMode) {
-      toggleStoreSelection(storeId);
-    } else {
-      openEditForm(storeId);
-    }
+    handlePress(storeId, openEditForm);
   }
 
   function handleStoreLongPress(storeId: string) {
@@ -107,25 +77,6 @@ export default function TiendasScreen() {
       setIsSelectionMode(true);
       setSelectedStoreIds(new Set([storeId]));
     }
-  }
-
-  function toggleStoreSelection(storeId: string) {
-    setSelectedStoreIds((prev) => {
-      const next = new Set(prev);
-      if (next.has(storeId)) {
-        next.delete(storeId);
-        if (next.size === 0) {
-          setIsSelectionMode(false);
-        }
-      } else {
-        next.add(storeId);
-      }
-      return next;
-    });
-  }
-
-  function handleExitSelectionMode() {
-    resetSelection();
   }
 
   function handleDeleteSelectedPress() {
@@ -161,7 +112,7 @@ export default function TiendasScreen() {
       <ScreenTitle>{t('tab.stores')}</ScreenTitle>
       {isSelectionMode ? (
         <View style={styles.selectionHeader}>
-          <Pressable onPress={handleExitSelectionMode} hitSlop={8} style={styles.selectionBackButton}>
+          <Pressable onPress={exitSelectionMode} hitSlop={8} style={styles.selectionBackButton}>
             <Ionicons name="close" size={24} color={colors.text} />
           </Pressable>
           <Text style={[styles.selectionCount, { color: colors.text }]}>{selectedStoreIds.size} {t('common.selected')}</Text>
@@ -189,16 +140,7 @@ export default function TiendasScreen() {
         </View>
       )}
 
-      <BottomSheet isOpen={isDeleteSelectedSheetOpen} onClose={() => setIsDeleteSelectedSheetOpen(false)}>
-        <Text style={[styles.deleteSheetTitle, { color: colors.text }]}>{t('stores.deleteSelected.title')}</Text>
-        <Text style={[styles.deleteSheetMessage, { color: colors.textSecondary }]}>
-          {t('stores.deleteSelected.confirmMessage', { count: selectedStoreIds.size })}
-        </Text>
-        <Text style={[styles.deleteSheetWarning, { color: colors.textSecondary }]}>{t('stores.deleteSelected.warning')}</Text>
-        <Button variant="destructive" style={styles.deleteSheetButton} onPress={handleConfirmDeleteSelected}>
-          <Text style={[styles.destructiveButtonText, { color: colors.destructiveBorder }]}>{t('stores.deleteSelected.confirm')}</Text>
-        </Button>
-      </BottomSheet>
+      <ConfirmDeleteSheet isOpen={isDeleteSelectedSheetOpen} onClose={() => setIsDeleteSelectedSheetOpen(false)} onConfirm={handleConfirmDeleteSelected} title={t('stores.deleteSelected.title')} message={t('stores.deleteSelected.confirmMessage', { count: selectedStoreIds.size })} warning={t('stores.deleteSelected.warning')} confirmLabel={t('stores.deleteSelected.confirm')} />
     </View>
   );
 }
@@ -253,25 +195,5 @@ const styles = StyleSheet.create({
   destructiveButtonText: {
     fontSize: 15,
     fontWeight: '600',
-  },
-  deleteSheetTitle: {
-    fontSize: 17,
-    fontWeight: '700',
-    marginBottom: 8,
-    textAlign: 'center',
-  },
-  deleteSheetMessage: {
-    fontSize: 15,
-    textAlign: 'center',
-    marginBottom: 8,
-  },
-  deleteSheetWarning: {
-    fontSize: 13,
-    textAlign: 'center',
-    marginBottom: 24,
-    lineHeight: 18,
-  },
-  deleteSheetButton: {
-    justifyContent: 'center',
   },
 });

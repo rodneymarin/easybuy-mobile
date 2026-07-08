@@ -69,4 +69,10 @@ function useI18n(): I18nContextValue {
   return context;
 }
 
-export { I18nProvider, useI18n };
+function tUnit(t: I18nContextValue['t'], unit: string): string {
+  const key = `unit.${unit}`;
+  const label = t(key);
+  return label !== key ? label : unit;
+}
+
+export { I18nProvider, useI18n, tUnit };

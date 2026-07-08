@@ -2,11 +2,12 @@ import { useEffect, useMemo, useState } from 'react';
 import { FlatList, Keyboard, KeyboardAvoidingView, Platform, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useRoute, useNavigation } from '@react-navigation/native';
-import { Button, BottomSheet, ProductPicker, ScreenTitle, Select, SelectContent, SelectItem, SelectTrigger, useToast } from '@components/ui';
+import { Button, ConfirmDeleteSheet, ProductPicker, ScreenTitle, Select, SelectContent, SelectItem, SelectTrigger, useToast } from '@components/ui';
 import { ProductFormSheet } from '@features/products/components';
 import { addItemToList, updateItemInList, removeItemFromList } from '@lib/repositories/shopping-lists';
+import { generateUUID } from '@lib/uuid';
 import { createProduct, getProductByName } from '@lib/repositories/products';
-import { useI18n } from '@lib/i18n';
+import { tUnit, useI18n } from '@lib/i18n';
 import { useTheme } from '@lib/theme';
 import type { Product } from '@models/product.model';
 import type { Store } from '@models/store.model';
@@ -16,14 +17,6 @@ interface ItemFormParams {
   shoppingListId: string;
   products: Product[];
   stores: Store[];
-}
-
-function generateUUID(): string {
-  return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, (c) => {
-    const r = (Math.random() * 16) | 0;
-    const v = c === 'x' ? r : (r & 0x3) | 0x8;
-    return v.toString(16);
-  });
 }
 
 export default function ShoppingListItemFormScreen() {
@@ -66,11 +59,7 @@ export default function ShoppingListItemFormScreen() {
 
   const selectedProduct = localProducts.find((p) => p.id === selectedProductId);
 
-  const unitLabel = (() => {
-    if (!selectedProduct) return '';
-    const label = t(`unit.${selectedProduct.unitOfMeasurement}`);
-    return label !== `unit.${selectedProduct.unitOfMeasurement}` ? label : selectedProduct.unitOfMeasurement;
-  })();
+  const unitLabel = !selectedProduct ? '' : tUnit(t, selectedProduct.unitOfMeasurement);
 
   const unitPrice = selectedStoreId && selectedProduct?.prices
     ? selectedProduct.prices.find((p) => p.storeId === selectedStoreId)?.value ?? 0
@@ -161,14 +150,7 @@ export default function ShoppingListItemFormScreen() {
       <ScrollView style={styles.body} contentContainerStyle={styles.bodyContent} keyboardShouldPersistTaps="handled">
         <Text style={[styles.fieldLabel, { color: colors.text }]}>{t('listItem.productLabel')}</Text>
         <View style={styles.productRow}>
-          <ProductPicker
-            value={selectedProductId}
-            onValueChange={setSelectedProductId}
-            placeholder={t('listItem.productPlaceholder')}
-            products={localProducts}
-            label={selectedProduct?.productName}
-            style={styles.productDropdown}
-          />
+          <ProductPicker value={selectedProductId} onValueChange={setSelectedProductId} placeholder={t('listItem.productPlaceholder')} products={localProducts} label={selectedProduct?.productName} style={styles.productDropdown} />
           <Button variant="secondary" onPress={() => setIsProductSheetOpen(true)} size="icon">
             <Ionicons name="add" size={20} color={colors.text} />
           </Button>
@@ -217,13 +199,7 @@ export default function ShoppingListItemFormScreen() {
         </Button>
       </View>
 
-      <BottomSheet isOpen={isDeleteSheetOpen} onClose={() => setIsDeleteSheetOpen(false)}>
-        <Text style={[styles.deleteSheetTitle, { color: colors.text }]}>{t('listItem.deleteModal.title')}</Text>
-        <Text style={[styles.deleteSheetMessage, { color: colors.text }]}>{t('listItem.deleteModal.confirmMessage')}</Text>
-        <Button variant="destructive" style={styles.deleteSheetButton} onPress={handleConfirmDelete}>
-          <Text style={[styles.destructiveButtonText, { color: colors.destructiveBorder }]}>{t('listItem.deleteModal.confirm')}</Text>
-        </Button>
-      </BottomSheet>
+      <ConfirmDeleteSheet isOpen={isDeleteSheetOpen} onClose={() => setIsDeleteSheetOpen(false)} onConfirm={handleConfirmDelete} title={t('listItem.deleteModal.title')} message={t('listItem.deleteModal.confirmMessage')} confirmLabel={t('listItem.deleteModal.confirm')} />
 
       <ProductFormSheet isOpen={isProductSheetOpen} stores={stores} onSave={handleCreateProduct} onClose={() => setIsProductSheetOpen(false)} />
     </KeyboardAvoidingView>
@@ -319,19 +295,5 @@ const styles = StyleSheet.create({
   destructiveButtonText: {
     fontSize: 15,
     fontWeight: '600',
-  },
-  deleteSheetTitle: {
-    fontSize: 17,
-    fontWeight: '700',
-    marginBottom: 8,
-    textAlign: 'center',
-  },
-  deleteSheetMessage: {
-    fontSize: 15,
-    textAlign: 'center',
-    marginBottom: 20,
-  },
-  deleteSheetButton: {
-    justifyContent: 'center',
   },
 });

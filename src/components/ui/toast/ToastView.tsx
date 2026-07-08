@@ -83,13 +83,7 @@ export default function ToastView({ message, type, duration, onDismiss }: ToastV
 
   return (
     <View style={styles.wrapper} pointerEvents="box-none">
-      <Animated.View
-        style={[
-          styles.toast,
-          { backgroundColor: colors.bg, transform: [{ translateY }], opacity },
-        ]}
-        {...panResponder.panHandlers}
-      >
+      <Animated.View style={[styles.toast, { backgroundColor: colors.bg, transform: [{ translateY }], opacity }]} {...panResponder.panHandlers}>
         <Ionicons name={colors.icon} size={20} color={colors.text} style={styles.icon} />
         <Text style={[styles.message, { color: colors.text }]} numberOfLines={2}>
           {message}

@@ -1,5 +1,5 @@
 import { forwardRef } from 'react';
-import { FlatList, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { FlatList, ScrollView, StyleSheet, Text, type ViewStyle, View } from 'react-native';
 import { Input, Select, SelectContent, SelectItem, SelectTrigger } from '@components/ui';
 import ProductPrices, { ProductPricesHandle } from './ProductPrices';
 import { useI18n } from '@lib/i18n';
@@ -14,19 +14,20 @@ interface ProductFormContentProps {
   prices: Price[];
   stores: StoreListData[];
   noPadding?: boolean;
+  style?: ViewStyle;
   onProductNameChange: (name: string) => void;
   onUnitOfMeasurementChange: (unit: string) => void;
   onPricesChange: (prices: Price[]) => void;
 }
 
-export default forwardRef<ProductPricesHandle, ProductFormContentProps>(function ProductFormContent({ productName, unitOfMeasurement, prices, stores, noPadding, onProductNameChange, onUnitOfMeasurementChange, onPricesChange }, ref) {
+export default forwardRef<ProductPricesHandle, ProductFormContentProps>(function ProductFormContent({ productName, unitOfMeasurement, prices, stores, noPadding, style, onProductNameChange, onUnitOfMeasurementChange, onPricesChange }, ref) {
   const { colors } = useTheme();
   const { t } = useI18n();
 
   const selectedUnit = UNIT_OF_MEASUREMENT.find((u) => u.id === unitOfMeasurement);
 
   return (
-    <ScrollView style={styles.body} contentContainerStyle={noPadding ? styles.bodyContentNoPadding : styles.bodyContent} keyboardShouldPersistTaps="handled">
+    <ScrollView style={[styles.body, style]} contentContainerStyle={noPadding ? styles.bodyContentNoPadding : styles.bodyContent} keyboardShouldPersistTaps="handled">
       <Input value={productName} onChangeText={onProductNameChange} placeholder={t('products.addModal.namePlaceholder')} autoFocus returnKeyType="next" />
       <Text style={[styles.unitLabel, { color: colors.text }]}>{t('products.addModal.unitLabel')}</Text>
       <Select value={unitOfMeasurement} onValueChange={onUnitOfMeasurementChange}>

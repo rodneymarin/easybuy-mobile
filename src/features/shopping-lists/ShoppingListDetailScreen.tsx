@@ -6,10 +6,10 @@ import { useRoute, useNavigation, useFocusEffect } from '@react-navigation/nativ
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { BottomSheet, Button, Dialog, DialogContent, DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, ScreenTitle, Tag, Toggle, useToast } from '@components/ui';
 import { ShoppingListCheckCircle, ShoppingListItemCard, ShoppingListItemTitle, ShoppingListTotals, ListTitleFormSheet } from '@features/shopping-lists/components';
-import { getShoppingListById, getAllShoppingLists, toggleItemDone, removeItemsFromList, moveItemsToList, updateShoppingListTitle, removeItemFromList } from '@lib/repositories/shopping-lists';
+import { getShoppingListById, getAllShoppingLists, toggleItemDone, removeItemsFromList, moveItemsToList, updateShoppingListTitle } from '@lib/repositories/shopping-lists';
 import { getAllProducts } from '@lib/repositories/products';
 import { getAllStores } from '@lib/repositories/stores';
-import { useI18n } from '@lib/i18n';
+import { tUnit, useI18n } from '@lib/i18n';
 import { useTheme } from '@lib/theme';
 import type { ShoppingList } from '@models/shopping-list.model';
 import type { Product } from '@models/product.model';
@@ -107,11 +107,7 @@ export default function ShoppingListDetailScreen() {
       const product = productMap.get(item.productId);
       const storeDesc = item.storeId ? storeMap.get(item.storeId) : undefined;
       const price = product?.prices?.find((p) => p.storeId === item.storeId)?.value ?? 0;
-      const unitLabel = (() => {
-        if (!product) return '';
-        const label = t(`unit.${product.unitOfMeasurement}`);
-        return label !== `unit.${product.unitOfMeasurement}` ? label : product.unitOfMeasurement;
-      })();
+      const unitLabel = !product ? '' : tUnit(t, product.unitOfMeasurement);
       return {
         rowId: item.rowId,
         productName: product?.productName ?? t('common.unknown'),

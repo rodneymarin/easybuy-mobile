@@ -152,6 +152,8 @@ export const translations: Record<Language, TranslationMap> = {
 		'toast.storeUpdated': 'Store updated',
 		'toast.storeDeleted': 'Store deleted',
 		'toast.storesDeleted': 'Stores deleted',
+		'about.developedBy': 'Developed by Rodney Marín',
+		'about.version': 'V',
 	},
 	es: {
 		'tab.lists': 'Listas',
@@ -302,5 +304,7 @@ export const translations: Record<Language, TranslationMap> = {
 		'toast.storeUpdated': 'Tienda actualizada',
 		'toast.storeDeleted': 'Tienda eliminada',
 		'toast.storesDeleted': 'Tiendas eliminadas',
+		'about.developedBy': 'Desarrollado por Rodney Marín',
+		'about.version': 'V',
 	},
 };

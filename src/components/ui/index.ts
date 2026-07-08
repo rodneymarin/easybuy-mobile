@@ -15,3 +15,4 @@ export { Select, SelectTrigger, SelectContent, SelectItem } from './select';
 export { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem } from './dropdown-menu';
 export { ToastProvider, useToast } from './toast';
 export { ProductPicker } from './product-picker';
+export { ConfirmDeleteSheet } from './confirm-delete-sheet';

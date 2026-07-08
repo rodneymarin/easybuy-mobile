@@ -1,18 +1,6 @@
 import { type ReactNode, useRef } from 'react';
 import { Animated, type GestureResponderEvent, Pressable, type PressableProps } from 'react-native';
-import { useTheme } from '@lib/theme';
-
-function darkenColor(hex: string, amount: number): string {
-  let normalized = hex.replace('#', '');
-  if (normalized.length === 3) {
-    normalized = normalized.split('').map((c) => c + c).join('');
-  }
-  const num = parseInt(normalized, 16);
-  const r = Math.max(0, (num >> 16) - Math.round(255 * amount));
-  const g = Math.max(0, ((num >> 8) & 0x00ff) - Math.round(255 * amount));
-  const b = Math.max(0, (num & 0x0000ff) - Math.round(255 * amount));
-  return `rgb(${r}, ${g}, ${b})`;
-}
+import { darkenColor, useTheme } from '@lib/theme';
 
 const AnimatedPressable = Animated.createAnimatedComponent(Pressable);
 

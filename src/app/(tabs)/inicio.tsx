@@ -4,30 +4,15 @@ import { Ionicons } from '@expo/vector-icons';
 import { useFocusEffect, useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { ScreenTitle } from '@components/ui/screen-title';
-import { BottomSheet, Button, SearchInput, useToast } from '@components/ui';
+import { Button, ConfirmDeleteSheet, SearchInput, useToast } from '@components/ui';
 import { ShoppingList, ListTitleFormSheet, type ShoppingListData } from '@features/shopping-lists';
 import { createShoppingList, deleteShoppingList, getAllShoppingLists } from '@lib/repositories/shopping-lists';
 import { getAllProducts } from '@lib/repositories/products';
 import { useDebounce } from '@lib/hooks';
+import { generateUUID } from '@lib/uuid';
 import { useI18n } from '@lib/i18n';
 import { calcListTotalAmount } from '@models/shopping-list.model';
 import { useTheme } from '@lib/theme';
-
-function generateUUID(): string {
-  let d = new Date().getTime();
-  let d2 = 0;
-  return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function (c) {
-    let r = Math.random() * 16;
-    if (d > 0) {
-      r = (d + r) % 16 | 0;
-      d = Math.floor(d / 16);
-    } else {
-      r = (d2 + r) % 16 | 0;
-      d2 = Math.floor(d2 / 16);
-    }
-    return (c === 'x' ? r : (r & 0x3) | 0x8).toString(16);
-  });
-}
 
 type InicioStackParamList = {
   InicioList: undefined;
@@ -158,14 +143,7 @@ export default function InicioScreen() {
 
       <ListTitleFormSheet isOpen={isTitleSheetOpen} onSave={handleCreateList} onClose={closeTitleSheet} />
 
-      <BottomSheet isOpen={isDeleteSheetOpen} onClose={handleCancelDelete}>
-        <Text style={[styles.deleteSheetTitle, { color: colors.text }]}>{t('lists.deleteModal.title')}</Text>
-        <Text style={[styles.deleteSheetMessage, { color: colors.text }]}>{t('lists.deleteModal.confirmMessage', { list: listToDelete?.title ?? '' })}</Text>
-        <Text style={[styles.deleteSheetWarning, { color: colors.textSecondary }]}>{t('lists.deleteModal.warning')}</Text>
-        <Button variant="destructive" style={styles.deleteSheetButton} onPress={handleConfirmDelete}>
-          <Text style={[styles.destructiveButtonText, { color: colors.destructiveBorder }]}>{t('lists.deleteModal.confirm')}</Text>
-        </Button>
-      </BottomSheet>
+      <ConfirmDeleteSheet isOpen={isDeleteSheetOpen} onClose={handleCancelDelete} onConfirm={handleConfirmDelete} title={t('lists.deleteModal.title')} message={t('lists.deleteModal.confirmMessage', { list: listToDelete?.title ?? '' })} warning={t('lists.deleteModal.warning')} confirmLabel={t('lists.deleteModal.confirm')} />
     </View>
   );
 }
@@ -195,26 +173,6 @@ const styles = StyleSheet.create({
   emptyText: {
     fontSize: 16,
     textAlign: 'center',
-  },
-  deleteSheetTitle: {
-    fontSize: 17,
-    fontWeight: '700',
-    marginBottom: 8,
-    textAlign: 'center',
-  },
-  deleteSheetMessage: {
-    fontSize: 15,
-    textAlign: 'center',
-    marginBottom: 8,
-  },
-  deleteSheetWarning: {
-    fontSize: 13,
-    textAlign: 'center',
-    lineHeight: 18,
-    marginBottom: 20,
-  },
-  deleteSheetButton: {
-    justifyContent: 'center',
   },
   destructiveButtonText: {
     fontSize: 15,

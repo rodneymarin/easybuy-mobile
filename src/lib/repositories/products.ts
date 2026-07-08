@@ -1,4 +1,3 @@
-import type { SQLiteDatabase } from 'expo-sqlite';
 import type { Product } from '@models/product.model';
 import type { Price } from '@models/price.model';
 import { getDatabase } from '@lib/database';

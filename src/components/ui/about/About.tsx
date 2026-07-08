@@ -2,6 +2,7 @@ import Constants from 'expo-constants';
 import { Image, StyleSheet, Text, View } from 'react-native';
 import { BottomSheet } from '@components/ui/bottom-sheet';
 import { useTheme } from '@lib/theme';
+import { useI18n } from '@lib/i18n';
 
 interface AboutProps {
   isOpen: boolean;
@@ -10,6 +11,7 @@ interface AboutProps {
 
 function About({ isOpen, onClose }: AboutProps) {
   const { colors } = useTheme();
+  const { t } = useI18n();
   const appVersion = Constants.expoConfig?.version ?? '0.0.0';
 
   return (
@@ -17,8 +19,8 @@ function About({ isOpen, onClose }: AboutProps) {
       <View style={styles.container}>
         <Image source={require('@assets/logo.png')} style={[styles.logo, { width: 100, height: 100 }]} />
         <Text style={[styles.title, { color: colors.text }]}>EasyBuy</Text>
-        <Text style={[styles.subtitle, { color: colors.textSecondary }]}>Desarrollado por Rodney Marín</Text>
-        <Text style={[styles.version, { color: colors.placeholderText }]}>V{appVersion}</Text>
+        <Text style={[styles.subtitle, { color: colors.textSecondary }]}>{t('about.developedBy')}</Text>
+        <Text style={[styles.version, { color: colors.placeholderText }]}>{t('about.version')}{appVersion}</Text>
       </View>
     </BottomSheet>
   );

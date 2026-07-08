@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import { StyleSheet, Text, View } from 'react-native';
+import { StyleSheet, Text } from 'react-native';
 import { BottomSheet, Button } from '@components/ui';
 import ProductFormContent from './ProductFormContent';
 import type { ProductPricesHandle } from './ProductPrices';
@@ -56,9 +56,7 @@ export default function ProductFormSheet({ isOpen, stores, onSave, onClose }: Pr
   return (
     <BottomSheet isOpen={isOpen} onClose={handleClose} percentage={0.75}>
       <Text style={[styles.title, { color: colors.text }]}>{t('products.addTitle')}</Text>
-      <View style={styles.content}>
-        <ProductFormContent ref={pricesRef} productName={productName} unitOfMeasurement={unitOfMeasurement} prices={prices} stores={stores} noPadding onProductNameChange={setProductName} onUnitOfMeasurementChange={setUnitOfMeasurement} onPricesChange={handlePricesChange} />
-      </View>
+      <ProductFormContent ref={pricesRef} productName={productName} unitOfMeasurement={unitOfMeasurement} prices={prices} stores={stores} noPadding onProductNameChange={setProductName} onUnitOfMeasurementChange={setUnitOfMeasurement} onPricesChange={handlePricesChange} style={styles.content} />
       <Button variant="primary" style={styles.saveButton} onPress={handleSave} disabled={!isFormValid}>
         <Text style={styles.buttonTextPrimary}>{t('products.addModal.save')}</Text>
       </Button>

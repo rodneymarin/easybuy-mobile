@@ -82,12 +82,12 @@ function TabBarIndicator({ state, ...rest }: BottomTabBarProps) {
   const left = state.index * tabWidth + (tabWidth - barWidth) / 2;
 
   return (
-    <View>
+    <>
       <View style={[styles.indicatorContainer, { backgroundColor: colors.background }]}>
         <View style={[styles.indicator, { backgroundColor: colors.primary, width: `${barWidth}%`, left: `${left}%` }]} />
       </View>
       <BottomTabBar state={state} {...rest} />
-    </View>
+    </>
   );
 }
 
