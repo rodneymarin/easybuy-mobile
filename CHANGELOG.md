@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [1.3.2](https://github.com/rodneymarin/easybuy-mobile/compare/v1.3.1...v1.3.2) (2026-07-08)
+
+
+### Bug Fixes
+
+* buscadores no sensibles a tildes ([10cb728](https://github.com/rodneymarin/easybuy-mobile/commit/10cb72894e000645f78e05a7ad9968f9f7b23beb))
+
 ### [1.3.1](https://github.com/rodneymarin/easybuy-mobile/compare/v1.3.0...v1.3.1) (2026-07-08)
 
 ## [1.3.0](https://github.com/rodneymarin/easybuy-mobile/compare/v1.2.2...v1.3.0) (2026-07-08)
