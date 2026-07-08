@@ -2,6 +2,23 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [1.3.0](https://github.com/rodneymarin/easybuy-mobile/compare/v1.2.2...v1.3.0) (2026-07-08)
+
+
+### Features
+
+* create composable Select and DropdownMenu components ([9b47259](https://github.com/rodneymarin/easybuy-mobile/commit/9b472597b5256a910601b1ab327a40fbd3527b6e))
+
+
+### Bug Fixes
+
+* bug de scrolling ([1ad48cb](https://github.com/rodneymarin/easybuy-mobile/commit/1ad48cb5df9bc4ca51d2903f4cdea12d64901c7e))
+* mejoras varias ([a97a5f3](https://github.com/rodneymarin/easybuy-mobile/commit/a97a5f3e29c3ae3e7eec805ce11d6ce34c8522f6))
+* output APK to dist/app-release.apk (directory, not flat file) ([1708585](https://github.com/rodneymarin/easybuy-mobile/commit/1708585b8efc1a733de58c7bc8b564204e6806bd))
+* reset tab stack to root on tab press when secondary screen is active ([27d0e6e](https://github.com/rodneymarin/easybuy-mobile/commit/27d0e6ed03a408174a08f698c9ecf6cdf8cc8650))
+* set JDK 17 for Gradle and clean dist before build ([6bc52ee](https://github.com/rodneymarin/easybuy-mobile/commit/6bc52eef3a3afd11fb1b328ef593a858a9f9f5ac))
+* varios errores ([1021049](https://github.com/rodneymarin/easybuy-mobile/commit/1021049d97d8dd82cbb709dc5b8036f95e6f5c03))
+
 ### [1.2.2](https://github.com/rodneymarin/easybuy-mobile/compare/v1.2.1...v1.2.2) (2026-07-07)
 
 
