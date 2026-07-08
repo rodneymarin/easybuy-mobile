@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { StyleSheet, View, Text } from 'react-native';
+import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { useTheme, ThemeProvider } from '@lib/theme';
 import { DrawerProvider } from '@lib/drawer';
 import { I18nProvider } from '@lib/i18n';
@@ -30,15 +31,17 @@ function AppContent() {
 
   return (
     <DrawerProvider>
-      <SafeAreaProvider>
-        <ToastProvider>
-          <NavigationContainer theme={navigationTheme}>
-            <StatusBar style={isDark ? 'light' : 'dark'} />
-            <TabNavigator />
-          </NavigationContainer>
-          <MainMenu />
-        </ToastProvider>
-      </SafeAreaProvider>
+      <GestureHandlerRootView style={styles.gestureRoot}>
+        <SafeAreaProvider>
+          <ToastProvider>
+            <NavigationContainer theme={navigationTheme}>
+              <StatusBar style={isDark ? 'light' : 'dark'} />
+              <TabNavigator />
+            </NavigationContainer>
+            <MainMenu />
+          </ToastProvider>
+        </SafeAreaProvider>
+      </GestureHandlerRootView>
     </DrawerProvider>
   );
 }
@@ -72,6 +75,9 @@ export default function App() {
 }
 
 const styles = StyleSheet.create({
+  gestureRoot: {
+    flex: 1,
+  },
   loadingContainer: {
     flex: 1,
     justifyContent: 'center',
