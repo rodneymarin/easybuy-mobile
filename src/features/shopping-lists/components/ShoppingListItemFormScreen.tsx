@@ -133,7 +133,7 @@ export default function ShoppingListItemFormScreen() {
     try {
       await createProduct(id, productName, unitOfMeasurement, prices);
       const newProduct: Product = { id, productName, unitOfMeasurement, prices };
-      setLocalProducts((prev) => [...prev, newProduct]);
+      setLocalProducts((prev) => [...prev, newProduct].sort((a, b) => a.productName.localeCompare(b.productName)));
       setSelectedProductId(id);
       setIsProductSheetOpen(false);
     } catch (error) {
