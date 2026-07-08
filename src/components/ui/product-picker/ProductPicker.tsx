@@ -4,6 +4,7 @@ import { Input } from '@components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger } from '@components/ui/select';
 import { useDebounce } from '@lib/hooks/useDebounce';
 import { useI18n } from '@lib/i18n';
+import { normalizeText } from '@lib/utils';
 import type { Product } from '@models/product.model';
 
 export interface ProductPickerProps {
@@ -24,8 +25,8 @@ export default function ProductPicker({ value, onValueChange, placeholder, produ
 
   const filteredProducts = useMemo(() => {
     if (!debouncedSearch.trim()) return products;
-    const query = debouncedSearch.toLowerCase();
-    return products.filter((p) => p.productName.toLowerCase().includes(query));
+    const query = normalizeText(debouncedSearch);
+    return products.filter((p) => normalizeText(p.productName).includes(query));
   }, [products, debouncedSearch]);
 
   const selectedProduct = products.find((p) => p.id === value);

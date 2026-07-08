@@ -11,6 +11,7 @@ import { getAllProducts } from '@lib/repositories/products';
 import { useDebounce } from '@lib/hooks';
 import { generateUUID } from '@lib/uuid';
 import { useI18n } from '@lib/i18n';
+import { normalizeText } from '@lib/utils';
 import { calcListTotalAmount } from '@models/shopping-list.model';
 import { useTheme } from '@lib/theme';
 
@@ -107,8 +108,8 @@ export default function InicioScreen() {
 
   const filteredLists = useMemo(() => {
     if (!debouncedSearch.trim()) return lists;
-    const query = debouncedSearch.toLowerCase();
-    return lists.filter((l) => l.title.toLowerCase().includes(query));
+    const query = normalizeText(debouncedSearch);
+    return lists.filter((l) => normalizeText(l.title).includes(query));
   }, [lists, debouncedSearch]);
 
   if (isLoading) {

@@ -10,6 +10,7 @@ import { deleteProducts, getAllProducts } from '@lib/repositories/products';
 import { getAllStores } from '@lib/repositories/stores';
 import { useDebounce, useSelectionMode } from '@lib/hooks';
 import { useI18n } from '@lib/i18n';
+import { normalizeText } from '@lib/utils';
 import { useTheme } from '@lib/theme';
 import { generateUUID } from '@lib/uuid';
 import type { Product } from '@models/product.model';
@@ -101,8 +102,8 @@ export default function ProductosScreen() {
       unitOfMeasurement: p.unitOfMeasurement,
     }));
     if (!debouncedSearch.trim()) return mapped;
-    const query = debouncedSearch.toLowerCase();
-    return mapped.filter((p) => p.productName.toLowerCase().includes(query));
+    const query = normalizeText(debouncedSearch);
+    return mapped.filter((p) => normalizeText(p.productName).includes(query));
   }, [products, debouncedSearch]);
 
   if (isLoading) {

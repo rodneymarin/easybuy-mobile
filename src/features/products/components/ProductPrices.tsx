@@ -116,7 +116,7 @@ export default forwardRef<ProductPricesHandle, ProductPricesProps>(function Prod
               return (
                 <View key={price.storeId} style={[styles.addPriceSection, { borderColor: colors.border }]}>
                   <Select value={newStoreId} onValueChange={handleSelectStore}>
-                    <SelectTrigger placeholder={t('products.addModal.storePlaceholder')} />
+                    <SelectTrigger placeholder={t('products.addModal.storePlaceholder')} label={newStoreId ? stores.find((s) => s.id === newStoreId)?.description : undefined} />
                     <SelectContent>
                       <FlatList data={storeOptions} keyExtractor={(item) => item.value}
                         renderItem={({ item }) => (
@@ -155,7 +155,7 @@ export default forwardRef<ProductPricesHandle, ProductPricesProps>(function Prod
       {isAddingPrice && editingStoreId === null ? (
         <View style={[styles.addPriceSection, { borderColor: colors.border }]}>
           <Select value={newStoreId} onValueChange={handleSelectStore}>
-            <SelectTrigger placeholder={t('products.addModal.storePlaceholder')} />
+            <SelectTrigger placeholder={t('products.addModal.storePlaceholder')} label={newStoreId ? stores.find((s) => s.id === newStoreId)?.description : undefined} />
             <SelectContent>
               <FlatList data={storeOptions} keyExtractor={(item) => item.value}
                 renderItem={({ item }) => (

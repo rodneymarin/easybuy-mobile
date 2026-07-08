@@ -9,6 +9,7 @@ import { StoreList, type StoreListData } from '@features/stores';
 import { deleteStores, getAllStores } from '@lib/repositories/stores';
 import { useDebounce, useSelectionMode } from '@lib/hooks';
 import { useI18n } from '@lib/i18n';
+import { normalizeText } from '@lib/utils';
 import { useTheme } from '@lib/theme';
 import { generateUUID } from '@lib/uuid';
 import type { StoresStackParamList } from '../navigation';
@@ -94,8 +95,8 @@ export default function TiendasScreen() {
 
   const filteredStores = useMemo(() => {
     if (!debouncedSearch.trim()) return stores;
-    const query = debouncedSearch.toLowerCase();
-    return stores.filter((s) => s.description.toLowerCase().includes(query));
+    const query = normalizeText(debouncedSearch);
+    return stores.filter((s) => normalizeText(s.description).includes(query));
   }, [stores, debouncedSearch]);
 
   if (isLoading) {

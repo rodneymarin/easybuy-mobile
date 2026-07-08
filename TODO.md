@@ -8,6 +8,7 @@
 ## Refactors
 
 ## Bugs
+- Buscadores no deberian ser sensibles a tildes
 
 ## Performance
 - 
