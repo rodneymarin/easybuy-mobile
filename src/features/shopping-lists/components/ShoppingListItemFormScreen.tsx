@@ -59,6 +59,11 @@ export default function ShoppingListItemFormScreen() {
 
   const selectedProduct = localProducts.find((p) => p.id === selectedProductId);
 
+  const storeIdsWithPrices = useMemo(() => {
+    if (!selectedProduct?.prices) return new Set<string>();
+    return new Set(selectedProduct.prices.map(p => p.storeId));
+  }, [selectedProduct]);
+
   const unitLabel = !selectedProduct ? '' : tUnit(t, selectedProduct.unitOfMeasurement);
 
   const unitPrice = selectedStoreId && selectedProduct?.prices
@@ -165,7 +170,7 @@ export default function ShoppingListItemFormScreen() {
               <FlatList data={storeOptions} keyExtractor={(item) => item.value}
                 keyboardShouldPersistTaps="handled"
                 renderItem={({ item }) => (
-                  <SelectItem label={item.label} value={item.value} />
+                  <SelectItem label={item.label} value={item.value} hasIndicator={item.value !== '' && storeIdsWithPrices.has(item.value)} />
                 )}
               />
             </SelectContent>
