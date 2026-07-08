@@ -5,7 +5,7 @@ import { useRoute, useNavigation } from '@react-navigation/native';
 import { Button, BottomSheet, Dropdown, ScreenTitle, useToast, type DropdownOption } from '@components/ui';
 import { ProductFormSheet } from '@features/products/components';
 import { addItemToList, updateItemInList, removeItemFromList } from '@lib/repositories/shopping-lists';
-import { createProduct } from '@lib/repositories/products';
+import { createProduct, getProductByName } from '@lib/repositories/products';
 import { useI18n } from '@lib/i18n';
 import { useTheme } from '@lib/theme';
 import type { Product } from '@models/product.model';
@@ -133,6 +133,11 @@ export default function ShoppingListItemFormScreen() {
   }
 
   async function handleCreateProduct(productName: string, unitOfMeasurement: string, prices: { storeId: string; value: number }[]) {
+    const existing = await getProductByName(productName);
+    if (existing) {
+      toast.show({ message: t('toast.productNameExists'), type: 'error' });
+      return;
+    }
     const id = generateUUID();
     try {
       await createProduct(id, productName, unitOfMeasurement, prices);

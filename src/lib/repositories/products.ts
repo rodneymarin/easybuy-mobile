@@ -30,6 +30,20 @@ export async function getAllProducts(): Promise<Product[]> {
   }));
 }
 
+export async function getProductByName(productName: string, excludeId?: string): Promise<Product | null> {
+  const db = await getDatabase();
+  const product = await db.getFirstAsync<ProductRow>(
+    "SELECT id, product_name, unit_of_measurement FROM products WHERE LOWER(product_name) = LOWER(?) AND (? IS NULL OR id != ?)",
+    [productName, excludeId ?? null, excludeId ?? null]
+  );
+  if (!product) return null;
+  return {
+    id: product.id,
+    productName: product.product_name,
+    unitOfMeasurement: product.unit_of_measurement,
+  };
+}
+
 export async function createProduct(id: string, productName: string, unitOfMeasurement: string, prices: Price[]): Promise<void> {
   const db = await getDatabase();
   await db.runAsync("INSERT INTO products (id, product_name, unit_of_measurement) VALUES (?, ?, ?)", [id, productName, unitOfMeasurement]);

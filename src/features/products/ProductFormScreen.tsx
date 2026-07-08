@@ -5,7 +5,7 @@ import { useRoute, useNavigation } from '@react-navigation/native';
 import { Button, BottomSheet, ScreenTitle, useToast } from '@components/ui';
 import { ProductFormContent } from '@features/products/components';
 import type { ProductPricesHandle } from '@features/products/components/ProductPrices';
-import { createProduct, updateProduct, deleteProduct } from '@lib/repositories/products';
+import { createProduct, getProductByName, updateProduct, deleteProduct } from '@lib/repositories/products';
 import { useI18n } from '@lib/i18n';
 import { useTheme } from '@lib/theme';
 import type { Price } from '@models/price.model';
@@ -61,12 +61,18 @@ export default function ProductFormScreen() {
     if (!isFormValid) return;
     pricesRef.current?.confirmPendingPrice();
     Keyboard.dismiss();
+    const trimmedName = productName.trim();
+    const existing = await getProductByName(trimmedName, product?.id);
+    if (existing) {
+      toast.show({ message: t('toast.productNameExists'), type: 'error' });
+      return;
+    }
     const pricesToSave = latestPricesRef.current;
     if (product) {
-      await updateProduct(product.id, productName.trim(), unitOfMeasurement, pricesToSave);
+      await updateProduct(product.id, trimmedName, unitOfMeasurement, pricesToSave);
       toast.show({ message: t('toast.productUpdated'), type: 'success' });
     } else {
-      await createProduct(generateUUID(), productName.trim(), unitOfMeasurement, pricesToSave);
+      await createProduct(generateUUID(), trimmedName, unitOfMeasurement, pricesToSave);
       toast.show({ message: t('toast.productCreated'), type: 'success' });
     }
     navigation.goBack();
