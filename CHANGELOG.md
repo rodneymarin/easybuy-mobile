@@ -2,6 +2,14 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [1.3.3](https://github.com/rodneymarin/easybuy-mobile/compare/v1.3.2...v1.3.3) (2026-07-08)
+
+
+### Bug Fixes
+
+* dot para tiendas con precio ([70a6b74](https://github.com/rodneymarin/easybuy-mobile/commit/70a6b745ebd9121ee477c3c64097ab390dc8a1de))
+* mejoras en animaciones de paneles ([912ba72](https://github.com/rodneymarin/easybuy-mobile/commit/912ba7221ecfbe3d95eed3152e64ffe938de8c1b))
+
 ### [1.3.2](https://github.com/rodneymarin/easybuy-mobile/compare/v1.3.1...v1.3.2) (2026-07-08)
 
 
