@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { Keyboard, KeyboardAvoidingView, Platform, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useRoute, useNavigation } from '@react-navigation/native';
-import { Button, BottomSheet, Dropdown, ScreenTitle, type DropdownOption } from '@components/ui';
+import { Button, BottomSheet, Dropdown, ScreenTitle, useToast, type DropdownOption } from '@components/ui';
 import { ProductFormSheet } from '@features/products/components';
 import { addItemToList, updateItemInList, removeItemFromList } from '@lib/repositories/shopping-lists';
 import { createProduct } from '@lib/repositories/products';
@@ -39,6 +39,7 @@ export default function ShoppingListItemFormScreen() {
   const [isProductSheetOpen, setIsProductSheetOpen] = useState(false);
   const [keyboardHeight, setKeyboardHeight] = useState(0);
   const [localProducts, setLocalProducts] = useState<Product[]>(initialProducts);
+  const toast = useToast();
 
   useEffect(() => {
     const showSubscription = Keyboard.addListener('keyboardDidShow', (e) => {
@@ -104,8 +105,10 @@ export default function ShoppingListItemFormScreen() {
     const qty = parseFloat(quantityText);
     if (item) {
       await updateItemInList(item.rowId, selectedProductId, qty, selectedStoreId ?? undefined);
+      toast.show({ message: t('toast.itemUpdated'), type: 'success' });
     } else {
       await addItemToList(shoppingListId, { productId: selectedProductId, quantity: qty, storeId: selectedStoreId ?? undefined });
+      toast.show({ message: t('toast.itemAdded'), type: 'success' });
     }
     navigation.goBack();
   }
@@ -120,6 +123,7 @@ export default function ShoppingListItemFormScreen() {
     if (!item) return;
     await removeItemFromList(item.rowId);
     setIsDeleteSheetOpen(false);
+    toast.show({ message: t('toast.itemDeleted'), type: 'success' });
     navigation.goBack();
   }
 

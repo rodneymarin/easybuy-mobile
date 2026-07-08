@@ -4,7 +4,7 @@ import { StyleSheet, View, Text } from 'react-native';
 import { useTheme, ThemeProvider } from '@lib/theme';
 import { DrawerProvider } from '@lib/drawer';
 import { I18nProvider } from '@lib/i18n';
-import { MainMenu } from '@components/ui/main-menu';
+import { MainMenu, ToastProvider } from '@components/ui';
 import { DefaultTheme, DarkTheme, NavigationContainer } from '@react-navigation/native';
 import { StatusBar } from 'expo-status-bar';
 import { getDatabase } from '@lib/database';
@@ -31,12 +31,14 @@ function AppContent() {
   return (
     <DrawerProvider>
       <SafeAreaProvider>
-        <NavigationContainer theme={navigationTheme}>
-          <StatusBar style={isDark ? 'light' : 'dark'} />
-          <TabNavigator />
-        </NavigationContainer>
+        <ToastProvider>
+          <NavigationContainer theme={navigationTheme}>
+            <StatusBar style={isDark ? 'light' : 'dark'} />
+            <TabNavigator />
+          </NavigationContainer>
+          <MainMenu />
+        </ToastProvider>
       </SafeAreaProvider>
-      <MainMenu />
     </DrawerProvider>
   );
 }

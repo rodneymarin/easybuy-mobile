@@ -4,7 +4,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { useFocusEffect, useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { ScreenTitle } from '@components/ui/screen-title';
-import { BottomSheet, Button, SearchInput } from '@components/ui';
+import { BottomSheet, Button, SearchInput, useToast } from '@components/ui';
 import { StoreList, type StoreListData } from '@features/stores';
 import { createStore, deleteStore, deleteStores, getAllStores, updateStore } from '@lib/repositories/stores';
 import { useDebounce } from '@lib/hooks';
@@ -41,6 +41,7 @@ export default function TiendasScreen() {
   const [selectedStoreIds, setSelectedStoreIds] = useState<Set<string>>(new Set());
   const [isDeleteSelectedSheetOpen, setIsDeleteSelectedSheetOpen] = useState(false);
   const debouncedSearch = useDebounce(searchQuery, 300);
+  const toast = useToast();
 
   const isFirstFocus = useRef(true);
 
@@ -136,6 +137,7 @@ export default function TiendasScreen() {
     setIsDeleteSelectedSheetOpen(false);
     resetSelection();
     await deleteStores(ids);
+    toast.show({ message: t('toast.storesDeleted'), type: 'success' });
     await loadStores();
   }
 

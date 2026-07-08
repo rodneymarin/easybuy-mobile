@@ -4,7 +4,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { useFocusEffect, useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { ScreenTitle } from '@components/ui/screen-title';
-import { BottomSheet, Button, SearchInput } from '@components/ui';
+import { BottomSheet, Button, SearchInput, useToast } from '@components/ui';
 import { ShoppingList, ListTitleFormSheet, type ShoppingListData } from '@features/shopping-lists';
 import { createShoppingList, deleteShoppingList, getAllShoppingLists } from '@lib/repositories/shopping-lists';
 import { getAllProducts } from '@lib/repositories/products';
@@ -47,6 +47,7 @@ export default function InicioScreen() {
   const [isDeleteSheetOpen, setIsDeleteSheetOpen] = useState(false);
   const [listToDelete, setListToDelete] = useState<{ id: string; title: string } | null>(null);
   const debouncedSearch = useDebounce(searchQuery, 300);
+  const toast = useToast();
 
   const isFirstFocus = useRef(true);
 
@@ -89,6 +90,7 @@ export default function InicioScreen() {
     const newId = generateUUID();
     await createShoppingList(newId, title);
     closeTitleSheet();
+    toast.show({ message: t('toast.listCreated'), type: 'success' });
     await loadLists();
     navigation.navigate('ShoppingListDetail', { shoppingListId: newId });
   }
@@ -109,6 +111,7 @@ export default function InicioScreen() {
     await deleteShoppingList(listToDelete.id);
     setIsDeleteSheetOpen(false);
     setListToDelete(null);
+    toast.show({ message: t('toast.listDeleted'), type: 'success' });
     loadLists();
   }
 

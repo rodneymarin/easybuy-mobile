@@ -15,3 +15,4 @@ export { FadeIn } from './fade-in';
 export { Dialog, DialogContent, DialogTitle } from './dialog';
 export { Select, SelectTrigger, SelectContent, SelectItem } from './select';
 export { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem } from './dropdown-menu';
+export { ToastProvider, useToast } from './toast';

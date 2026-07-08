@@ -4,7 +4,7 @@ import * as Clipboard from 'expo-clipboard';
 import { Ionicons } from '@expo/vector-icons';
 import { useRoute, useNavigation, useFocusEffect } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import { BottomSheet, Button, Dialog, DialogContent, DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, ScreenTitle, Tag, Toggle } from '@components/ui';
+import { BottomSheet, Button, Dialog, DialogContent, DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, ScreenTitle, Tag, Toggle, useToast } from '@components/ui';
 import { ShoppingListCheckCircle, ShoppingListItemCard, ShoppingListItemTitle, ShoppingListTotals, ListTitleFormSheet } from '@features/shopping-lists/components';
 import { getShoppingListById, getAllShoppingLists, toggleItemDone, removeItemsFromList, moveItemsToList, updateShoppingListTitle, removeItemFromList } from '@lib/repositories/shopping-lists';
 import { getAllProducts } from '@lib/repositories/products';
@@ -52,6 +52,7 @@ export default function ShoppingListDetailScreen() {
   const [availableLists, setAvailableLists] = useState<{ id: string; title: string }[]>([]);
   const [isRemoveCompletedSheetOpen, setIsRemoveCompletedSheetOpen] = useState(false);
   const [isTitleSheetOpen, setIsTitleSheetOpen] = useState(false);
+  const toast = useToast();
 
   const loadData = useCallback(async () => {
     try {
@@ -239,6 +240,7 @@ export default function ShoppingListDetailScreen() {
     await updateShoppingListTitle(shoppingListId, title);
     setShoppingList((prev) => prev ? { ...prev, title } : prev);
     setIsTitleSheetOpen(false);
+    toast.show({ message: t('toast.listRenamed'), type: 'success' });
   }
 
   function resetSelection() {
@@ -307,6 +309,7 @@ export default function ShoppingListDetailScreen() {
     });
     resetSelection();
     await moveItemsToList(rowIds, targetListId);
+    toast.show({ message: t('toast.itemsMoved'), type: 'success' });
   }
 
   function handleDeleteSelectedPress() {
@@ -325,6 +328,7 @@ export default function ShoppingListDetailScreen() {
     });
     resetSelection();
     await removeItemsFromList(rowIds);
+    toast.show({ message: t('toast.itemsDeleted'), type: 'success' });
   }
 
   function handleRemoveCompletedPress() {
@@ -343,6 +347,7 @@ export default function ShoppingListDetailScreen() {
     for (const item of doneItemsList) {
       await toggleItemDone(item.rowId);
     }
+    toast.show({ message: t('toast.listUnchecked'), type: 'success' });
   }
 
   async function handleConfirmRemoveCompleted() {
@@ -356,6 +361,7 @@ export default function ShoppingListDetailScreen() {
       };
     });
     await removeItemsFromList(doneRowIds);
+    toast.show({ message: t('toast.completedDeleted'), type: 'success' });
   }
 
   function handleAddPress() {
@@ -372,6 +378,7 @@ export default function ShoppingListDetailScreen() {
     ];
     const text = lines.join('\n');
     await Clipboard.setStringAsync(text);
+    toast.show({ message: t('toast.listCopied'), type: 'success' });
   }
 
   if (isLoading) {

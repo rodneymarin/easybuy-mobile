@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { Keyboard, KeyboardAvoidingView, Pressable, StyleSheet, Text, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useRoute, useNavigation } from '@react-navigation/native';
-import { Button, Input, BottomSheet, ScreenTitle } from '@components/ui';
+import { Button, Input, BottomSheet, ScreenTitle, useToast } from '@components/ui';
 import { createStore, updateStore, deleteStore } from '@lib/repositories/stores';
 import { STORE_COLORS, getStoreColor } from '@lib/store-colors';
 import { useI18n } from '@lib/i18n';
@@ -33,6 +33,7 @@ export default function StoreFormScreen() {
   const [description, setDescription] = useState('');
   const [selectedColor, setSelectedColor] = useState(0);
   const [isDeleteSheetOpen, setIsDeleteSheetOpen] = useState(false);
+  const toast = useToast();
 
   const isEditMode = store !== undefined;
   const isFormValid = description.trim().length > 0;
@@ -49,8 +50,10 @@ export default function StoreFormScreen() {
     Keyboard.dismiss();
     if (store) {
       await updateStore(store.id, description.trim(), selectedColor);
+      toast.show({ message: t('toast.storeUpdated'), type: 'success' });
     } else {
       await createStore(generateUUID(), description.trim(), selectedColor);
+      toast.show({ message: t('toast.storeCreated'), type: 'success' });
     }
     navigation.goBack();
   }
@@ -65,6 +68,7 @@ export default function StoreFormScreen() {
     Keyboard.dismiss();
     await deleteStore(store.id);
     setIsDeleteSheetOpen(false);
+    toast.show({ message: t('toast.storeDeleted'), type: 'success' });
     navigation.goBack();
   }
 

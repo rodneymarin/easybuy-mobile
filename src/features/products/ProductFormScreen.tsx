@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import { Keyboard, KeyboardAvoidingView, Pressable, StyleSheet, Text, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useRoute, useNavigation } from '@react-navigation/native';
-import { Button, BottomSheet, ScreenTitle } from '@components/ui';
+import { Button, BottomSheet, ScreenTitle, useToast } from '@components/ui';
 import { ProductFormContent } from '@features/products/components';
 import type { ProductPricesHandle } from '@features/products/components/ProductPrices';
 import { createProduct, updateProduct, deleteProduct } from '@lib/repositories/products';
@@ -44,6 +44,7 @@ export default function ProductFormScreen() {
     setPrices(newPrices);
   }
   const [isDeleteSheetOpen, setIsDeleteSheetOpen] = useState(false);
+  const toast = useToast();
 
   const isEditMode = product !== undefined;
   const isFormValid = productName.trim().length > 0 && unitOfMeasurement.length > 0;
@@ -63,8 +64,10 @@ export default function ProductFormScreen() {
     const pricesToSave = latestPricesRef.current;
     if (product) {
       await updateProduct(product.id, productName.trim(), unitOfMeasurement, pricesToSave);
+      toast.show({ message: t('toast.productUpdated'), type: 'success' });
     } else {
       await createProduct(generateUUID(), productName.trim(), unitOfMeasurement, pricesToSave);
+      toast.show({ message: t('toast.productCreated'), type: 'success' });
     }
     navigation.goBack();
   }
@@ -79,6 +82,7 @@ export default function ProductFormScreen() {
     Keyboard.dismiss();
     await deleteProduct(product.id);
     setIsDeleteSheetOpen(false);
+    toast.show({ message: t('toast.productDeleted'), type: 'success' });
     navigation.goBack();
   }
 
