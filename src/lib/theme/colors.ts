@@ -23,7 +23,7 @@ const light: ThemeColors = {
 	textSecondary: '#666',
 	border: '#e0e0e0',
 	surface: '#f0f0f0',
-	surfaceText: '#555',
+	surfaceText: '#333',
 	primary: '#4A5DF9',
 	destructive: '#FFE0E0',
 	destructiveBorder: '#E05555',

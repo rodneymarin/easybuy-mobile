@@ -16,7 +16,7 @@ export default function Tag({ label, size = 'md', color, colorIndex }: TagProps)
   const resolvedColor = color ?? (colorIndex !== undefined ? getStoreColor(colorIndex, isDark) : undefined);
 
   if (resolvedColor) {
-    const textColor = isDark ? shadeColor(resolvedColor, 0.75) : shadeColor(resolvedColor, -0.4);
+    const textColor = isDark ? shadeColor(resolvedColor, 0.75) : shadeColor(resolvedColor, -0.55);
     const bgAlpha = isDark ? 0.2 : 0.35;
     return <Text style={[styles.tag, isSmall ? styles.tagSm : styles.tagMd, { backgroundColor: hexToRgba(resolvedColor, bgAlpha), borderColor: hexToRgba(resolvedColor, 0.4), borderWidth: 1 }, isSmall ? styles.labelSm : styles.labelMd, { color: textColor }]}>{label}</Text>;
   }

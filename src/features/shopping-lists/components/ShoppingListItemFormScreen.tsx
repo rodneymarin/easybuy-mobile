@@ -1,5 +1,5 @@
-import { useEffect, useState } from 'react';
-import { KeyboardAvoidingView, Platform, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
+import { useEffect, useMemo, useState } from 'react';
+import { Keyboard, KeyboardAvoidingView, Platform, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useRoute, useNavigation } from '@react-navigation/native';
 import { Button, BottomSheet, Dropdown, ScreenTitle, type DropdownOption } from '@components/ui';
@@ -37,7 +37,23 @@ export default function ShoppingListItemFormScreen() {
   const [quantityText, setQuantityText] = useState('1');
   const [isDeleteSheetOpen, setIsDeleteSheetOpen] = useState(false);
   const [isProductSheetOpen, setIsProductSheetOpen] = useState(false);
+  const [keyboardHeight, setKeyboardHeight] = useState(0);
   const [localProducts, setLocalProducts] = useState<Product[]>(initialProducts);
+
+  useEffect(() => {
+    const showSubscription = Keyboard.addListener('keyboardDidShow', (e) => {
+      setKeyboardHeight(e.endCoordinates.height);
+    });
+    const hideSubscription = Keyboard.addListener('keyboardDidHide', () => {
+      setKeyboardHeight(0);
+    });
+    return () => {
+      showSubscription.remove();
+      hideSubscription.remove();
+    };
+  }, []);
+
+  const footerStyle = useMemo(() => [styles.footer, { borderTopColor: colors.border, paddingBottom: keyboardHeight + 16 }] as const, [colors.border, keyboardHeight]);
 
   useEffect(() => {
     setLocalProducts(initialProducts);
@@ -83,6 +99,7 @@ export default function ShoppingListItemFormScreen() {
   }
 
   async function handleSave() {
+    Keyboard.dismiss();
     if (!isFormValid || !selectedProductId) return;
     const qty = parseFloat(quantityText);
     if (item) {
@@ -94,13 +111,20 @@ export default function ShoppingListItemFormScreen() {
   }
 
   function handleDeletePress() {
+    Keyboard.dismiss();
     setIsDeleteSheetOpen(true);
   }
 
   async function handleConfirmDelete() {
+    Keyboard.dismiss();
     if (!item) return;
     await removeItemFromList(item.rowId);
     setIsDeleteSheetOpen(false);
+    navigation.goBack();
+  }
+
+  function handleGoBack() {
+    Keyboard.dismiss();
     navigation.goBack();
   }
 
@@ -121,7 +145,7 @@ export default function ShoppingListItemFormScreen() {
     <KeyboardAvoidingView style={[styles.container, { backgroundColor: colors.background }]} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
       <View style={styles.headerWrapper}>
         <ScreenTitle>{isEditMode ? t('listItem.editTitle') : t('listItem.addTitle')}</ScreenTitle>
-        <Pressable onPress={() => navigation.goBack()} style={styles.backButton} hitSlop={8}>
+        <Pressable onPress={handleGoBack} style={styles.backButton} hitSlop={8}>
           <Ionicons name="arrow-back" size={24} color={colors.text} />
         </Pressable>
       </View>
@@ -154,13 +178,13 @@ export default function ShoppingListItemFormScreen() {
         </View>
       </ScrollView>
 
-      <View style={[styles.footer, { borderTopColor: colors.border }]}>
+      <View style={footerStyle}>
         {isEditMode && (
           <Button variant="destructive" style={styles.actionButton} onPress={handleDeletePress}>
             <Text style={[styles.destructiveButtonText, { color: colors.destructiveBorder }]}>{t('listItem.delete')}</Text>
           </Button>
         )}
-        <Button variant="secondary" style={styles.actionButton} onPress={() => navigation.goBack()}>
+        <Button variant="secondary" style={styles.actionButton} onPress={handleGoBack}>
           <Text style={[styles.buttonTextSecondary, { color: colors.text }]}>{t('listItem.cancel')}</Text>
         </Button>
         <Button variant="primary" style={styles.actionButton} onPress={handleSave} disabled={!isFormValid}>

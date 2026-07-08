@@ -6,7 +6,6 @@
 
 ## Features
 - Agregar toast
-- Editar precio
 
 ## Refactors
 
