@@ -64,6 +64,7 @@ const styles = StyleSheet.create({
     position: 'absolute',
     borderRadius: 14,
     paddingVertical: 4,
+    overflow: 'hidden',
     transformOrigin: 'top right',
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 4 },

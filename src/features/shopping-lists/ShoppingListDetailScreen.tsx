@@ -4,7 +4,7 @@ import * as Clipboard from 'expo-clipboard';
 import { Ionicons } from '@expo/vector-icons';
 import { useRoute, useNavigation, useFocusEffect } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import { BottomSheet, Button, DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, Modal, ScreenTitle, Tag, Toggle } from '@components/ui';
+import { BottomSheet, Button, Dialog, DialogContent, DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, ScreenTitle, Tag, Toggle } from '@components/ui';
 import { ShoppingListCheckCircle, ShoppingListItemCard, ShoppingListItemTitle, ShoppingListTotals, ListTitleFormSheet } from '@features/shopping-lists/components';
 import { getShoppingListById, getAllShoppingLists, toggleItemDone, removeItemsFromList, moveItemsToList, updateShoppingListTitle, removeItemFromList } from '@lib/repositories/shopping-lists';
 import { getAllProducts } from '@lib/repositories/products';
@@ -441,8 +441,8 @@ export default function ShoppingListDetailScreen() {
             </DropdownMenuTrigger>
             <DropdownMenuContent cardStyle={{ minWidth: 200 }}>
               <DropdownMenuItem label={t('listDetail.copyList')} onSelect={handleCopyList} />
-              <DropdownMenuItem label={t('listDetail.menuUncheckAll')} onSelect={handleUncheckAll} />
-              <DropdownMenuItem label={t('listDetail.removeCompleted')} onSelect={handleRemoveCompletedPress} />
+              <DropdownMenuItem label={t('listDetail.menuUncheckAll')} onSelect={handleUncheckAll} disabled={doneItems.length === 0} />
+              <DropdownMenuItem label={t('listDetail.removeCompleted')} onSelect={handleRemoveCompletedPress} disabled={doneItems.length === 0} />
             </DropdownMenuContent>
           </DropdownMenu>
         </View>
@@ -462,19 +462,21 @@ export default function ShoppingListDetailScreen() {
         </View>
       )}
 
-      <Modal isOpen={isMoreFilterOpen} onClose={() => setIsMoreFilterOpen(false)} cardStyle={[styles.filterDropdownCard, { backgroundColor: colors.cardBackground }]}>
-        {hiddenStores.map((store) => (
-          <Pressable key={store.id} style={styles.filterDropdownItem} onPress={() => { setIsMoreFilterOpen(false); handleSelectStore(store.id); }}>
-            <Text style={[styles.filterDropdownItemText, { color: colors.text }, activeStoreId === store.id && styles.filterDropdownItemTextActive]}>{store.description}</Text>
-            {activeStoreId === store.id && <Ionicons name="checkmark" size={18} color={colors.primary} />}
+      <Dialog isOpen={isMoreFilterOpen} onClose={() => setIsMoreFilterOpen(false)}>
+        <DialogContent style={[styles.filterDropdownCard, { backgroundColor: colors.cardBackground }]}>
+          {hiddenStores.map((store) => (
+            <Pressable key={store.id} style={styles.filterDropdownItem} onPress={() => { setIsMoreFilterOpen(false); handleSelectStore(store.id); }}>
+              <Text style={[styles.filterDropdownItemText, { color: colors.text }, activeStoreId === store.id && styles.filterDropdownItemTextActive]}>{store.description}</Text>
+              {activeStoreId === store.id && <Ionicons name="checkmark" size={18} color={colors.primary} />}
+            </Pressable>
+          ))}
+          <View style={[styles.filterDropdownDivider, { backgroundColor: colors.border }]} />
+          <Pressable style={styles.filterDropdownItem} onPress={() => { setIsMoreFilterOpen(false); handleSelectStore(null); }}>
+            <Text style={[styles.filterDropdownItemText, { color: colors.text }, activeStoreId === null && styles.filterDropdownItemTextActive]}>{t('listDetail.allStores')}</Text>
+            {activeStoreId === null && <Ionicons name="checkmark" size={18} color={colors.primary} />}
           </Pressable>
-        ))}
-        <View style={[styles.filterDropdownDivider, { backgroundColor: colors.border }]} />
-        <Pressable style={styles.filterDropdownItem} onPress={() => { setIsMoreFilterOpen(false); handleSelectStore(null); }}>
-          <Text style={[styles.filterDropdownItemText, { color: colors.text }, activeStoreId === null && styles.filterDropdownItemTextActive]}>{t('listDetail.allStores')}</Text>
-          {activeStoreId === null && <Ionicons name="checkmark" size={18} color={colors.primary} />}
-        </Pressable>
-      </Modal>
+        </DialogContent>
+      </Dialog>
 
       <ScrollView style={styles.scrollBody} contentContainerStyle={styles.scrollContent}>
         {pendingItems.length > 0 && (
