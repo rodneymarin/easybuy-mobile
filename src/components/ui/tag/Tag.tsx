@@ -21,7 +21,7 @@ export default function Tag({ label, size = 'md', color, colorIndex }: TagProps)
     return <Text style={[styles.tag, isSmall ? styles.tagSm : styles.tagMd, { backgroundColor: hexToRgba(resolvedColor, bgAlpha), borderColor: hexToRgba(resolvedColor, 0.4), borderWidth: 1 }, isSmall ? styles.labelSm : styles.labelMd, { color: textColor }]}>{label}</Text>;
   }
 
-  return <Text style={[styles.tag, isSmall ? styles.tagSm : styles.tagMd, { backgroundColor: colors.surface }, isSmall ? styles.labelSm : styles.labelMd, { color: colors.surfaceText }]}>{label}</Text>;
+  return <Text style={[styles.tag, isSmall ? styles.tagSm : styles.tagMd, { backgroundColor: colors.surface, borderWidth: 1, borderColor: 'transparent' }, isSmall ? styles.labelSm : styles.labelMd, { color: colors.surfaceText }]}>{label}</Text>;
 }
 
 const styles = StyleSheet.create({

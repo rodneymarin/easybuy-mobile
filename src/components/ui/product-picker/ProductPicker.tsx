@@ -1,9 +1,8 @@
 import { useMemo, useState } from 'react';
-import { FlatList, StyleSheet, View } from 'react-native';
+import { FlatList, StyleSheet, Text, View } from 'react-native';
 import { Input } from '@components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger } from '@components/ui/select';
 import { useDebounce } from '@lib/hooks/useDebounce';
-import { useTheme } from '@lib/theme';
 import { useI18n } from '@lib/i18n';
 import type { Product } from '@models/product.model';
 
@@ -19,7 +18,6 @@ export interface ProductPickerProps {
 type ViewStyle = import('react-native').ViewStyle;
 
 export default function ProductPicker({ value, onValueChange, placeholder, products, label, style }: ProductPickerProps) {
-  const { colors } = useTheme();
   const { t } = useI18n();
   const [searchQuery, setSearchQuery] = useState('');
   const debouncedSearch = useDebounce(searchQuery, 300);
@@ -39,13 +37,13 @@ export default function ProductPicker({ value, onValueChange, placeholder, produ
         <View style={styles.searchSection}>
           <Input value={searchQuery} onChangeText={setSearchQuery} placeholder={t('search.products')} />
         </View>
-        <View style={[styles.divider, { backgroundColor: colors.border }]} />
         <FlatList
           data={filteredProducts}
           keyExtractor={(item) => item.id}
           style={styles.listSection}
           contentContainerStyle={styles.listContent}
           keyboardShouldPersistTaps="handled"
+          ListEmptyComponent={debouncedSearch.trim() ? <Text style={styles.emptyText}>{t('common.noResults')}</Text> : null}
           renderItem={({ item }) => (
             <SelectItem label={item.productName} value={item.id} />
           )}
@@ -61,15 +59,19 @@ const styles = StyleSheet.create({
     paddingTop: 16,
     paddingBottom: 12,
   },
-  divider: {
-    height: 1,
-    marginHorizontal: 12,
-  },
   listSection: {
     flex: 1,
   },
   listContent: {
     paddingHorizontal: 8,
     paddingBottom: 8,
+    flexGrow: 1,
+  },
+  emptyText: {
+    flex: 1,
+    textAlign: 'center',
+    textAlignVertical: 'center',
+    fontSize: 15,
+    paddingTop: 24,
   },
 });
