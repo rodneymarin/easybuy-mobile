@@ -67,6 +67,8 @@ export default function ShoppingListItemFormScreen() {
 
   const total = unitPrice * quantity;
 
+  const selectedStoreLabel = selectedStoreId ? stores.find((s) => s.id === selectedStoreId)?.description : undefined;
+
   const storeOptions: Array<{ label: string; value: string }> = [
     { label: t('listItem.storeNone'), value: '' },
     ...stores.map((s) => ({ label: s.description, value: s.id })),
@@ -158,7 +160,7 @@ export default function ShoppingListItemFormScreen() {
 
         <Text style={[styles.fieldLabel, { color: colors.text }]}>{t('listItem.storeLabel')}</Text>
         <Select value={selectedStoreId} onValueChange={(value) => setSelectedStoreId(value || null)}>
-          <SelectTrigger placeholder={t('listItem.storePlaceholder')} />
+          <SelectTrigger placeholder={t('listItem.storePlaceholder')} label={selectedStoreLabel} />
 <SelectContent>
               <FlatList data={storeOptions} keyExtractor={(item) => item.value}
                 keyboardShouldPersistTaps="handled"
