@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [1.3.4](https://github.com/rodneymarin/easybuy-mobile/compare/v1.3.3...v1.3.4) (2026-07-09)
+
+
+### Bug Fixes
+
+* product picker con foco en search input ([d547c5b](https://github.com/rodneymarin/easybuy-mobile/commit/d547c5baaf538e1111f933a9b2dfe42a65fbac49))
+
 ### [1.3.3](https://github.com/rodneymarin/easybuy-mobile/compare/v1.3.2...v1.3.3) (2026-07-08)
 
 
