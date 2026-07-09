@@ -196,8 +196,8 @@ export default function ShoppingListDetailScreen() {
     return items.filter((item) => item.storeId === activeStoreId);
   }, [items, activeStoreId]);
 
-  const pendingItems = useMemo(() => filteredItems.filter((item) => !item.isDone), [filteredItems]);
-  const doneItems = useMemo(() => filteredItems.filter((item) => item.isDone), [filteredItems]);
+  const pendingItems = useMemo(() => filteredItems.filter((item) => !item.isDone).sort((a, b) => a.productName.localeCompare(b.productName)), [filteredItems]);
+  const doneItems = useMemo(() => filteredItems.filter((item) => item.isDone).sort((a, b) => a.productName.localeCompare(b.productName)), [filteredItems]);
 
   const globalTotal = useMemo(() => {
     return items.reduce((sum, item) => sum + item.price * item.quantity, 0);

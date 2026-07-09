@@ -1,7 +1,7 @@
-import { useMemo, useState } from 'react';
-import { FlatList, StyleSheet, Text, View } from 'react-native';
+import { useEffect, useMemo, useRef, useState } from 'react';
+import { FlatList, StyleSheet, Text, TextInput, View } from 'react-native';
 import { Input } from '@components/ui/input';
-import { Select, SelectContent, SelectItem, SelectTrigger } from '@components/ui/select';
+import { Select, SelectContent, SelectItem, SelectTrigger, useSelectContext } from '@components/ui/select';
 import { useDebounce } from '@lib/hooks/useDebounce';
 import { useI18n } from '@lib/i18n';
 import { normalizeText } from '@lib/utils';
@@ -18,8 +18,38 @@ export interface ProductPickerProps {
 
 type ViewStyle = import('react-native').ViewStyle;
 
-export default function ProductPicker({ value, onValueChange, placeholder, products, label, style }: ProductPickerProps) {
+function ProductPickerContent({ searchQuery, setSearchQuery, filteredProducts, debouncedSearch }: { searchQuery: string; setSearchQuery: (v: string) => void; filteredProducts: Product[]; debouncedSearch: string }) {
   const { t } = useI18n();
+  const inputRef = useRef<TextInput>(null);
+  const { isOpen } = useSelectContext();
+
+  useEffect(() => {
+    if (isOpen) {
+      inputRef.current?.focus();
+    }
+  }, [isOpen]);
+
+  return (
+    <SelectContent cardStyle={{ height: 350 }}>
+      <View style={styles.searchSection}>
+        <Input ref={inputRef} value={searchQuery} onChangeText={setSearchQuery} placeholder={t('search.products')} />
+      </View>
+      <FlatList
+        data={filteredProducts}
+        keyExtractor={(item) => item.id}
+        style={styles.listSection}
+        contentContainerStyle={styles.listContent}
+        keyboardShouldPersistTaps="handled"
+        ListEmptyComponent={debouncedSearch.trim() ? <Text style={styles.emptyText}>{t('common.noResults')}</Text> : null}
+        renderItem={({ item }) => (
+          <SelectItem label={item.productName} value={item.id} />
+        )}
+      />
+    </SelectContent>
+  );
+}
+
+export default function ProductPicker({ value, onValueChange, placeholder, products, label, style }: ProductPickerProps) {
   const [searchQuery, setSearchQuery] = useState('');
   const debouncedSearch = useDebounce(searchQuery, 300);
 
@@ -34,22 +64,7 @@ export default function ProductPicker({ value, onValueChange, placeholder, produ
   return (
     <Select value={value} onValueChange={onValueChange}>
       <SelectTrigger placeholder={placeholder} label={label ?? selectedProduct?.productName} style={style} />
-      <SelectContent cardStyle={{ height: 350 }}>
-        <View style={styles.searchSection}>
-          <Input value={searchQuery} onChangeText={setSearchQuery} placeholder={t('search.products')} />
-        </View>
-        <FlatList
-          data={filteredProducts}
-          keyExtractor={(item) => item.id}
-          style={styles.listSection}
-          contentContainerStyle={styles.listContent}
-          keyboardShouldPersistTaps="handled"
-          ListEmptyComponent={debouncedSearch.trim() ? <Text style={styles.emptyText}>{t('common.noResults')}</Text> : null}
-          renderItem={({ item }) => (
-            <SelectItem label={item.productName} value={item.id} />
-          )}
-        />
-      </SelectContent>
+      <ProductPickerContent searchQuery={searchQuery} setSearchQuery={setSearchQuery} filteredProducts={filteredProducts} debouncedSearch={debouncedSearch} />
     </Select>
   );
 }
