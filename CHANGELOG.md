@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [1.3.5](https://github.com/rodneymarin/easybuy-mobile/compare/v1.3.4...v1.3.5) (2026-07-09)
+
+
+### Bug Fixes
+
+* product picker input focus teclado & input cantidad select text on focus ([cd014ac](https://github.com/rodneymarin/easybuy-mobile/commit/cd014ac7429a045cd417cd1ab76c3082af11828b))
+
 ### [1.3.4](https://github.com/rodneymarin/easybuy-mobile/compare/v1.3.3...v1.3.4) (2026-07-09)
 
 
