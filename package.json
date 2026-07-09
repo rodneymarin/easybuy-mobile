@@ -1,6 +1,6 @@
 {
 	"name": "easybuy-mobile",
-	"version": "1.4.0",
+	"version": "0.1.0-beta.0",
 	"main": "expo/AppEntry.js",
 	"scripts": {
 		"start": "expo start",
@@ -9,7 +9,7 @@
 		"web": "expo start --web",
 		"build:apk-local": "mkdir -p dist && eas build --local --platform android --profile preview --output dist/app-release.apk",
 		"build:apk-remote": "eas build --platform android --profile preview --non-interactive",
-		"release": "standard-version"
+		"release": "node scripts/bump-beta.js"
 	},
 	"dependencies": {
 		"@expo/vector-icons": "^15.0.3",
@@ -35,8 +35,7 @@
 		"typescript": "~5.9.2"
 	},
 	"devDependencies": {
-		"@babel/core": "^7.25.0",
-		"standard-version": "^9.5.0"
+		"@babel/core": "^7.25.0"
 	},
 	"private": true
 }
