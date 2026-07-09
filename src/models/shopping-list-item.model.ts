@@ -4,4 +4,5 @@ export interface ShoppingListItem {
 	quantity: number;
 	storeId?: string;
 	done?: boolean;
+	pinned?: boolean;
 }

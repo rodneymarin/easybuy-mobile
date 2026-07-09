@@ -1,12 +1,12 @@
 import { useCallback, useMemo, useRef, useState } from 'react';
 import { ActivityIndicator, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import * as Clipboard from 'expo-clipboard';
-import { Ionicons } from '@expo/vector-icons';
+import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import { useRoute, useNavigation, useFocusEffect } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { BottomSheet, Button, Dialog, DialogContent, DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, ScreenTitle, Tag, Toggle, useToast } from '@components/ui';
 import { ShoppingListCheckCircle, ShoppingListItemCard, ShoppingListItemTitle, ShoppingListTotals, ListTitleFormSheet } from '@features/shopping-lists/components';
-import { getShoppingListById, getAllShoppingLists, toggleItemDone, removeItemsFromList, moveItemsToList, updateShoppingListTitle } from '@lib/repositories/shopping-lists';
+import { getShoppingListById, getAllShoppingLists, toggleItemDone, removeItemsFromList, moveItemsToList, updateShoppingListTitle, pinItems } from '@lib/repositories/shopping-lists';
 import { getAllProducts } from '@lib/repositories/products';
 import { getAllStores } from '@lib/repositories/stores';
 import { tUnit, useI18n } from '@lib/i18n';
@@ -25,6 +25,7 @@ interface ItemDisplayData {
   storeColor?: number;
   price: number;
   isDone: boolean;
+  isPinned: boolean;
 }
 
 type ListsNavigationParamList = {
@@ -118,6 +119,7 @@ export default function ShoppingListDetailScreen() {
         storeColor: item.storeId ? storeColorMap.get(item.storeId) : undefined,
         price,
         isDone: item.done ?? false,
+        isPinned: item.pinned ?? false,
       };
     });
   }, [shoppingList, productMap, storeMap, storeColorMap, t]);
@@ -134,6 +136,11 @@ export default function ShoppingListDetailScreen() {
   }, [items, stores]);
 
   const shouldShowFilters = uniqueStores.length > 1 || (hasStorelessItems && hasStoredItems);
+
+  const allSelectedPinned = useMemo(() => {
+    if (selectedItemRowIds.size === 0) return false;
+    return Array.from(selectedItemRowIds).every((id) => items.find((item) => item.rowId === id)?.isPinned);
+  }, [selectedItemRowIds, items]);
 
   const [filterBarWidth, setFilterBarWidth] = useState(0);
   const [isMoreFilterOpen, setIsMoreFilterOpen] = useState(false);
@@ -196,7 +203,10 @@ export default function ShoppingListDetailScreen() {
     return items.filter((item) => item.storeId === activeStoreId);
   }, [items, activeStoreId]);
 
-  const pendingItems = useMemo(() => filteredItems.filter((item) => !item.isDone).sort((a, b) => a.productName.localeCompare(b.productName)), [filteredItems]);
+  const pendingItems = useMemo(() => filteredItems.filter((item) => !item.isDone).sort((a, b) => {
+    if (a.isPinned !== b.isPinned) return a.isPinned ? -1 : 1;
+    return a.productName.localeCompare(b.productName);
+  }), [filteredItems]);
   const doneItems = useMemo(() => filteredItems.filter((item) => item.isDone).sort((a, b) => a.productName.localeCompare(b.productName)), [filteredItems]);
 
   const globalTotal = useMemo(() => {
@@ -327,6 +337,23 @@ export default function ShoppingListDetailScreen() {
     toast.show({ message: t('toast.itemsDeleted'), type: 'success' });
   }
 
+  function handlePinSelectedPress() {
+    const rowIds = Array.from(selectedItemRowIds);
+    const allPinned = rowIds.every((id) => items.find((item) => item.rowId === id)?.isPinned);
+    const newPinned = !allPinned;
+    setShoppingList((prev) => {
+      if (!prev) return prev;
+      return {
+        ...prev,
+        items: prev.items.map((item) =>
+          rowIds.includes(item.rowId) ? { ...item, pinned: newPinned } : item
+        ),
+      };
+    });
+    resetSelection();
+    pinItems(rowIds, newPinned);
+  }
+
   function handleRemoveCompletedPress() {
     setIsRemoveCompletedSheetOpen(true);
   }
@@ -416,54 +443,58 @@ export default function ShoppingListDetailScreen() {
         </Pressable>
       </View>
 
+      <View style={styles.totalsRow}>
+        <View style={styles.totalsFlex}>
+          <ShoppingListTotals globalTotal={globalTotal} cartTotal={cartTotal} onAddPress={handleAddPress} />
+        </View>
+        <DropdownMenu>
+          <DropdownMenuTrigger disabled={items.length === 0} hitSlop={8} style={styles.menuButton}>
+            <Ionicons name="ellipsis-vertical" size={20} color={items.length === 0 ? colors.textSecondary : colors.text} />
+          </DropdownMenuTrigger>
+          <DropdownMenuContent cardStyle={{ minWidth: 200 }}>
+            <DropdownMenuItem label={t('listDetail.copyList')} onSelect={handleCopyList} />
+            <DropdownMenuItem label={t('listDetail.menuUncheckAll')} onSelect={handleUncheckAll} disabled={doneItems.length === 0} />
+            <DropdownMenuItem label={t('listDetail.removeCompleted')} onSelect={handleRemoveCompletedPress} disabled={doneItems.length === 0} />
+          </DropdownMenuContent>
+        </DropdownMenu>
+      </View>
+
       {isSelectionMode ? (
         <View style={styles.selectionHeader}>
-          <Pressable onPress={resetSelection} hitSlop={8} style={styles.selectionBackButton}>
-            <Ionicons name="close" size={24} color={colors.text} />
-          </Pressable>
-          <Text style={[styles.selectionCount, { color: colors.text }]}>{selectedItemRowIds.size} {t('common.selected')}</Text>
+          <View style={styles.selectionHeaderTop}>
+            <Pressable onPress={resetSelection} hitSlop={8} style={styles.selectionBackButton}>
+              <Ionicons name="close" size={24} color={colors.text} />
+            </Pressable>
+            <Text style={[styles.selectionCount, { color: colors.text }]}>{selectedItemRowIds.size} {t('common.selected')}</Text>
+          </View>
           <View style={styles.selectionActions}>
             {availableLists.length > 0 && (
               <Button onPress={handleMoveSelectedPress}>
                 <Text style={[styles.destructiveButtonText, { color: '#fff' }]}>{t('listDetail.moveSelected')}</Text>
               </Button>
             )}
+            <Button onPress={handlePinSelectedPress}>
+              <Ionicons name={allSelectedPinned ? 'pin-off-outline' : 'pin-outline'} size={16} color="#fff" />
+              <Text style={[styles.destructiveButtonText, { color: '#fff' }]}>{t(allSelectedPinned ? 'listDetail.unpinSelected' : 'listDetail.pinSelected')}</Text>
+            </Button>
             <Button variant="destructive" style={styles.deleteSelectedButton} onPress={handleDeleteSelectedPress}>
               <Text style={[styles.destructiveButtonText, { color: colors.destructiveBorder }]}>{t('listDetail.removeConfirm')} ({selectedItemRowIds.size})</Text>
             </Button>
           </View>
         </View>
-      ) : (
-        <View style={styles.totalsRow}>
-          <View style={styles.totalsFlex}>
-            <ShoppingListTotals globalTotal={globalTotal} cartTotal={cartTotal} onAddPress={handleAddPress} />
-          </View>
-          <DropdownMenu>
-            <DropdownMenuTrigger disabled={items.length === 0} hitSlop={8} style={styles.menuButton}>
-              <Ionicons name="ellipsis-vertical" size={20} color={items.length === 0 ? colors.textSecondary : colors.text} />
-            </DropdownMenuTrigger>
-            <DropdownMenuContent cardStyle={{ minWidth: 200 }}>
-              <DropdownMenuItem label={t('listDetail.copyList')} onSelect={handleCopyList} />
-              <DropdownMenuItem label={t('listDetail.menuUncheckAll')} onSelect={handleUncheckAll} disabled={doneItems.length === 0} />
-              <DropdownMenuItem label={t('listDetail.removeCompleted')} onSelect={handleRemoveCompletedPress} disabled={doneItems.length === 0} />
-            </DropdownMenuContent>
-          </DropdownMenu>
-        </View>
-      )}
-
-      {shouldShowFilters && (
-        <View style={[styles.filterContainer, isSelectionMode && styles.filterContainerMuted]} onLayout={handleFilterBarLayout}>
-          <Toggle label={t('listDetail.allStores')} isSelected={activeStoreId === null} onPress={() => handleSelectStore(null)} disabled={isSelectionMode} />
+      ) : shouldShowFilters ? (
+        <View style={styles.filterContainer} onLayout={handleFilterBarLayout}>
+          <Toggle label={t('listDetail.allStores')} isSelected={activeStoreId === null} onPress={() => handleSelectStore(null)} />
           {visibleStores.map((store) => (
-            <Toggle key={store.id} label={store.description} isSelected={activeStoreId === store.id} onPress={() => handleSelectStore(store.id)} disabled={isSelectionMode} />
+            <Toggle key={store.id} label={store.description} isSelected={activeStoreId === store.id} onPress={() => handleSelectStore(store.id)} />
           ))}
           {hiddenStores.length > 0 && (
-            <Pressable style={[styles.moreToggle, { borderColor: colors.border }]} onPress={() => setIsMoreFilterOpen(true)} disabled={isSelectionMode}>
-              <Ionicons name="chevron-down" size={16} color={isSelectionMode ? colors.textSecondary : colors.text} />
+            <Pressable style={[styles.moreToggle, { borderColor: colors.border }]} onPress={() => setIsMoreFilterOpen(true)}>
+              <Ionicons name="chevron-down" size={16} color={colors.text} />
             </Pressable>
           )}
         </View>
-      )}
+      ) : null}
 
       <Dialog isOpen={isMoreFilterOpen} onClose={() => setIsMoreFilterOpen(false)}>
         <DialogContent style={[styles.filterDropdownCard, { backgroundColor: colors.cardBackground }]}>
@@ -485,6 +516,7 @@ export default function ShoppingListDetailScreen() {
         {pendingItems.length > 0 && (
           pendingItems.map((item) => (
             <ShoppingListItemCard key={item.rowId} isSelected={selectedItemRowIds.has(item.rowId)} isSelectionMode={isSelectionMode} onPress={() => handleItemPress(item)} onLongPress={() => handleItemLongPress(item)}>
+              {item.isPinned && <MaterialCommunityIcons name="pin" size={14} color={colors.primary} style={styles.pinIconAbsolute} />}
               <View style={styles.itemContent}>
                 <ShoppingListItemTitle name={item.productName} isDone={false} />
                 <View style={styles.itemTags}>
@@ -503,7 +535,7 @@ export default function ShoppingListDetailScreen() {
                   </View>
                 </View>
               </View>
-              <ShoppingListCheckCircle isDone={false} onToggle={() => handleToggleDone(item.rowId)} disabled={isSelectionMode} />
+              {!isSelectionMode && <ShoppingListCheckCircle isDone={false} onToggle={() => handleToggleDone(item.rowId)} />}
             </ShoppingListItemCard>
           ))
         )}
@@ -539,7 +571,7 @@ export default function ShoppingListDetailScreen() {
                     </View>
                   </View>
                 </View>
-                <ShoppingListCheckCircle isDone={true} onToggle={() => handleToggleDone(item.rowId)} disabled={isSelectionMode} />
+                {!isSelectionMode && <ShoppingListCheckCircle isDone={true} onToggle={() => handleToggleDone(item.rowId)} />}
               </ShoppingListItemCard>
             ))}
           </View>
@@ -610,9 +642,6 @@ const styles = StyleSheet.create({
     gap: 6,
     paddingTop: 20,
     paddingBottom: 0,
-  },
-  filterContainerMuted: {
-    opacity: 0.5,
   },
   moreToggle: {
     width: 42,
@@ -698,6 +727,13 @@ const styles = StyleSheet.create({
   itemContent: {
     flex: 1,
     marginRight: 8,
+    paddingLeft: 8,
+  },
+  pinIconAbsolute: {
+    position: 'absolute',
+    top: 2,
+    left: 2,
+    zIndex: 1,
   },
   itemTags: {
     flexDirection: 'row',
@@ -733,10 +769,15 @@ const styles = StyleSheet.create({
     opacity: 0.4,
   },
   selectionHeader: {
+    flexDirection: 'column',
+    paddingHorizontal: 16,
+    paddingTop: 16,
+    paddingBottom: 8,
+    gap: 10,
+  },
+  selectionHeaderTop: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingHorizontal: 16,
-    paddingVertical: 12,
   },
   selectionBackButton: {
     width: 36,
@@ -746,13 +787,13 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   selectionCount: {
-    flex: 1,
     fontSize: 17,
     fontWeight: '600',
     marginLeft: 8,
   },
   selectionActions: {
     flexDirection: 'row',
+    justifyContent: 'flex-end',
     gap: 8,
   },
   deleteSelectedButton: {

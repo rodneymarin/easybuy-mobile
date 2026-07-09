@@ -14,6 +14,7 @@ interface ItemRow {
   store_id: string | null;
   quantity: number;
   done: number;
+  pinned: number;
 }
 
 function mapItem(row: ItemRow): ShoppingListItem {
@@ -23,6 +24,7 @@ function mapItem(row: ItemRow): ShoppingListItem {
     quantity: row.quantity,
     storeId: row.store_id ?? undefined,
     done: row.done === 1,
+    pinned: row.pinned === 1,
   };
 }
 
@@ -112,4 +114,11 @@ export async function moveItemsToList(itemRowIds: number[], targetListId: string
   const db = await getDatabase();
   const placeholders = itemRowIds.map(() => '?').join(',');
   await db.runAsync(`UPDATE shopping_list_items SET shopping_list_id = ? WHERE id IN (${placeholders})`, [targetListId, ...itemRowIds]);
+}
+
+export async function pinItems(itemRowIds: number[], pinned: boolean): Promise<void> {
+  if (itemRowIds.length === 0) return;
+  const db = await getDatabase();
+  const placeholders = itemRowIds.map(() => '?').join(',');
+  await db.runAsync(`UPDATE shopping_list_items SET pinned = ? WHERE id IN (${placeholders})`, [pinned ? 1 : 0, ...itemRowIds]);
 }

@@ -70,4 +70,10 @@ async function runMigrations(database: SQLiteDatabase): Promise<void> {
   } catch {
     // Column already exists — ignore
   }
+
+  try {
+    await database.execAsync("ALTER TABLE shopping_list_items ADD COLUMN pinned INTEGER NOT NULL DEFAULT 0");
+  } catch {
+    // Column already exists — ignore
+  }
 }
