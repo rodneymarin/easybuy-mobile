@@ -25,7 +25,8 @@ function ProductPickerContent({ searchQuery, setSearchQuery, filteredProducts, d
 
   useEffect(() => {
     if (isOpen) {
-      inputRef.current?.focus();
+      const timer = setTimeout(() => inputRef.current?.focus(), 150);
+      return () => clearTimeout(timer);
     }
   }, [isOpen]);
 

@@ -178,7 +178,7 @@ export default function ShoppingListItemFormScreen() {
 
         <Text style={[styles.fieldLabel, { color: colors.text }]}>{t('listItem.quantityLabel')}</Text>
         <View style={styles.quantityRow}>
-          <TextInput value={quantityText} onChangeText={handleQuantityChange} keyboardType="decimal-pad" placeholder="0" placeholderTextColor={colors.placeholderText} style={[styles.quantityInput, { color: colors.text, borderColor: colors.border, backgroundColor: colors.background }]} />
+          <TextInput value={quantityText} onChangeText={handleQuantityChange} keyboardType="decimal-pad" placeholder="0" placeholderTextColor={colors.placeholderText} selectTextOnFocus style={[styles.quantityInput, { color: colors.text, borderColor: colors.border, backgroundColor: colors.background }]} />
           <Text style={[styles.unitLabel, { color: colors.textSecondary }]}>{unitLabel}</Text>
         </View>
 

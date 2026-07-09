@@ -19,7 +19,8 @@
         "foregroundImage": "./src/assets/adaptive-icon.png",
         "backgroundColor": "#d9006f"
       },
-      "package": "com.easybuy.mobile"
+      "package": "com.easybuy.mobile",
+      "softwareKeyboardLayoutMode": "adjustResize"
     },
     "web": {
       "bundler": "metro"
