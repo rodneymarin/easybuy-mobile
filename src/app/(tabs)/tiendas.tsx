@@ -4,7 +4,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { useFocusEffect, useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { ScreenTitle } from '@components/ui/screen-title';
-import { Button, ConfirmDeleteSheet, SearchInput, useToast } from '@components/ui';
+import { ActionBar, Button, ConfirmDeleteSheet, SearchInput, useToast } from '@components/ui';
 import { StoreList, type StoreListData } from '@features/stores';
 import { deleteStores, getAllStores } from '@lib/repositories/stores';
 import { useDebounce, useSelectionMode } from '@lib/hooks';
@@ -111,24 +111,26 @@ export default function TiendasScreen() {
   return (
     <View style={[styles.container, { backgroundColor: colors.background }]}>
       <ScreenTitle>{t('tab.stores')}</ScreenTitle>
-      {isSelectionMode ? (
-        <View style={styles.selectionHeader}>
-          <Pressable onPress={exitSelectionMode} hitSlop={8} style={styles.selectionBackButton}>
-            <Ionicons name="close" size={24} color={colors.text} />
-          </Pressable>
-          <Text style={[styles.selectionCount, { color: colors.text }]}>{selectedStoreIds.size} {t('common.selected')}</Text>
-          <Button variant="destructive" style={styles.deleteSelectedButton} onPress={handleDeleteSelectedPress}>
-            <Text style={[styles.destructiveButtonText, { color: colors.destructiveBorder }]}>{t('stores.deleteSelected.confirm')} ({selectedStoreIds.size})</Text>
-          </Button>
-        </View>
-      ) : (
-        <View style={styles.searchRow}>
-          <SearchInput value={searchQuery} onChangeText={setSearchQuery} placeholder={t('search.stores')} />
-          <Button onPress={openAddForm} size="icon">
-            <Ionicons name="add" size={20} color="#fff" />
-          </Button>
-        </View>
-      )}
+      <ActionBar>
+        {isSelectionMode ? (
+          <View style={styles.selectionHeader}>
+            <Pressable onPress={exitSelectionMode} hitSlop={8} style={styles.selectionBackButton}>
+              <Ionicons name="close" size={24} color={colors.text} />
+            </Pressable>
+            <Text style={[styles.selectionCount, { color: colors.text }]}>{selectedStoreIds.size} {t('common.selected')}</Text>
+            <Button variant="destructive" style={styles.deleteSelectedButton} onPress={handleDeleteSelectedPress}>
+              <Text style={[styles.destructiveButtonText, { color: colors.destructiveBorder }]}>{t('stores.deleteSelected.confirm')} ({selectedStoreIds.size})</Text>
+            </Button>
+          </View>
+        ) : (
+          <View style={styles.searchRow}>
+            <SearchInput value={searchQuery} onChangeText={setSearchQuery} placeholder={t('search.stores')} />
+            <Button onPress={openAddForm} size="icon">
+              <Ionicons name="add" size={20} color="#fff" />
+            </Button>
+          </View>
+        )}
+      </ActionBar>
       {filteredStores.length > 0 ? (
         <StoreList data={filteredStores} selectedIds={selectedStoreIds} isSelectionMode={isSelectionMode} onStorePress={handleStorePress} onStoreLongPress={handleStoreLongPress} />
       ) : searchQuery !== debouncedSearch ? (
@@ -159,7 +161,6 @@ const styles = StyleSheet.create({
   searchRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginHorizontal: 16,
     gap: 10,
   },
   emptyContainer: {
@@ -175,7 +176,6 @@ const styles = StyleSheet.create({
   selectionHeader: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingHorizontal: 16,
   },
   selectionBackButton: {
     width: 36,

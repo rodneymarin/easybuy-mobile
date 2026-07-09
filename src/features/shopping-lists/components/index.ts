@@ -5,3 +5,5 @@ export { default as ShoppingListItemTitle } from './ShoppingListItemTitle';
 export { default as ShoppingListTotals } from './ShoppingListTotals';
 export { default as ListTitleFormSheet } from './ListTitleFormSheet';
 export { default as ShoppingListItemFormScreen } from './ShoppingListItemFormScreen';
+export { default as SelectionActions } from './SelectionActions';
+export { default as StoreFilterBar } from './StoreFilterBar';

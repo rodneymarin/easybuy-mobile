@@ -4,7 +4,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { useFocusEffect, useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { ScreenTitle } from '@components/ui/screen-title';
-import { Button, ConfirmDeleteSheet, SearchInput, useToast } from '@components/ui';
+import { ActionBar, Button, ConfirmDeleteSheet, SearchInput, useToast } from '@components/ui';
 import { ShoppingList, ListTitleFormSheet, type ShoppingListData } from '@features/shopping-lists';
 import { createShoppingList, deleteShoppingList, getAllShoppingLists } from '@lib/repositories/shopping-lists';
 import { getAllProducts } from '@lib/repositories/products';
@@ -124,12 +124,14 @@ export default function InicioScreen() {
   return (
     <View style={[styles.container, { backgroundColor: colors.background }]}>
       <ScreenTitle>{t('tab.lists')}</ScreenTitle>
-      <View style={styles.searchRow}>
-        <SearchInput value={searchQuery} onChangeText={setSearchQuery} placeholder={t('search.lists')} />
-        <Button onPress={openCreateSheet} size="icon">
+      <ActionBar>
+        <View style={styles.searchRow}>
+          <SearchInput value={searchQuery} onChangeText={setSearchQuery} placeholder={t('search.lists')} />
+          <Button onPress={openCreateSheet} size="icon">
             <Ionicons name="add" size={20} color="#fff" />
           </Button>
-      </View>
+        </View>
+      </ActionBar>
       {filteredLists.length > 0 ? (
         <ShoppingList data={filteredLists} onListPress={openDetail} onRemoveList={handleRemovePress} />
       ) : searchQuery !== debouncedSearch ? (
@@ -162,7 +164,6 @@ const styles = StyleSheet.create({
   searchRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginHorizontal: 16,
     gap: 10,
   },
   emptyContainer: {
@@ -175,8 +176,5 @@ const styles = StyleSheet.create({
     fontSize: 16,
     textAlign: 'center',
   },
-  destructiveButtonText: {
-    fontSize: 15,
-    fontWeight: '600',
-  },
+
 });

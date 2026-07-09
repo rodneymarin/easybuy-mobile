@@ -4,7 +4,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { useFocusEffect, useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { ScreenTitle } from '@components/ui/screen-title';
-import { Button, ConfirmDeleteSheet, SearchInput, useToast } from '@components/ui';
+import { ActionBar, Button, ConfirmDeleteSheet, SearchInput, useToast } from '@components/ui';
 import { ProductList, type ProductListData } from '@features/products';
 import { deleteProducts, getAllProducts } from '@lib/repositories/products';
 import { getAllStores } from '@lib/repositories/stores';
@@ -118,24 +118,26 @@ export default function ProductosScreen() {
   return (
     <View style={[styles.container, { backgroundColor: colors.background }]}>
       <ScreenTitle>{t('tab.products')}</ScreenTitle>
-      {isSelectionMode ? (
-        <View style={styles.selectionHeader}>
-          <Pressable onPress={exitSelectionMode} hitSlop={8} style={styles.selectionBackButton}>
-            <Ionicons name="close" size={24} color={colors.text} />
-          </Pressable>
-          <Text style={[styles.selectionCount, { color: colors.text }]}>{selectedProductIds.size} {t('common.selected')}</Text>
-          <Button variant="destructive" style={styles.deleteSelectedButton} onPress={handleDeleteSelectedPress}>
-            <Text style={[styles.destructiveButtonText, { color: colors.destructiveBorder }]}>{t('products.deleteSelected.confirm')} ({selectedProductIds.size})</Text>
-          </Button>
-        </View>
-      ) : (
-        <View style={styles.searchRow}>
-          <SearchInput value={searchQuery} onChangeText={setSearchQuery} placeholder={t('search.products')} />
-          <Button onPress={openAddForm} size="icon">
-            <Ionicons name="add" size={20} color="#fff" />
-          </Button>
-        </View>
-      )}
+      <ActionBar>
+        {isSelectionMode ? (
+          <View style={styles.selectionHeader}>
+            <Pressable onPress={exitSelectionMode} hitSlop={8} style={styles.selectionBackButton}>
+              <Ionicons name="close" size={24} color={colors.text} />
+            </Pressable>
+            <Text style={[styles.selectionCount, { color: colors.text }]}>{selectedProductIds.size} {t('common.selected')}</Text>
+            <Button variant="destructive" style={styles.deleteSelectedButton} onPress={handleDeleteSelectedPress}>
+              <Text style={[styles.destructiveButtonText, { color: colors.destructiveBorder }]}>{t('products.deleteSelected.confirm')} ({selectedProductIds.size})</Text>
+            </Button>
+          </View>
+        ) : (
+          <View style={styles.searchRow}>
+            <SearchInput value={searchQuery} onChangeText={setSearchQuery} placeholder={t('search.products')} />
+            <Button onPress={openAddForm} size="icon">
+              <Ionicons name="add" size={20} color="#fff" />
+            </Button>
+          </View>
+        )}
+      </ActionBar>
       {filteredProducts.length > 0 ? (
         <ProductList data={filteredProducts} selectedIds={selectedProductIds} isSelectionMode={isSelectionMode} onProductPress={handleProductPress} onProductLongPress={handleProductLongPress} />
       ) : searchQuery !== debouncedSearch ? (
@@ -166,7 +168,6 @@ const styles = StyleSheet.create({
   searchRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginHorizontal: 16,
     gap: 10,
   },
   emptyContainer: {
@@ -182,7 +183,6 @@ const styles = StyleSheet.create({
   selectionHeader: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingHorizontal: 16,
   },
   selectionBackButton: {
     width: 36,
