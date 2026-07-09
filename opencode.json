@@ -6,8 +6,8 @@
 			"name": "Local LLM",
 			"npm": "@ai-sdk/openai-compatible",
 			"models": {
-				"qwen/qwen3.5-9b": {
-					"name": "Qwen3.5-9b"
+				"qwen2.5-coder-1.5b-instruct": {
+					"name": "Qwen2.5-1.5b-instruct"
 				}
 			},
 			"options": {
