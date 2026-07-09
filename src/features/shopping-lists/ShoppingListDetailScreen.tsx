@@ -474,7 +474,7 @@ export default function ShoppingListDetailScreen() {
               </Button>
             )}
             <Button onPress={handlePinSelectedPress}>
-              <Ionicons name={allSelectedPinned ? 'pin-off-outline' : 'pin-outline'} size={16} color="#fff" />
+              <MaterialCommunityIcons name={allSelectedPinned ? 'pin-off' : 'pin'} size={16} color="#fff" />
               <Text style={[styles.destructiveButtonText, { color: '#fff' }]}>{t(allSelectedPinned ? 'listDetail.unpinSelected' : 'listDetail.pinSelected')}</Text>
             </Button>
             <Button variant="destructive" style={styles.deleteSelectedButton} onPress={handleDeleteSelectedPress}>

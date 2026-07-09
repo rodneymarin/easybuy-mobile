@@ -94,14 +94,16 @@ export default function ProductFormScreen() {
       <ProductFormContent ref={pricesRef} productName={productName} unitOfMeasurement={unitOfMeasurement} prices={prices} stores={stores} onProductNameChange={setProductName} onUnitOfMeasurementChange={setUnitOfMeasurement} onPricesChange={handlePricesChange} />
 
       <View style={[styles.footer, { borderTopColor: colors.border }]}>
-        {isEditMode && (
-          <Button variant="destructive" style={styles.actionButton} onPress={handleDeletePress}>
-            <Text style={[styles.destructiveButtonText, { color: colors.destructiveBorder }]}>{t('products.delete')}</Text>
+        <View style={styles.buttonRow}>
+          {isEditMode && (
+            <Button variant="destructive" style={styles.halfButton} onPress={handleDeletePress}>
+              <Text style={[styles.destructiveButtonText, { color: colors.destructiveBorder }]}>{t('products.delete')}</Text>
+            </Button>
+          )}
+          <Button variant="secondary" style={styles.halfButton} onPress={handleGoBack}>
+            <Text style={[styles.buttonTextSecondary, { color: colors.text }]}>{t('products.addModal.cancel')}</Text>
           </Button>
-        )}
-        <Button variant="secondary" style={styles.actionButton} onPress={handleGoBack}>
-          <Text style={[styles.buttonTextSecondary, { color: colors.text }]}>{t('products.addModal.cancel')}</Text>
-        </Button>
+        </View>
         <Button variant="primary" style={styles.actionButton} onPress={handleSave} disabled={!isFormValid}>
           <Text style={styles.buttonTextPrimary}>{t('products.addModal.save')}</Text>
         </Button>
@@ -135,6 +137,14 @@ const styles = StyleSheet.create({
     padding: 16,
     gap: 8,
     borderTopWidth: 1,
+  },
+  buttonRow: {
+    flexDirection: 'row',
+    gap: 8,
+  },
+  halfButton: {
+    flex: 1,
+    justifyContent: 'center',
   },
   actionButton: {
     justifyContent: 'center',

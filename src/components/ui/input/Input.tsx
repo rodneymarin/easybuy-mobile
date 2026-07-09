@@ -13,7 +13,7 @@ const Input = forwardRef<TextInput, InputProps>(function Input({ style, onFocus,
 
   return (
     <View style={[styles.container, style]}>
-      <TextInput ref={ref} style={[styles.input, { color: colors.text, borderColor: isFocused ? colors.primary : colors.border, borderWidth: isFocused ? 2 : 1, paddingHorizontal: isFocused ? 13 : 14, backgroundColor: colors.background }, hasValue && { paddingRight: 44 }]} placeholderTextColor={colors.placeholderText} onFocus={(e) => { setIsFocused(true); onFocus?.(e); }} onBlur={(e) => { setIsFocused(false); onBlur?.(e); }} {...props} />
+      <TextInput ref={ref} style={[styles.input, { color: colors.text, borderColor: isFocused ? colors.primary : colors.border, borderWidth: 2, paddingHorizontal: 11, backgroundColor: colors.background }, hasValue && { paddingRight: 40 }]} placeholderTextColor={colors.placeholderText} onFocus={(e) => { setIsFocused(true); onFocus?.(e); }} onBlur={(e) => { setIsFocused(false); onBlur?.(e); }} {...props} />
       {hasValue && (
         <Pressable style={styles.clearButton} onPress={() => props.onChangeText?.('')} hitSlop={8}>
           <Ionicons name="close" size={18} color={colors.textSecondary} />
@@ -31,14 +31,15 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   input: {
-    height: 44,
-    borderRadius: 10,
-    paddingHorizontal: 14,
-    fontSize: 15,
+    height: 40,
+    borderRadius: 8,
+    paddingHorizontal: 11,
+    fontSize: 14,
+    textAlignVertical: 'center',
   },
   clearButton: {
     position: 'absolute',
-    right: 10,
+    right: 8,
     padding: 4,
   },
 });

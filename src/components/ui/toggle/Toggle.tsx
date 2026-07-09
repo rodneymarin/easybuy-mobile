@@ -19,7 +19,7 @@ export default function Toggle({ label, isSelected, onPress, disabled }: ToggleP
 
   if (isSelected) {
     dynamicStyle.backgroundColor = disabled ? colors.textSecondary : colors.primary;
-    dynamicStyle.borderWidth = 0;
+    dynamicStyle.borderColor = disabled ? colors.textSecondary : colors.primary;
   } else if (disabled) {
     dynamicStyle.borderColor = colors.border;
   }
@@ -40,8 +40,8 @@ export default function Toggle({ label, isSelected, onPress, disabled }: ToggleP
 const styles = StyleSheet.create({
   toggle: {
     borderRadius: 999,
-    paddingHorizontal: 14,
-    paddingVertical: 6,
+    paddingHorizontal: 10,
+    paddingVertical: 4,
   },
   label: {
     fontSize: 14,

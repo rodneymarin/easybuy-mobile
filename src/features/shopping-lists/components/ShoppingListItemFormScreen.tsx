@@ -64,7 +64,7 @@ export default function ShoppingListItemFormScreen() {
     return new Set(selectedProduct.prices.map(p => p.storeId));
   }, [selectedProduct]);
 
-  const unitLabel = !selectedProduct ? '' : tUnit(t, selectedProduct.unitOfMeasurement);
+  const unitLabel = !selectedProduct ? tUnit(t, 'unit') : tUnit(t, selectedProduct.unitOfMeasurement);
 
   const unitPrice = selectedStoreId && selectedProduct?.prices
     ? selectedProduct.prices.find((p) => p.storeId === selectedStoreId)?.value ?? 0
@@ -179,7 +179,7 @@ export default function ShoppingListItemFormScreen() {
         <Text style={[styles.fieldLabel, { color: colors.text }]}>{t('listItem.quantityLabel')}</Text>
         <View style={styles.quantityRow}>
           <TextInput value={quantityText} onChangeText={handleQuantityChange} keyboardType="decimal-pad" placeholder="0" placeholderTextColor={colors.placeholderText} selectTextOnFocus style={[styles.quantityInput, { color: colors.text, borderColor: colors.border, backgroundColor: colors.background }]} />
-          <Text style={[styles.unitLabel, { color: colors.textSecondary }]}>{unitLabel}</Text>
+          <Text style={[styles.unitLabel, { color: selectedProduct ? colors.textSecondary : colors.placeholderText }]}>{unitLabel}</Text>
         </View>
 
         <View style={styles.priceInfo}>
@@ -193,14 +193,16 @@ export default function ShoppingListItemFormScreen() {
       </ScrollView>
 
       <View style={footerStyle}>
-        {isEditMode && (
-          <Button variant="destructive" style={styles.actionButton} onPress={handleDeletePress}>
-            <Text style={[styles.destructiveButtonText, { color: colors.destructiveBorder }]}>{t('listItem.delete')}</Text>
+        <View style={styles.buttonRow}>
+          {isEditMode && (
+            <Button variant="destructive" style={styles.halfButton} onPress={handleDeletePress}>
+              <Text style={[styles.destructiveButtonText, { color: colors.destructiveBorder }]}>{t('listItem.delete')}</Text>
+            </Button>
+          )}
+          <Button variant="secondary" style={styles.halfButton} onPress={handleGoBack}>
+            <Text style={[styles.buttonTextSecondary, { color: colors.text }]}>{t('listItem.cancel')}</Text>
           </Button>
-        )}
-        <Button variant="secondary" style={styles.actionButton} onPress={handleGoBack}>
-          <Text style={[styles.buttonTextSecondary, { color: colors.text }]}>{t('listItem.cancel')}</Text>
-        </Button>
+        </View>
         <Button variant="primary" style={styles.actionButton} onPress={handleSave} disabled={!isFormValid}>
           <Text style={styles.buttonTextPrimary}>{t('listItem.save')}</Text>
         </Button>
@@ -286,6 +288,14 @@ const styles = StyleSheet.create({
     padding: 16,
     gap: 8,
     borderTopWidth: 1,
+  },
+  buttonRow: {
+    flexDirection: 'row',
+    gap: 8,
+  },
+  halfButton: {
+    flex: 1,
+    justifyContent: 'center',
   },
   actionButton: {
     justifyContent: 'center',

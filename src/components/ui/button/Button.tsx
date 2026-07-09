@@ -56,13 +56,13 @@ const styles = StyleSheet.create({
   button: {
     flexDirection: 'row',
     alignItems: 'center',
-    borderRadius: 10,
-    paddingHorizontal: 14,
-    height: 44,
+    borderRadius: 8,
+    paddingHorizontal: 12,
+    height: 40,
     gap: 4,
   },
   icon: {
-    width: 44,
+    width: 40,
     paddingHorizontal: 0,
     justifyContent: 'center',
   },

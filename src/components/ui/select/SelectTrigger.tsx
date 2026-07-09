@@ -28,12 +28,12 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     borderWidth: 1,
-    borderRadius: 10,
-    paddingHorizontal: 12,
-    height: 44,
+    borderRadius: 8,
+    paddingHorizontal: 10,
+    height: 40,
   },
   text: {
     flex: 1,
-    fontSize: 15,
+    fontSize: 14,
   },
 });
