@@ -4,7 +4,7 @@ import * as Clipboard from 'expo-clipboard';
 import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import { useRoute, useNavigation, useFocusEffect } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import { ActionBar, BottomSheet, Button, Dialog, DialogContent, DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, ListFlatList, ScreenTitle, Tag, useToast } from '@components/ui';
+import { ActionBar, BottomSheet, Button, DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, ScreenTitle, ScrollableList, Tag, useToast } from '@components/ui';
 import { ListTitleFormSheet, SelectionActions, ShoppingListCheckCircle, ShoppingListItemCard, ShoppingListItemTitle, ShoppingListTotals, StoreFilterBar } from '@features/shopping-lists/components';
 import { getShoppingListById, getAllShoppingLists, toggleItemDone, removeItemsFromList, moveItemsToList, updateShoppingListTitle, pinItems } from '@lib/repositories/shopping-lists';
 import { getAllProducts } from '@lib/repositories/products';
@@ -143,7 +143,6 @@ export default function ShoppingListDetailScreen() {
 	}, [selectedItemRowIds, items]);
 
 	const [filterBarWidth, setFilterBarWidth] = useState(0);
-	const [isMoreFilterOpen, setIsMoreFilterOpen] = useState(false);
 
 	const EST_CHAR_WIDTH = 8.5;
 	const MORE_TOGGLE_WIDTH = 40;
@@ -463,30 +462,12 @@ export default function ShoppingListDetailScreen() {
 								</DropdownMenuContent>
 							</DropdownMenu>
 						</View>
-						{shouldShowFilters && <View style={styles.filterRow}><StoreFilterBar visibleStores={visibleStores} hiddenStores={hiddenStores} activeStoreId={activeStoreId} onSelectStore={handleSelectStore} onMorePress={() => setIsMoreFilterOpen(true)} onLayout={handleFilterBarLayout} /></View>}
+						{shouldShowFilters && <View style={styles.filterRow}><StoreFilterBar visibleStores={visibleStores} hiddenStores={hiddenStores} activeStoreId={activeStoreId} onSelectStore={handleSelectStore} onLayout={handleFilterBarLayout} /></View>}
 					</>
 				)}
 			</ActionBar>
 
-			<Dialog isOpen={isMoreFilterOpen} onClose={() => setIsMoreFilterOpen(false)}>
-				<DialogContent style={[styles.filterDropdownCard, { backgroundColor: colors.cardBackground }]}>
-					{hiddenStores.map((store) => (
-						<Pressable key={store.id} style={styles.filterDropdownItem} onPress={() => { setIsMoreFilterOpen(false); handleSelectStore(store.id); }}>
-							<Text style={[styles.filterDropdownItemText, { color: colors.text }, activeStoreId === store.id && styles.filterDropdownItemTextActive]}>{store.description}</Text>
-							{activeStoreId === store.id && <Ionicons name="checkmark" size={18} color={colors.primary} />}
-						</Pressable>
-					))}
-					<View style={[styles.filterDropdownDivider, { backgroundColor: colors.border }]} />
-					<Pressable style={styles.filterDropdownItem} onPress={() => { setIsMoreFilterOpen(false); handleSelectStore(null); }}>
-						<Text style={[styles.filterDropdownItemText, { color: colors.text }, activeStoreId === null && styles.filterDropdownItemTextActive]}>{t('listDetail.allStores')}</Text>
-						{activeStoreId === null && <Ionicons name="checkmark" size={18} color={colors.primary} />}
-					</Pressable>
-				</DialogContent>
-			</Dialog>
-
-			<ListFlatList
-				data={pendingItems}
-				keyExtractor={(item) => String(item.rowId)}
+			<ScrollableList data={pendingItems} keyExtractor={(item) => String(item.rowId)}
 				renderItem={({ item }) => (
 					<ShoppingListItemCard isSelected={selectedItemRowIds.has(item.rowId)} isSelectionMode={isSelectionMode} onPress={() => handleItemPress(item)} onLongPress={() => handleItemLongPress(item)}>
 						{item.isPinned && <MaterialCommunityIcons name="pin" size={14} color={colors.primary} style={styles.pinIconAbsolute} />}
@@ -606,35 +587,8 @@ const styles = StyleSheet.create({
 	headerWrapper: {
 		position: 'relative',
 	},
-	filterDropdownCard: {
-		borderRadius: 14,
-		paddingVertical: 4,
-		minWidth: 220,
-		shadowColor: '#000',
-		shadowOffset: { width: 0, height: 4 },
-		shadowOpacity: 0.15,
-		shadowRadius: 12,
-		elevation: 8,
-	},
-	filterDropdownItem: {
-		flexDirection: 'row',
-		alignItems: 'center',
-		justifyContent: 'space-between',
-		paddingVertical: 14,
-		paddingHorizontal: 16,
-	},
-	filterDropdownItemText: {
-		fontSize: 16,
-	},
-	filterDropdownItemTextActive: {
-		fontWeight: '700',
-	},
 	filterRow: {
 		marginTop: 6,
-	},
-	filterDropdownDivider: {
-		height: 1,
-		marginHorizontal: 16,
 	},
 	backButton: {
 		position: 'absolute',

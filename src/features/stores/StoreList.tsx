@@ -1,4 +1,4 @@
-import { ListFlatList } from '@components/ui';
+import { ScrollableList } from '@components/ui';
 import { StoreListItem } from '@features/stores/components';
 
 export interface StoreListData {
@@ -17,7 +17,7 @@ interface StoreListProps {
 
 export default function StoreList({ data, selectedIds, isSelectionMode, onStorePress, onStoreLongPress }: StoreListProps) {
   return (
-    <ListFlatList data={data} keyExtractor={(item) => item.id}
+    <ScrollableList data={data} keyExtractor={(item) => item.id}
       renderItem={({ item }) => (
         <StoreListItem id={item.id} description={item.description} color={item.color} isSelected={selectedIds?.has(item.id)} isSelectionMode={isSelectionMode} onPress={onStorePress} onLongPress={onStoreLongPress ? () => onStoreLongPress(item.id) : undefined} />
       )}

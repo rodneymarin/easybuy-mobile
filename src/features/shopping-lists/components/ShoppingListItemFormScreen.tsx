@@ -167,8 +167,7 @@ export default function ShoppingListItemFormScreen() {
         <Select value={selectedStoreId} onValueChange={(value) => setSelectedStoreId(value || null)}>
           <SelectTrigger placeholder={t('listItem.storePlaceholder')} label={selectedStoreLabel} />
 <SelectContent>
-              <FlatList data={storeOptions} keyExtractor={(item) => item.value}
-                keyboardShouldPersistTaps="handled"
+              <FlatList data={storeOptions} keyExtractor={(item) => item.value} keyboardShouldPersistTaps="handled"
                 renderItem={({ item }) => (
                   <SelectItem label={item.label} value={item.value} hasIndicator={item.value !== '' && storeIdsWithPrices.has(item.value)} />
                 )}

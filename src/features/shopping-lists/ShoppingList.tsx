@@ -1,4 +1,4 @@
-import { ListFlatList } from '@components/ui';
+import { ScrollableList } from '@components/ui';
 import { ShoppingListItem } from '@features/shopping-lists/components';
 
 export interface ShoppingListData {
@@ -16,7 +16,7 @@ interface ShoppingListProps {
 
 export default function ShoppingList({ data, onListPress, onRemoveList }: ShoppingListProps) {
   return (
-    <ListFlatList data={data} keyExtractor={(item) => item.id}
+    <ScrollableList data={data} keyExtractor={(item) => item.id}
       renderItem={({ item }) => (
         <ShoppingListItem title={item.title} itemCount={item.itemCount} totalAmount={item.totalAmount} onPress={onListPress ? () => onListPress(item.id) : undefined} onRemove={onRemoveList ? () => onRemoveList(item.id) : undefined} />
       )}

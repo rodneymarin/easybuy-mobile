@@ -1,7 +1,7 @@
-import { Pressable, StyleSheet, View } from 'react-native';
+import { StyleSheet, View } from 'react-native';
 import type { LayoutChangeEvent } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { Toggle } from '@components/ui';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, Toggle } from '@components/ui';
 import { useI18n } from '@lib/i18n';
 import { useTheme } from '@lib/theme';
 
@@ -15,11 +15,10 @@ interface StoreFilterBarProps {
   hiddenStores: Store[];
   activeStoreId: string | null;
   onSelectStore: (storeId: string | null) => void;
-  onMorePress: () => void;
   onLayout?: (event: LayoutChangeEvent) => void;
 }
 
-export default function StoreFilterBar({ visibleStores, hiddenStores, activeStoreId, onSelectStore, onMorePress, onLayout }: StoreFilterBarProps) {
+export default function StoreFilterBar({ visibleStores, hiddenStores, activeStoreId, onSelectStore, onLayout }: StoreFilterBarProps) {
   const { colors } = useTheme();
   const { t } = useI18n();
 
@@ -30,9 +29,17 @@ export default function StoreFilterBar({ visibleStores, hiddenStores, activeStor
         <Toggle key={store.id} label={store.description} isSelected={activeStoreId === store.id} onPress={() => onSelectStore(store.id)} />
       ))}
       {hiddenStores.length > 0 && (
-        <Pressable style={[styles.moreToggle, { borderColor: colors.border }]} onPress={onMorePress}>
-          <Ionicons name="chevron-down" size={16} color={colors.text} />
-        </Pressable>
+        <DropdownMenu>
+          <DropdownMenuTrigger style={[styles.moreToggle, { borderColor: colors.border }]}>
+            <Ionicons name="chevron-down" size={16} color={colors.text} />
+          </DropdownMenuTrigger>
+          <DropdownMenuContent cardStyle={{ minWidth: 180 }}>
+            {hiddenStores.map((store) => (
+              <DropdownMenuItem key={store.id} label={store.description} onSelect={() => onSelectStore(store.id)} />
+            ))}
+            <DropdownMenuItem label={t('listDetail.allStores')} onSelect={() => onSelectStore(null)} />
+          </DropdownMenuContent>
+        </DropdownMenu>
       )}
     </View>
   );
