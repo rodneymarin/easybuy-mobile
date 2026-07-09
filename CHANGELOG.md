@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [1.4.0](https://github.com/rodneymarin/easybuy-mobile/compare/v1.3.5...v1.4.0) (2026-07-09)
+
+
+### Features
+
+* fijar items importantes en lista ([c61a8d6](https://github.com/rodneymarin/easybuy-mobile/commit/c61a8d6e0ea9308453003bf4e0bbb710edaba893))
+
 ### [1.3.5](https://github.com/rodneymarin/easybuy-mobile/compare/v1.3.4...v1.3.5) (2026-07-09)
 
 
