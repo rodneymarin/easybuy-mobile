@@ -139,7 +139,10 @@ export default function ProductosScreen() {
         )}
       </ActionBar>
       {filteredProducts.length > 0 ? (
-        <ProductList data={filteredProducts} selectedIds={selectedProductIds} isSelectionMode={isSelectionMode} onProductPress={handleProductPress} onProductLongPress={handleProductLongPress} />
+        <>
+          <Text style={[styles.countLabel, { color: colors.textSecondary }]}>{t('products.showingCount', { count: filteredProducts.length })}</Text>
+          <ProductList data={filteredProducts} selectedIds={selectedProductIds} isSelectionMode={isSelectionMode} onProductPress={handleProductPress} onProductLongPress={handleProductLongPress} />
+        </>
       ) : searchQuery !== debouncedSearch ? (
         <View style={styles.emptyContainer}>
           <ActivityIndicator size="large" color={colors.text} />
@@ -203,5 +206,10 @@ const styles = StyleSheet.create({
   destructiveButtonText: {
     fontSize: 15,
     fontWeight: '600',
+  },
+  countLabel: {
+    fontSize: 13,
+    textAlign: 'center',
+    paddingVertical: 8,
   },
 });

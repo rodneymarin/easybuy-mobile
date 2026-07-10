@@ -132,7 +132,10 @@ export default function TiendasScreen() {
         )}
       </ActionBar>
       {filteredStores.length > 0 ? (
-        <StoreList data={filteredStores} selectedIds={selectedStoreIds} isSelectionMode={isSelectionMode} onStorePress={handleStorePress} onStoreLongPress={handleStoreLongPress} />
+        <>
+          <Text style={[styles.countLabel, { color: colors.textSecondary }]}>{t('stores.showingCount', { count: filteredStores.length })}</Text>
+          <StoreList data={filteredStores} selectedIds={selectedStoreIds} isSelectionMode={isSelectionMode} onStorePress={handleStorePress} onStoreLongPress={handleStoreLongPress} />
+        </>
       ) : searchQuery !== debouncedSearch ? (
         <View style={styles.emptyContainer}>
           <ActivityIndicator size="large" color={colors.text} />
@@ -196,5 +199,10 @@ const styles = StyleSheet.create({
   destructiveButtonText: {
     fontSize: 15,
     fontWeight: '600',
+  },
+  countLabel: {
+    fontSize: 13,
+    textAlign: 'center',
+    paddingVertical: 8,
   },
 });
