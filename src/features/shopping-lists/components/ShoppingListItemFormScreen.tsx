@@ -6,310 +6,342 @@ import { Button, ConfirmDeleteSheet, ProductPicker, ScreenTitle, Select, SelectC
 import { ProductFormSheet } from '@features/products/components';
 import { addItemToList, updateItemInList, removeItemFromList } from '@lib/repositories/shopping-lists';
 import { generateUUID } from '@lib/uuid';
-import { createProduct, getProductByName } from '@lib/repositories/products';
+import { createProduct, getProductByName, updateProduct } from '@lib/repositories/products';
 import { tUnit, useI18n } from '@lib/i18n';
 import { useTheme } from '@lib/theme';
+import type { Price } from '@models/price.model';
 import type { Product } from '@models/product.model';
 import type { Store } from '@models/store.model';
 
 interface ItemFormParams {
-  item?: { rowId: number; productId: string; quantity: number; storeId?: string };
-  shoppingListId: string;
-  products: Product[];
-  stores: Store[];
+	item?: { rowId: number; productId: string; quantity: number; storeId?: string; };
+	shoppingListId: string;
+	products: Product[];
+	stores: Store[];
 }
 
 export default function ShoppingListItemFormScreen() {
-  const route = useRoute<{ key: string; name: string; params: ItemFormParams }>();
-  const navigation = useNavigation();
-  const { item, shoppingListId, products: initialProducts, stores } = route.params;
-  const { colors } = useTheme();
-  const { t } = useI18n();
-  const [selectedProductId, setSelectedProductId] = useState<string | null>(null);
-  const [selectedStoreId, setSelectedStoreId] = useState<string | null>(null);
-  const [quantityText, setQuantityText] = useState('1');
-  const [isDeleteSheetOpen, setIsDeleteSheetOpen] = useState(false);
-  const [isProductSheetOpen, setIsProductSheetOpen] = useState(false);
-  const [keyboardHeight, setKeyboardHeight] = useState(0);
-  const [localProducts, setLocalProducts] = useState<Product[]>(initialProducts);
-  const toast = useToast();
+	const route = useRoute<{ key: string; name: string; params: ItemFormParams; }>();
+	const navigation = useNavigation();
+	const { item, shoppingListId, products: initialProducts, stores } = route.params;
+	const { colors } = useTheme();
+	const { t } = useI18n();
+	const [selectedProductId, setSelectedProductId] = useState<string | null>(null);
+	const [selectedStoreId, setSelectedStoreId] = useState<string | null>(null);
+	const [quantityText, setQuantityText] = useState('1');
+	const [isDeleteSheetOpen, setIsDeleteSheetOpen] = useState(false);
+	const [isProductSheetOpen, setIsProductSheetOpen] = useState(false);
+	const [isProductEditSheetOpen, setIsProductEditSheetOpen] = useState(false);
+	const [keyboardHeight, setKeyboardHeight] = useState(0);
+	const [localProducts, setLocalProducts] = useState<Product[]>(initialProducts);
+	const toast = useToast();
 
-  useEffect(() => {
-    const showSubscription = Keyboard.addListener('keyboardDidShow', (e) => {
-      setKeyboardHeight(e.endCoordinates.height);
-    });
-    const hideSubscription = Keyboard.addListener('keyboardDidHide', () => {
-      setKeyboardHeight(0);
-    });
-    return () => {
-      showSubscription.remove();
-      hideSubscription.remove();
-    };
-  }, []);
+	useEffect(() => {
+		const showSubscription = Keyboard.addListener('keyboardDidShow', (e) => {
+			setKeyboardHeight(e.endCoordinates.height);
+		});
+		const hideSubscription = Keyboard.addListener('keyboardDidHide', () => {
+			setKeyboardHeight(0);
+		});
+		return () => {
+			showSubscription.remove();
+			hideSubscription.remove();
+		};
+	}, []);
 
-  const footerStyle = useMemo(() => [styles.footer, { borderTopColor: colors.border, paddingBottom: keyboardHeight + 16 }], [colors.border, keyboardHeight]);
+	const footerStyle = useMemo(() => [styles.footer, { borderTopColor: colors.border, paddingBottom: keyboardHeight + 16 }], [colors.border, keyboardHeight]);
 
-  useEffect(() => {
-    setLocalProducts(initialProducts);
-  }, [initialProducts]);
+	useEffect(() => {
+		setLocalProducts(initialProducts);
+	}, [initialProducts]);
 
-  const isEditMode = item !== undefined;
-  const quantity = quantityText === '' ? 0 : parseFloat(quantityText);
-  const isFormValid = selectedProductId !== null && !isNaN(quantity) && quantity > 0;
+	const isEditMode = item !== undefined;
+	const quantity = quantityText === '' ? 0 : parseFloat(quantityText);
+	const isFormValid = selectedProductId !== null && !isNaN(quantity) && quantity > 0;
 
-  const selectedProduct = localProducts.find((p) => p.id === selectedProductId);
+	const selectedProduct = localProducts.find((p) => p.id === selectedProductId);
 
-  const storeIdsWithPrices = useMemo(() => {
-    if (!selectedProduct?.prices) return new Set<string>();
-    return new Set(selectedProduct.prices.map(p => p.storeId));
-  }, [selectedProduct]);
+	const storeIdsWithPrices = useMemo(() => {
+		if (!selectedProduct?.prices) return new Set<string>();
+		return new Set(selectedProduct.prices.map(p => p.storeId));
+	}, [selectedProduct]);
 
-  const unitLabel = !selectedProduct ? tUnit(t, 'unit') : tUnit(t, selectedProduct.unitOfMeasurement);
+	const unitLabel = !selectedProduct ? tUnit(t, 'unit') : tUnit(t, selectedProduct.unitOfMeasurement);
 
-  const unitPrice = selectedStoreId && selectedProduct?.prices
-    ? selectedProduct.prices.find((p) => p.storeId === selectedStoreId)?.value ?? 0
-    : 0;
+	const unitPrice = selectedStoreId && selectedProduct?.prices
+		? selectedProduct.prices.find((p) => p.storeId === selectedStoreId)?.value ?? 0
+		: 0;
 
-  const total = unitPrice * quantity;
+	const total = unitPrice * quantity;
 
-  const selectedStoreLabel = selectedStoreId ? stores.find((s) => s.id === selectedStoreId)?.description : undefined;
+	const selectedStoreLabel = selectedStoreId ? stores.find((s) => s.id === selectedStoreId)?.description : undefined;
 
-  const storeOptions: Array<{ label: string; value: string }> = [
-    { label: t('listItem.storeNone'), value: '' },
-    ...stores.map((s) => ({ label: s.description, value: s.id })),
-  ];
+	const storeOptions: Array<{ label: string; value: string; }> = [
+		{ label: t('listItem.storeNone'), value: '' },
+		...stores.map((s) => ({ label: s.description, value: s.id })),
+	];
 
-  useEffect(() => {
-    if (item) {
-      setSelectedProductId(item.productId);
-      setSelectedStoreId(item.storeId ?? null);
-      setQuantityText(String(item.quantity));
-    }
-  }, [item]);
+	useEffect(() => {
+		if (item) {
+			setSelectedProductId(item.productId);
+			setSelectedStoreId(item.storeId ?? null);
+			setQuantityText(String(item.quantity));
+		}
+	}, [item]);
 
-  function handleQuantityChange(text: string) {
-    const filtered = text.replace(/[^0-9.]/g, '');
-    if (filtered === '' || /^\d*\.?\d*$/.test(filtered)) {
-      setQuantityText(filtered);
-    }
-  }
+	function handleQuantityChange(text: string) {
+		const filtered = text.replace(/[^0-9.]/g, '');
+		if (filtered === '' || /^\d*\.?\d*$/.test(filtered)) {
+			setQuantityText(filtered);
+		}
+	}
 
-  async function handleSave() {
-    Keyboard.dismiss();
-    if (!isFormValid || !selectedProductId) return;
-    const qty = parseFloat(quantityText);
-    if (item) {
-      await updateItemInList(item.rowId, selectedProductId, qty, selectedStoreId ?? undefined);
-      toast.show({ message: t('toast.itemUpdated'), type: 'success' });
-    } else {
-      await addItemToList(shoppingListId, { productId: selectedProductId, quantity: qty, storeId: selectedStoreId ?? undefined });
-      toast.show({ message: t('toast.itemAdded'), type: 'success' });
-    }
-    navigation.goBack();
-  }
+	async function handleSave() {
+		Keyboard.dismiss();
+		if (!isFormValid || !selectedProductId) return;
+		const qty = parseFloat(quantityText);
+		if (item) {
+			await updateItemInList(item.rowId, selectedProductId, qty, selectedStoreId ?? undefined);
+			toast.show({ message: t('toast.itemUpdated'), type: 'success' });
+		} else {
+			await addItemToList(shoppingListId, { productId: selectedProductId, quantity: qty, storeId: selectedStoreId ?? undefined });
+			toast.show({ message: t('toast.itemAdded'), type: 'success' });
+		}
+		navigation.goBack();
+	}
 
-  function handleDeletePress() {
-    Keyboard.dismiss();
-    setIsDeleteSheetOpen(true);
-  }
+	function handleDeletePress() {
+		Keyboard.dismiss();
+		setIsDeleteSheetOpen(true);
+	}
 
-  async function handleConfirmDelete() {
-    Keyboard.dismiss();
-    if (!item) return;
-    await removeItemFromList(item.rowId);
-    setIsDeleteSheetOpen(false);
-    toast.show({ message: t('toast.itemDeleted'), type: 'success' });
-    navigation.goBack();
-  }
+	async function handleConfirmDelete() {
+		Keyboard.dismiss();
+		if (!item) return;
+		await removeItemFromList(item.rowId);
+		setIsDeleteSheetOpen(false);
+		toast.show({ message: t('toast.itemDeleted'), type: 'success' });
+		navigation.goBack();
+	}
 
-  function handleGoBack() {
-    Keyboard.dismiss();
-    navigation.goBack();
-  }
+	function handleGoBack() {
+		Keyboard.dismiss();
+		navigation.goBack();
+	}
 
-  async function handleCreateProduct(productName: string, unitOfMeasurement: string, prices: { storeId: string; value: number }[]) {
-    const existing = await getProductByName(productName);
-    if (existing) {
-      toast.show({ message: t('toast.productNameExists'), type: 'error' });
-      return;
-    }
-    const id = generateUUID();
-    try {
-      await createProduct(id, productName, unitOfMeasurement, prices);
-      const newProduct: Product = { id, productName, unitOfMeasurement, prices };
-      setLocalProducts((prev) => [...prev, newProduct].sort((a, b) => a.productName.localeCompare(b.productName)));
-      setSelectedProductId(id);
-      setIsProductSheetOpen(false);
-    } catch (error) {
-      console.error("Failed to create product:", error);
-    }
-  }
+	function handleEditProductPress() {
+		Keyboard.dismiss();
+		setIsProductEditSheetOpen(true);
+	}
 
-  return (
-    <KeyboardAvoidingView style={[styles.container, { backgroundColor: colors.background }]} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
-      <View style={styles.headerWrapper}>
-        <ScreenTitle>{isEditMode ? t('listItem.editTitle') : t('listItem.addTitle')}</ScreenTitle>
-        <Pressable onPress={handleGoBack} style={styles.backButton} hitSlop={8}>
-          <Ionicons name="arrow-back" size={24} color={colors.text} />
-        </Pressable>
-      </View>
+	async function handleCreateProduct(productName: string, unitOfMeasurement: string, prices: { storeId: string; value: number; }[]) {
+		const existing = await getProductByName(productName);
+		if (existing) {
+			toast.show({ message: t('toast.productNameExists'), type: 'error' });
+			return;
+		}
+		const id = generateUUID();
+		try {
+			await createProduct(id, productName, unitOfMeasurement, prices);
+			const newProduct: Product = { id, productName, unitOfMeasurement, prices };
+			setLocalProducts((prev) => [...prev, newProduct].sort((a, b) => a.productName.localeCompare(b.productName)));
+			setSelectedProductId(id);
+			setIsProductSheetOpen(false);
+		} catch (error) {
+			console.error("Failed to create product:", error);
+		}
+	}
 
-      <ScrollView style={styles.body} contentContainerStyle={styles.bodyContent} keyboardShouldPersistTaps="handled">
-        <Text style={[styles.fieldLabel, { color: colors.text }]}>{t('listItem.productLabel')}</Text>
-        <View style={styles.productRow}>
-          <ProductPicker value={selectedProductId} onValueChange={setSelectedProductId} placeholder={t('listItem.productPlaceholder')} products={localProducts} label={selectedProduct?.productName} style={styles.productDropdown} />
-          <Button variant="secondary" onPress={() => setIsProductSheetOpen(true)} size="icon">
-            <Ionicons name="add" size={20} color={colors.text} />
-          </Button>
-        </View>
+	async function handleEditProduct(productName: string, unitOfMeasurement: string, prices: Price[], productId?: string) {
+		if (!productId) return;
+		const existing = await getProductByName(productName, productId);
+		if (existing) {
+			toast.show({ message: t('toast.productNameExists'), type: 'error' });
+			return;
+		}
+		try {
+			await updateProduct(productId, productName, unitOfMeasurement, prices);
+			setLocalProducts((prev) =>
+				prev.map((p) =>
+					p.id === productId ? { ...p, productName, unitOfMeasurement, prices } : p
+				)
+			);
+			setIsProductEditSheetOpen(false);
+			toast.show({ message: t('toast.productUpdated'), type: 'success' });
+		} catch (error) {
+			console.error("Failed to update product:", error);
+		}
+	}
 
-        <Text style={[styles.fieldLabel, { color: colors.text }]}>{t('listItem.storeLabel')}</Text>
-        <Select value={selectedStoreId} onValueChange={(value) => setSelectedStoreId(value || null)}>
-          <SelectTrigger placeholder={t('listItem.storePlaceholder')} label={selectedStoreLabel} />
-<SelectContent>
-              <FlatList data={storeOptions} keyExtractor={(item) => item.value} keyboardShouldPersistTaps="handled"
-                renderItem={({ item }) => (
-                  <SelectItem label={item.label} value={item.value} hasIndicator={item.value !== '' && storeIdsWithPrices.has(item.value)} />
-                )}
-              />
-            </SelectContent>
-        </Select>
+	return (
+		<KeyboardAvoidingView style={[styles.container, { backgroundColor: colors.background }]} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
+			<View style={styles.headerWrapper}>
+				<ScreenTitle>{isEditMode ? t('listItem.editTitle') : t('listItem.addTitle')}</ScreenTitle>
+				<Pressable onPress={handleGoBack} style={styles.backButton} hitSlop={8}>
+					<Ionicons name="arrow-back" size={24} color={colors.text} />
+				</Pressable>
+			</View>
 
-        <Text style={[styles.fieldLabel, { color: colors.text }]}>{t('listItem.quantityLabel')}</Text>
-        <View style={styles.quantityRow}>
-          <TextInput value={quantityText} onChangeText={handleQuantityChange} keyboardType="decimal-pad" placeholder="0" placeholderTextColor={colors.placeholderText} selectTextOnFocus style={[styles.quantityInput, { color: colors.text, borderColor: colors.border, backgroundColor: colors.background }]} />
-          <Text style={[styles.unitLabel, { color: selectedProduct ? colors.textSecondary : colors.placeholderText }]}>{unitLabel}</Text>
-        </View>
+			<ScrollView style={styles.body} contentContainerStyle={styles.bodyContent} keyboardShouldPersistTaps="handled">
+				<Text style={[styles.fieldLabel, { color: colors.text }]}>{t('listItem.productLabel')}</Text>
+				<View style={styles.productRow}>
+					<ProductPicker value={selectedProductId} onValueChange={setSelectedProductId} placeholder={t('listItem.productPlaceholder')} products={localProducts} label={selectedProduct?.productName} style={styles.productDropdown} />
+					<Button variant="secondary" onPress={handleEditProductPress} size="icon" disabled={!selectedProductId}>
+						<Ionicons name="create-outline" size={20} color={colors.text} />
+					</Button>
+					<Button variant="secondary" onPress={() => setIsProductSheetOpen(true)} size="icon">
+						<Ionicons name="add" size={20} color={colors.text} />
+					</Button>
+				</View>
 
-        <View style={styles.priceInfo}>
-          <Text style={[styles.priceLabel, { color: colors.text }]}>
-            {t('listItem.unitPrice')}: {unitPrice > 0 ? `$${unitPrice.toFixed(2)}` : '---'}
-          </Text>
-          <Text style={[styles.priceLabel, styles.totalLabel, { color: colors.text }]}>
-            {t('listItem.total')}: ${isNaN(total) ? '0.00' : total.toFixed(2)}
-          </Text>
-        </View>
-      </ScrollView>
+				<Text style={[styles.fieldLabel, { color: colors.text }]}>{t('listItem.storeLabel')}</Text>
+				<Select value={selectedStoreId} onValueChange={(value) => setSelectedStoreId(value || null)}>
+					<SelectTrigger placeholder={t('listItem.storePlaceholder')} label={selectedStoreLabel} />
+					<SelectContent>
+						<FlatList data={storeOptions} keyExtractor={(item) => item.value} keyboardShouldPersistTaps="handled"
+							renderItem={({ item }) => (
+								<SelectItem label={item.label} value={item.value} hasIndicator={item.value !== '' && storeIdsWithPrices.has(item.value)} />
+							)}
+						/>
+					</SelectContent>
+				</Select>
 
-      <View style={footerStyle}>
-        <View style={styles.buttonRow}>
-          {isEditMode && (
-            <Button variant="destructive" style={styles.halfButton} onPress={handleDeletePress}>
-              <Text style={[styles.destructiveButtonText, { color: colors.destructiveBorder }]}>{t('listItem.delete')}</Text>
-            </Button>
-          )}
-          <Button variant="secondary" style={styles.halfButton} onPress={handleGoBack}>
-            <Text style={[styles.buttonTextSecondary, { color: colors.text }]}>{t('listItem.cancel')}</Text>
-          </Button>
-        </View>
-        <Button variant="primary" style={styles.actionButton} onPress={handleSave} disabled={!isFormValid}>
-          <Text style={styles.buttonTextPrimary}>{t('listItem.save')}</Text>
-        </Button>
-      </View>
+				<Text style={[styles.fieldLabel, { color: colors.text }]}>{t('listItem.quantityLabel')}</Text>
+				<View style={styles.quantityRow}>
+					<TextInput value={quantityText} onChangeText={handleQuantityChange} keyboardType="decimal-pad" placeholder="0" placeholderTextColor={colors.placeholderText} selectTextOnFocus style={[styles.quantityInput, { color: colors.text, borderColor: colors.border, backgroundColor: colors.background }]} />
+					<Text style={[styles.unitLabel, { color: selectedProduct ? colors.textSecondary : colors.placeholderText }]}>{unitLabel}</Text>
+				</View>
 
-      <ConfirmDeleteSheet isOpen={isDeleteSheetOpen} onClose={() => setIsDeleteSheetOpen(false)} onConfirm={handleConfirmDelete} title={t('listItem.deleteModal.title')} message={t('listItem.deleteModal.confirmMessage')} confirmLabel={t('listItem.deleteModal.confirm')} />
+				<View style={styles.priceInfo}>
+					<Text style={[styles.priceLabel, { color: colors.text }]}>
+						{t('listItem.unitPrice')}: {unitPrice > 0 ? `$${unitPrice.toFixed(2)}` : '---'}
+					</Text>
+					<Text style={[styles.priceLabel, styles.totalLabel, { color: colors.text }]}>
+						{t('listItem.total')}: ${isNaN(total) ? '0.00' : total.toFixed(2)}
+					</Text>
+				</View>
+			</ScrollView>
 
-      <ProductFormSheet isOpen={isProductSheetOpen} stores={stores} onSave={handleCreateProduct} onClose={() => setIsProductSheetOpen(false)} />
-    </KeyboardAvoidingView>
-  );
+			<View style={footerStyle}>
+				<View style={styles.buttonRow}>
+					{isEditMode && (
+						<Button variant="destructive" style={styles.halfButton} onPress={handleDeletePress}>
+							<Text style={[styles.destructiveButtonText, { color: colors.destructiveBorder }]}>{t('listItem.delete')}</Text>
+						</Button>
+					)}
+					<Button variant="secondary" style={styles.halfButton} onPress={handleGoBack}>
+						<Text style={[styles.buttonTextSecondary, { color: colors.text }]}>{t('listItem.cancel')}</Text>
+					</Button>
+				</View>
+				<Button variant="primary" style={styles.actionButton} onPress={handleSave} disabled={!isFormValid}>
+					<Text style={styles.buttonTextPrimary}>{t('listItem.save')}</Text>
+				</Button>
+			</View>
+
+			<ConfirmDeleteSheet isOpen={isDeleteSheetOpen} onClose={() => setIsDeleteSheetOpen(false)} onConfirm={handleConfirmDelete} title={t('listItem.deleteModal.title')} message={t('listItem.deleteModal.confirmMessage')} confirmLabel={t('listItem.deleteModal.confirm')} />
+
+			<ProductFormSheet isOpen={isProductSheetOpen} stores={stores} onSave={handleCreateProduct} onClose={() => setIsProductSheetOpen(false)} />
+			<ProductFormSheet isOpen={isProductEditSheetOpen} stores={stores} onSave={handleEditProduct} initialProduct={selectedProduct} onClose={() => setIsProductEditSheetOpen(false)} />
+		</KeyboardAvoidingView>
+	);
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    paddingTop: 60,
-  },
-  headerWrapper: {
-    position: 'relative',
-  },
-  backButton: {
-    position: 'absolute',
-    left: 16,
-    top: -6,
-    width: 36,
-    height: 36,
-    borderRadius: 18,
-    justifyContent: 'center',
-    alignItems: 'center',
-    zIndex: 1,
-  },
-  body: {
-    flex: 1,
-  },
-  bodyContent: {
-    padding: 16,
-    paddingBottom: 24,
-  },
-  fieldLabel: {
-    fontSize: 15,
-    fontWeight: '600',
-    marginTop: 16,
-    marginBottom: 6,
-  },
-  productRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-  },
-  productDropdown: {
-    flex: 1,
-  },
-  quantityRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-  },
-  quantityInput: {
-    flex: 1,
-    height: 44,
-    borderWidth: 1,
-    borderRadius: 10,
-    paddingHorizontal: 12,
-    fontSize: 15,
-  },
-  unitLabel: {
-    fontSize: 15,
-    fontWeight: '500',
-    minWidth: 60,
-  },
-  priceInfo: {
-    marginTop: 20,
-    gap: 6,
-  },
-  priceLabel: {
-    fontSize: 15,
-  },
-  totalLabel: {
-    fontWeight: '700',
-    fontSize: 17,
-  },
-  footer: {
-    padding: 16,
-    gap: 8,
-    borderTopWidth: 1,
-  },
-  buttonRow: {
-    flexDirection: 'row',
-    gap: 8,
-  },
-  halfButton: {
-    flex: 1,
-    justifyContent: 'center',
-  },
-  actionButton: {
-    justifyContent: 'center',
-  },
-  buttonTextPrimary: {
-    color: '#fff',
-    fontSize: 15,
-    fontWeight: '600',
-  },
-  buttonTextSecondary: {
-    fontSize: 15,
-    fontWeight: '600',
-  },
-  destructiveButtonText: {
-    fontSize: 15,
-    fontWeight: '600',
-  },
+	container: {
+		flex: 1,
+		paddingTop: 60,
+	},
+	headerWrapper: {
+		position: 'relative',
+	},
+	backButton: {
+		position: 'absolute',
+		left: 16,
+		top: -6,
+		width: 36,
+		height: 36,
+		borderRadius: 18,
+		justifyContent: 'center',
+		alignItems: 'center',
+		zIndex: 1,
+	},
+	body: {
+		flex: 1,
+	},
+	bodyContent: {
+		padding: 16,
+		paddingBottom: 24,
+	},
+	fieldLabel: {
+		fontSize: 15,
+		fontWeight: '600',
+		marginTop: 16,
+		marginBottom: 6,
+	},
+	productRow: {
+		flexDirection: 'row',
+		alignItems: 'center',
+		gap: 8,
+	},
+	productDropdown: {
+		flex: 1,
+	},
+	quantityRow: {
+		flexDirection: 'row',
+		alignItems: 'center',
+		gap: 8,
+	},
+	quantityInput: {
+		flex: 1,
+		height: 44,
+		borderWidth: 1,
+		borderRadius: 10,
+		paddingHorizontal: 12,
+		fontSize: 15,
+	},
+	unitLabel: {
+		fontSize: 15,
+		fontWeight: '500',
+		minWidth: 60,
+	},
+	priceInfo: {
+		marginTop: 20,
+		gap: 6,
+	},
+	priceLabel: {
+		fontSize: 15,
+	},
+	totalLabel: {
+		fontWeight: '700',
+		fontSize: 17,
+	},
+	footer: {
+		padding: 16,
+		gap: 8,
+		borderTopWidth: 1,
+	},
+	buttonRow: {
+		flexDirection: 'row',
+		gap: 8,
+	},
+	halfButton: {
+		flex: 1,
+		justifyContent: 'center',
+	},
+	actionButton: {
+		justifyContent: 'center',
+	},
+	buttonTextPrimary: {
+		color: '#fff',
+		fontSize: 15,
+		fontWeight: '600',
+	},
+	buttonTextSecondary: {
+		fontSize: 15,
+		fontWeight: '600',
+	},
+	destructiveButtonText: {
+		fontSize: 15,
+		fontWeight: '600',
+	},
 });

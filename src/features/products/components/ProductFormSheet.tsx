@@ -6,16 +6,18 @@ import type { ProductPricesHandle } from './ProductPrices';
 import { useI18n } from '@lib/i18n';
 import { useTheme } from '@lib/theme';
 import type { Price } from '@models/price.model';
+import type { Product } from '@models/product.model';
 import type { StoreListData } from '@features/stores';
 
 interface ProductFormSheetProps {
   isOpen: boolean;
   stores: StoreListData[];
-  onSave: (productName: string, unitOfMeasurement: string, prices: Price[]) => void;
+  onSave: (productName: string, unitOfMeasurement: string, prices: Price[], productId?: string) => void;
   onClose: () => void;
+  initialProduct?: Product | null;
 }
 
-export default function ProductFormSheet({ isOpen, stores, onSave, onClose }: ProductFormSheetProps) {
+export default function ProductFormSheet({ isOpen, stores, onSave, onClose, initialProduct }: ProductFormSheetProps) {
   const { colors } = useTheme();
   const { t } = useI18n();
   const pricesRef = useRef<ProductPricesHandle>(null);
@@ -24,6 +26,7 @@ export default function ProductFormSheet({ isOpen, stores, onSave, onClose }: Pr
   const [unitOfMeasurement, setUnitOfMeasurement] = useState('');
   const [prices, setPrices] = useState<Price[]>([]);
 
+  const isEditMode = initialProduct !== undefined && initialProduct !== null;
   const isFormValid = productName.trim().length > 0 && unitOfMeasurement.length > 0;
 
   function handlePricesChange(newPrices: Price[]) {
@@ -33,17 +36,24 @@ export default function ProductFormSheet({ isOpen, stores, onSave, onClose }: Pr
 
   useEffect(() => {
     if (isOpen) {
-      setProductName('');
-      setUnitOfMeasurement('');
-      setPrices([]);
-      latestPricesRef.current = [];
+      if (initialProduct) {
+        setProductName(initialProduct.productName);
+        setUnitOfMeasurement(initialProduct.unitOfMeasurement);
+        setPrices(initialProduct.prices ?? []);
+        latestPricesRef.current = initialProduct.prices ?? [];
+      } else {
+        setProductName('');
+        setUnitOfMeasurement('');
+        setPrices([]);
+        latestPricesRef.current = [];
+      }
     }
-  }, [isOpen]);
+  }, [isOpen, initialProduct]);
 
   function handleSave() {
     if (!isFormValid) return;
     pricesRef.current?.confirmPendingPrice();
-    onSave(productName.trim(), unitOfMeasurement, latestPricesRef.current);
+    onSave(productName.trim(), unitOfMeasurement, latestPricesRef.current, initialProduct?.id);
   }
 
   function handleClose() {
@@ -55,7 +65,7 @@ export default function ProductFormSheet({ isOpen, stores, onSave, onClose }: Pr
 
   return (
     <BottomSheet isOpen={isOpen} onClose={handleClose} percentage={0.75}>
-      <Text style={[styles.title, { color: colors.text }]}>{t('products.addTitle')}</Text>
+      <Text style={[styles.title, { color: colors.text }]}>{isEditMode ? t('products.editTitle') : t('products.addTitle')}</Text>
       <ProductFormContent ref={pricesRef} productName={productName} unitOfMeasurement={unitOfMeasurement} prices={prices} stores={stores} noPadding onProductNameChange={setProductName} onUnitOfMeasurementChange={setUnitOfMeasurement} onPricesChange={handlePricesChange} style={styles.content} />
       <Button variant="primary" style={styles.saveButton} onPress={handleSave} disabled={!isFormValid}>
         <Text style={styles.buttonTextPrimary}>{t('products.addModal.save')}</Text>
