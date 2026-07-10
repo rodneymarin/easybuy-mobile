@@ -40,28 +40,28 @@ const dark: ThemeColors = {
 	text: '#f5f5f5',
 	textSecondary: '#aaa',
 	border: '#333',
-	surface: '#2c2c2e',
+	surface: '#2c2c2c',
 	surfaceText: '#ccc',
 	primary: '#4A5DF9',
 	destructive: '#4A1C1C',
 	destructiveBorder: '#d95050',
 	tabBarInactive: '#636366',
-	panelBackground: '#1c1c1e',
+	panelBackground: '#1c1c1c',
 	panelText: '#f5f5f5',
 	panelBorder: '#38383a',
 	placeholderText: '#666',
 };
 
 function darkenColor(hex: string, amount: number): string {
-  let normalized = hex.replace('#', '');
-  if (normalized.length === 3) {
-    normalized = normalized.split('').map((c) => c + c).join('');
-  }
-  const num = parseInt(normalized, 16);
-  const r = Math.max(0, (num >> 16) - Math.round(255 * amount));
-  const g = Math.max(0, ((num >> 8) & 0x00ff) - Math.round(255 * amount));
-  const b = Math.max(0, (num & 0x0000ff) - Math.round(255 * amount));
-  return `rgb(${r}, ${g}, ${b})`;
+	let normalized = hex.replace('#', '');
+	if (normalized.length === 3) {
+		normalized = normalized.split('').map((c) => c + c).join('');
+	}
+	const num = parseInt(normalized, 16);
+	const r = Math.max(0, (num >> 16) - Math.round(255 * amount));
+	const g = Math.max(0, ((num >> 8) & 0x00ff) - Math.round(255 * amount));
+	const b = Math.max(0, (num & 0x0000ff) - Math.round(255 * amount));
+	return `rgb(${r}, ${g}, ${b})`;
 }
 
 export { light, dark, darkenColor, type ThemeColors };

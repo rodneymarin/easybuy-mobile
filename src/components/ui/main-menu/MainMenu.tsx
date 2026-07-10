@@ -86,9 +86,9 @@ function MainMenu() {
 
 			<GestureDetector gesture={panGesture}>
 				<Animated.View style={[styles.panel, panelStyle, { backgroundColor: colors.panelBackground }]}>
-				<View style={styles.panelHeader}>
-					<Text style={[styles.panelTitle, { color: colors.panelText }]}>EasyBuy</Text>
-				</View>
+					<View style={styles.panelHeader}>
+						<Text style={[styles.panelTitle, { color: colors.panelText }]}>EasyBuy</Text>
+					</View>
 
 					<Text style={[styles.sectionLabel, { color: colors.textSecondary }]}>{t('menu.theme')}</Text>
 

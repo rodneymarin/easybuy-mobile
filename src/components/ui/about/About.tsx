@@ -15,7 +15,7 @@ function About({ isOpen, onClose }: AboutProps) {
   const appVersion = Constants.expoConfig?.version ?? '0.0.0';
 
   return (
-    <BottomSheet isOpen={isOpen} onClose={onClose}>
+    <BottomSheet isOpen={isOpen} onClose={onClose} percentage={0.4}>
       <View style={styles.container}>
         <Image source={require('@assets/logo.png')} style={[styles.logo, { width: 100, height: 100 }]} />
         <Text style={[styles.title, { color: colors.text }]}>EasyBuy</Text>
