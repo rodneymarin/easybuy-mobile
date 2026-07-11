@@ -184,3 +184,20 @@ dependencies {
         implementation jscFlavor
     }
 }
+
+def patchGraphicsConversions() {
+    def rnDir = file(["node", "--print", "require.resolve('react-native/package.json')"].execute(null, rootDir).text.trim()).getParentFile()
+    def headerFile = new File(rnDir, "ReactCommon/react/renderer/core/graphicsConversions.h")
+    def content = headerFile.text
+    if (content.contains('#include <format>')) return
+    def patched = content.replace(
+        "#ifdef RN_SERIALIZABLE_STATE\n#include <yoga/Yoga.h>\n#endif",
+        "#ifdef RN_SERIALIZABLE_STATE\n#include <yoga/Yoga.h>\n#include <format>\n#endif"
+    )
+    if (patched != content) {
+        headerFile.text = patched
+        println "Patched graphicsConversions.h to include <format>"
+    }
+}
+
+patchGraphicsConversions()
