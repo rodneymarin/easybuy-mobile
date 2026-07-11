@@ -549,7 +549,7 @@ export default function ShoppingListDetailScreen() {
 						</View>
 					)}
 					{filteredItems.length > 0 && (
-						<Text style={[styles.countLabel, { color: colors.textSecondary }]}>{t('list.items', { count: filteredItems.length })}</Text>
+						<Text style={[styles.countLabel, { color: colors.textSecondary }]}>{t('list.items', { completed: doneItems.length, count: filteredItems.length })}</Text>
 					)}
 				</View>
 			</ScrollableList>
