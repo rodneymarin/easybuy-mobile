@@ -7,8 +7,8 @@
 		"android": "expo run:android",
 		"ios": "expo run:ios",
 		"web": "expo start --web",
-		"build:apk-local": "mkdir -p dist && eas build --local --platform android --profile preview --output dist/app-release.apk",
-		"build:apk-remote": "eas build --platform android --profile preview --non-interactive",
+		"build:local": "mkdir -p dist && eas build --local --platform android --profile preview --output dist/app-release.apk",
+		"build:remote": "eas build --platform android --profile preview --non-interactive",
 		"release": "node scripts/bump-beta.js"
 	},
 	"dependencies": {
