@@ -2,3 +2,4 @@
 /.expo/
 /dist
 /node_modules
+dist/app-release.apk
