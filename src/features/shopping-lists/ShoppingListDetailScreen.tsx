@@ -622,7 +622,7 @@ const styles = StyleSheet.create({
 		marginTop: 8,
 	},
 	doneSectionTitle: {
-		fontSize: 15,
+		fontSize: 13,
 		fontWeight: '600',
 		marginHorizontal: 16,
 		marginBottom: 12,

@@ -10,7 +10,7 @@ function ShoppingListItemTitle({ name, isDone }: ShoppingListItemTitleProps) {
   const { colors } = useTheme();
 
   return (
-    <Text numberOfLines={1} ellipsizeMode="tail" style={[styles.title, { color: isDone ? colors.textSecondary : colors.text }, isDone && styles.titleDone]}>
+    <Text numberOfLines={1} ellipsizeMode="tail" style={[styles.title, { color: isDone ? colors.placeholderText : colors.text }, isDone && styles.titleDone]}>
       {name}
     </Text>
   );
