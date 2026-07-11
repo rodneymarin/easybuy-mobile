@@ -66,7 +66,7 @@ export default function ShoppingListItemFormScreen() {
 		return new Set(selectedProduct.prices.map(p => p.storeId));
 	}, [selectedProduct]);
 
-	const unitLabel = !selectedProduct ? tUnit(t, 'unit') : tUnit(t, selectedProduct.unitOfMeasurement);
+	const unitLabel = !selectedProduct ? tUnit(t, 'unit', quantity) : tUnit(t, selectedProduct.unitOfMeasurement, quantity);
 
 	const unitPrice = selectedStoreId && selectedProduct?.prices
 		? selectedProduct.prices.find((p) => p.storeId === selectedStoreId)?.value ?? 0

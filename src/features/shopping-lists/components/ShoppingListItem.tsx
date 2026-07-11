@@ -6,12 +6,13 @@ import { useTheme } from '@lib/theme';
 interface ShoppingListItemProps {
 	title: string;
 	itemCount: number;
+	completedCount: number;
 	totalAmount: number;
 	onPress?: () => void;
 	onRemove?: () => void;
 }
 
-export default function ShoppingListItem({ title, itemCount, totalAmount, onPress, onRemove }: ShoppingListItemProps) {
+export default function ShoppingListItem({ title, itemCount, completedCount, totalAmount, onPress, onRemove }: ShoppingListItemProps) {
 	const { colors } = useTheme();
 	const { t } = useI18n();
 
@@ -21,7 +22,7 @@ export default function ShoppingListItem({ title, itemCount, totalAmount, onPres
 				<View style={styles.cardLeft}>
 					<Text style={[styles.title, { color: colors.text }]}>{title}</Text>
 					<View style={styles.tags}>
-						<Tag size="sm" label={t('list.items', { count: itemCount })} />
+						<Tag size="sm" label={t('list.items', { completed: completedCount, count: itemCount })} />
 						<Tag size="sm" label={t('list.total', { amount: totalAmount.toFixed(2) })} />
 					</View>
 				</View>

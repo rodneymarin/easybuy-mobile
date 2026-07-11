@@ -6,6 +6,7 @@ export interface ShoppingListData {
   id: string;
   title: string;
   itemCount: number;
+  completedCount: number;
   totalAmount: number;
 }
 
@@ -20,7 +21,7 @@ export default function ShoppingList({ data, children, onListPress, onRemoveList
   return (
     <ScrollableList data={data} keyExtractor={(item) => item.id}
       renderItem={({ item }) => (
-        <ShoppingListItem title={item.title} itemCount={item.itemCount} totalAmount={item.totalAmount} onPress={onListPress ? () => onListPress(item.id) : undefined} onRemove={onRemoveList ? () => onRemoveList(item.id) : undefined} />
+        <ShoppingListItem title={item.title} itemCount={item.itemCount} completedCount={item.completedCount} totalAmount={item.totalAmount} onPress={onListPress ? () => onListPress(item.id) : undefined} onRemove={onRemoveList ? () => onRemoveList(item.id) : undefined} />
       )}
     >
       {children}

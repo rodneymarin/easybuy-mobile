@@ -108,7 +108,7 @@ export default function ShoppingListDetailScreen() {
 			const product = productMap.get(item.productId);
 			const storeDesc = item.storeId ? storeMap.get(item.storeId) : undefined;
 			const price = product?.prices?.find((p) => p.storeId === item.storeId)?.value ?? 0;
-			const unitLabel = !product ? '' : tUnit(t, product.unitOfMeasurement);
+			const unitLabel = !product ? '' : tUnit(t, product.unitOfMeasurement, item.quantity);
 			return {
 				rowId: item.rowId,
 				productName: product?.productName ?? t('common.unknown'),
@@ -312,6 +312,12 @@ export default function ShoppingListDetailScreen() {
 				items: prev.items.filter((item) => !rowIds.includes(item.rowId)),
 			};
 		});
+		if (activeStoreId) {
+			const remainingAfterMove = items.filter((item) => !rowIds.includes(item.rowId));
+			if (!remainingAfterMove.some((item) => item.storeId === activeStoreId)) {
+				setActiveStoreId(null);
+			}
+		}
 		resetSelection();
 		await moveItemsToList(rowIds, targetListId);
 		toast.show({ message: t('toast.itemsMoved'), type: 'success' });
@@ -331,6 +337,12 @@ export default function ShoppingListDetailScreen() {
 				items: prev.items.filter((item) => !rowIds.includes(item.rowId)),
 			};
 		});
+		if (activeStoreId) {
+			const remainingAfterDelete = items.filter((item) => !rowIds.includes(item.rowId));
+			if (!remainingAfterDelete.some((item) => item.storeId === activeStoreId)) {
+				setActiveStoreId(null);
+			}
+		}
 		resetSelection();
 		await removeItemsFromList(rowIds);
 		toast.show({ message: t('toast.itemsDeleted'), type: 'success' });
@@ -382,6 +394,12 @@ export default function ShoppingListDetailScreen() {
 				items: prev.items.filter((item) => !item.done),
 			};
 		});
+		if (activeStoreId) {
+			const remainingAfterRemove = items.filter((item) => !item.done && !doneRowIds.includes(item.rowId));
+			if (!remainingAfterRemove.some((item) => item.storeId === activeStoreId)) {
+				setActiveStoreId(null);
+			}
+		}
 		await removeItemsFromList(doneRowIds);
 		toast.show({ message: t('toast.completedDeleted'), type: 'success' });
 	}

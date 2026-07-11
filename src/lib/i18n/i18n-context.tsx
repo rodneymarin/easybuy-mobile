@@ -69,8 +69,9 @@ function useI18n(): I18nContextValue {
   return context;
 }
 
-function tUnit(t: I18nContextValue['t'], unit: string): string {
-  const key = `unit.${unit}`;
+function tUnit(t: I18nContextValue['t'], unit: string, quantity?: number): string {
+  const usePlural = quantity !== undefined && quantity > 1;
+  const key = usePlural ? `unit.${unit}.plural` : `unit.${unit}`;
   const label = t(key);
   return label !== key ? label : unit;
 }

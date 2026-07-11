@@ -45,6 +45,7 @@ export default function InicioScreen() {
         id: list.id,
         title: list.title,
         itemCount: list.items.length,
+        completedCount: list.items.filter((item) => item.done).length,
         totalAmount: calcListTotalAmount(list, products),
       }));
       setLists(mapped);
