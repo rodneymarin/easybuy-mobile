@@ -499,8 +499,9 @@ export default function ShoppingListDetailScreen() {
 						<Text style={[styles.emptyText, { color: colors.textSecondary }]}>{t('listDetail.noFilterMatch')}</Text>
 					) : null
 				}
-				ListFooterComponent={
-					doneItems.length > 0 ? (
+			>
+				<View>
+					{doneItems.length > 0 && (
 						<View style={styles.doneSection}>
 							<Text style={[styles.doneSectionTitle, { color: colors.textSecondary }]}>{t('listDetail.doneSection')}</Text>
 							<View style={[styles.doneDivider, { backgroundColor: colors.border }]} />
@@ -528,9 +529,12 @@ export default function ShoppingListDetailScreen() {
 								</ShoppingListItemCard>
 							))}
 						</View>
-					) : null
-				}
-			/>
+					)}
+					{filteredItems.length > 0 && (
+						<Text style={[styles.countLabel, { color: colors.textSecondary }]}>{t('list.items', { count: filteredItems.length })}</Text>
+					)}
+				</View>
+			</ScrollableList>
 
 			<ListTitleFormSheet isOpen={isTitleSheetOpen} initialTitle={shoppingList.title} onSave={handleSaveTitle} onClose={() => setIsTitleSheetOpen(false)} />
 
@@ -709,5 +713,10 @@ const styles = StyleSheet.create({
 	moveListItemText: {
 		fontSize: 16,
 		fontWeight: '500',
+	},
+	countLabel: {
+		fontSize: 13,
+		textAlign: 'center',
+		paddingVertical: 8,
 	},
 });

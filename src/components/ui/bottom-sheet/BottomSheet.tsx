@@ -1,12 +1,7 @@
-import { useEffect, useCallback, useState, type PropsWithChildren } from 'react';
-import { Dimensions, Pressable, ScrollView, StyleSheet, View } from 'react-native';
-import { Gesture, GestureDetector } from 'react-native-gesture-handler';
-import Animated, { useSharedValue, useAnimatedStyle, withTiming, Easing, interpolate, Extrapolation, runOnJS } from 'react-native-reanimated';
+import { useEffect, useCallback, useState, useRef, type PropsWithChildren } from 'react';
+import { Animated, Dimensions, Easing, PanResponder, Pressable, ScrollView, StyleSheet, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useTheme } from '@lib/theme';
-
-const EASE_OUT_EXPO = Easing.bezier(0.16, 1, 0.3, 1);
-const EASE_IN_EXPO = Easing.bezier(0.4, 0, 1, 1);
 
 interface BottomSheetProps extends PropsWithChildren {
   isOpen: boolean;
@@ -17,54 +12,55 @@ interface BottomSheetProps extends PropsWithChildren {
 export default function BottomSheet({ isOpen, onClose, children, percentage }: BottomSheetProps) {
   const { colors } = useTheme();
   const [isRendered, setIsRendered] = useState(false);
-  const translateY = useSharedValue(300);
-  const backdropOpacity = useSharedValue(0);
-
-  const onCloseJS = useCallback(() => {
-    onClose();
-  }, [onClose]);
+  const translateY = useRef(new Animated.Value(300)).current;
+  const backdropOpacity = useRef(new Animated.Value(0)).current;
+  const onCloseRef = useRef(onClose);
+  onCloseRef.current = onClose;
 
   useEffect(() => {
     if (isOpen) {
       setIsRendered(true);
-      translateY.value = withTiming(0, { duration: 300, easing: EASE_OUT_EXPO });
-      backdropOpacity.value = withTiming(1, { duration: 300 });
+      Animated.parallel([
+        Animated.timing(translateY, { toValue: 0, duration: 300, easing: Easing.bezier(0.16, 1, 0.3, 1), useNativeDriver: false }),
+        Animated.timing(backdropOpacity, { toValue: 1, duration: 300, useNativeDriver: false }),
+      ]).start();
     } else {
-      translateY.value = withTiming(300, { duration: 250, easing: EASE_IN_EXPO }, (finished) => {
-        if (finished) {
-          runOnJS(setIsRendered)(false);
-        }
+      Animated.parallel([
+        Animated.timing(translateY, { toValue: 300, duration: 250, easing: Easing.bezier(0.4, 0, 1, 1), useNativeDriver: false }),
+        Animated.timing(backdropOpacity, { toValue: 0, duration: 200, useNativeDriver: false }),
+      ]).start(() => {
+        setIsRendered(false);
       });
-      backdropOpacity.value = withTiming(0, { duration: 200 });
     }
   }, [isOpen]);
 
-  const sheetStyle = useAnimatedStyle(() => ({
-    transform: [{ translateY: translateY.value }],
-  }));
-
-  const backdropStyle = useAnimatedStyle(() => ({
-    opacity: backdropOpacity.value,
-  }));
-
-  const panGesture = Gesture.Pan()
-    .activeOffsetY(10)
-    .onUpdate((event) => {
-      if (event.translationY > 0) {
-        translateY.value = event.translationY;
-        backdropOpacity.value = interpolate(event.translationY, [0, 300], [1, 0], Extrapolation.CLAMP);
-      }
+  const panResponder = useRef(
+    PanResponder.create({
+      onStartShouldSetPanResponder: () => false,
+      onMoveShouldSetPanResponder: (_, gestureState) => Math.abs(gestureState.dy) > 5,
+      onPanResponderMove: (_, gestureState) => {
+        if (gestureState.dy > 0) {
+          translateY.setValue(gestureState.dy);
+          backdropOpacity.setValue(1 - gestureState.dy / 300);
+        }
+      },
+      onPanResponderRelease: (_, gestureState) => {
+        if (gestureState.dy > 100 || gestureState.vy > 0.5) {
+          Animated.parallel([
+            Animated.timing(translateY, { toValue: 300, duration: 200, easing: Easing.bezier(0.4, 0, 1, 1), useNativeDriver: false }),
+            Animated.timing(backdropOpacity, { toValue: 0, duration: 200, useNativeDriver: false }),
+          ]).start(() => {
+            onCloseRef.current();
+          });
+        } else {
+          Animated.parallel([
+            Animated.timing(translateY, { toValue: 0, duration: 250, easing: Easing.bezier(0.16, 1, 0.3, 1), useNativeDriver: false }),
+            Animated.timing(backdropOpacity, { toValue: 1, duration: 250, useNativeDriver: false }),
+          ]).start();
+        }
+      },
     })
-    .onEnd((event) => {
-      if (event.translationY > 100 || event.velocityY > 500) {
-        translateY.value = withTiming(300, { duration: 200, easing: EASE_IN_EXPO });
-        backdropOpacity.value = withTiming(0, { duration: 200 });
-        runOnJS(onCloseJS)();
-      } else {
-        translateY.value = withTiming(0, { duration: 250, easing: EASE_OUT_EXPO });
-        backdropOpacity.value = withTiming(1, { duration: 250 });
-      }
-    });
+  ).current;
 
   if (!isRendered) return null;
 
@@ -73,23 +69,21 @@ export default function BottomSheet({ isOpen, onClose, children, percentage }: B
 
   return (
     <View style={styles.wrapper}>
-      <Animated.View style={[styles.backdrop, backdropStyle]}>
+      <Animated.View style={[styles.backdrop, { opacity: backdropOpacity }]}>
         <Pressable style={StyleSheet.absoluteFill} onPress={onClose} />
       </Animated.View>
-      <GestureDetector gesture={panGesture}>
-        <Animated.View style={[styles.sheet, sheetStyle, { backgroundColor: colors.cardBackground }, sheetHeight ? { height: sheetHeight } : undefined]}>
-          <Pressable onPress={onClose} style={styles.closeButton} hitSlop={8}>
-            <Ionicons name="close" size={18} color={colors.textSecondary} />
-          </Pressable>
-          {percentage ? (
-            <ScrollView keyboardShouldPersistTaps="handled" showsVerticalScrollIndicator={false} style={styles.scroll}>
-              {children}
-            </ScrollView>
-          ) : (
-            children
-          )}
-        </Animated.View>
-      </GestureDetector>
+      <Animated.View {...panResponder.panHandlers} style={[styles.sheet, { transform: [{ translateY }] }, { backgroundColor: colors.cardBackground }, sheetHeight ? { height: sheetHeight } : undefined]}>
+        <Pressable onPress={onClose} style={styles.closeButton} hitSlop={8}>
+          <Ionicons name="close" size={18} color={colors.textSecondary} />
+        </Pressable>
+        {percentage ? (
+          <ScrollView keyboardShouldPersistTaps="handled" showsVerticalScrollIndicator={false} style={styles.scroll}>
+            {children}
+          </ScrollView>
+        ) : (
+          children
+        )}
+      </Animated.View>
     </View>
   );
 }

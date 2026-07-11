@@ -99,7 +99,7 @@ export const translations: Record<Language, TranslationMap> = {
 		'listDetail.moveNoLists': 'No other lists available',
 		'listDetail.confirmDeleteSelected': 'Delete selected items',
 		'listDetail.confirmDeleteSelectedMessage': 'Are you sure you want to delete {count} items?',
-		'listDetail.copyList': 'Copy list',
+		'listDetail.copyList': 'Copy to clipboard',
 		'listDetail.empty': 'No items in this list',
 		'listDetail.noFilterMatch': 'No items match the selected store',
 		'listDetail.pinSelected': 'Pin',

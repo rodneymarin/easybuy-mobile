@@ -139,10 +139,9 @@ export default function ProductosScreen() {
         )}
       </ActionBar>
       {filteredProducts.length > 0 ? (
-        <>
+        <ProductList data={filteredProducts} selectedIds={selectedProductIds} isSelectionMode={isSelectionMode} onProductPress={handleProductPress} onProductLongPress={handleProductLongPress}>
           <Text style={[styles.countLabel, { color: colors.textSecondary }]}>{t('products.showingCount', { count: filteredProducts.length })}</Text>
-          <ProductList data={filteredProducts} selectedIds={selectedProductIds} isSelectionMode={isSelectionMode} onProductPress={handleProductPress} onProductLongPress={handleProductLongPress} />
-        </>
+        </ProductList>
       ) : searchQuery !== debouncedSearch ? (
         <View style={styles.emptyContainer}>
           <ActivityIndicator size="large" color={colors.text} />

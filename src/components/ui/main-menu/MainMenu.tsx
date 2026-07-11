@@ -1,7 +1,5 @@
-import { useState, useEffect, useCallback } from 'react';
-import { Pressable, StyleSheet, Text, View } from 'react-native';
-import { Gesture, GestureDetector } from 'react-native-gesture-handler';
-import Animated, { useSharedValue, useAnimatedStyle, withTiming, Easing, interpolate, Extrapolation, runOnJS } from 'react-native-reanimated';
+import { useState, useEffect, useCallback, useRef } from 'react';
+import { Animated, Easing, PanResponder, Pressable, StyleSheet, Text, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { About } from '@components/ui/about';
 import { useDrawer } from '@lib/drawer';
@@ -9,9 +7,6 @@ import { useI18n, type Language } from '@lib/i18n';
 import { useTheme, type ThemeMode } from '@lib/theme';
 
 const PANEL_WIDTH = 280;
-
-const EASE_OUT_EXPO = Easing.bezier(0.16, 1, 0.3, 1);
-const EASE_IN_EXPO = Easing.bezier(0.4, 0, 1, 1);
 
 interface ThemeOption {
 	mode: ThemeMode;
@@ -36,96 +31,97 @@ function MainMenu() {
 	const { language, setLanguage, t } = useI18n();
 	const [isAboutOpen, setIsAboutOpen] = useState(false);
 
-	const translateX = useSharedValue(PANEL_WIDTH);
-	const backdropOpacity = useSharedValue(0);
-
-	const closeDrawerJS = useCallback(() => {
-		closeDrawer();
-	}, [closeDrawer]);
+	const translateX = useRef(new Animated.Value(PANEL_WIDTH)).current;
+	const backdropOpacity = useRef(new Animated.Value(0)).current;
+	const closeDrawerRef = useRef(closeDrawer);
+	closeDrawerRef.current = closeDrawer;
 
 	useEffect(() => {
 		const toValue = isDrawerOpen ? 0 : PANEL_WIDTH;
 		const backdropTo = isDrawerOpen ? 0.5 : 0;
 		const duration = isDrawerOpen ? 300 : 250;
-		const easing = isDrawerOpen ? EASE_OUT_EXPO : EASE_IN_EXPO;
+		const easing = isDrawerOpen ? Easing.bezier(0.16, 1, 0.3, 1) : Easing.bezier(0.4, 0, 1, 1);
 
-		translateX.value = withTiming(toValue, { duration, easing });
-		backdropOpacity.value = withTiming(backdropTo, { duration });
+		Animated.parallel([
+			Animated.timing(translateX, { toValue, duration, easing, useNativeDriver: false }),
+			Animated.timing(backdropOpacity, { toValue: backdropTo, duration, useNativeDriver: false }),
+		]).start();
 	}, [isDrawerOpen]);
 
-	const panelStyle = useAnimatedStyle(() => ({
-		transform: [{ translateX: translateX.value }],
-	}));
-
-	const backdropStyle = useAnimatedStyle(() => ({
-		opacity: backdropOpacity.value,
-	}));
-
-	const panGesture = Gesture.Pan()
-		.onUpdate((event) => {
-			const offset = Math.max(0, event.translationX);
-			translateX.value = offset;
-			backdropOpacity.value = interpolate(offset, [0, PANEL_WIDTH], [0.5, 0], Extrapolation.CLAMP);
+	const panResponder = useRef(
+		PanResponder.create({
+			onStartShouldSetPanResponder: () => false,
+			onMoveShouldSetPanResponder: (_, gestureState) => Math.abs(gestureState.dx) > 5,
+			onPanResponderMove: (_, gestureState) => {
+				const offset = Math.max(0, gestureState.dx);
+				translateX.setValue(offset);
+				backdropOpacity.setValue(0.5 * (1 - offset / PANEL_WIDTH));
+			},
+			onPanResponderRelease: (_, gestureState) => {
+				if (gestureState.dx > PANEL_WIDTH * 0.3 || gestureState.vx > 0.3) {
+					Animated.parallel([
+						Animated.timing(translateX, { toValue: PANEL_WIDTH, duration: 200, easing: Easing.bezier(0.4, 0, 1, 1), useNativeDriver: false }),
+						Animated.timing(backdropOpacity, { toValue: 0, duration: 200, useNativeDriver: false }),
+					]).start(() => {
+						closeDrawerRef.current();
+					});
+				} else {
+					Animated.parallel([
+						Animated.timing(translateX, { toValue: 0, duration: 250, easing: Easing.bezier(0.16, 1, 0.3, 1), useNativeDriver: false }),
+						Animated.timing(backdropOpacity, { toValue: 0.5, duration: 250, useNativeDriver: false }),
+					]).start();
+				}
+			},
 		})
-		.onEnd((event) => {
-			if (event.translationX > PANEL_WIDTH * 0.3 || event.velocityX > 300) {
-				translateX.value = withTiming(PANEL_WIDTH, { duration: 200, easing: EASE_IN_EXPO });
-				backdropOpacity.value = withTiming(0, { duration: 200 });
-				runOnJS(closeDrawerJS)();
-			} else {
-				translateX.value = withTiming(0, { duration: 250, easing: EASE_OUT_EXPO });
-				backdropOpacity.value = withTiming(0.5, { duration: 250 });
-			}
-		});
+	).current;
 
 	return (
 		<View style={styles.overlay} pointerEvents={isDrawerOpen ? 'box-none' : 'none'}>
-			<Animated.View style={[styles.backdrop, backdropStyle]}>
-				<Pressable style={StyleSheet.absoluteFill} onPress={closeDrawerJS} />
+			<Animated.View style={[styles.backdrop, { opacity: backdropOpacity }]}>
+				<Pressable style={StyleSheet.absoluteFill} onPress={closeDrawer} />
 			</Animated.View>
 
-			<GestureDetector gesture={panGesture}>
-				<Animated.View style={[styles.panel, panelStyle, { backgroundColor: colors.panelBackground }]}>
-					<View style={styles.panelHeader}>
-						<Text style={[styles.panelTitle, { color: colors.panelText }]}>EasyBuy</Text>
-					</View>
+			<Animated.View {...panResponder.panHandlers} style={[styles.panel, { transform: [{ translateX }] }, { backgroundColor: colors.panelBackground }]}>
+				<View style={styles.panelHeader}>
+					<Text style={[styles.panelTitle, { color: colors.panelText }]}>EasyBuy</Text>
+				</View>
 
-					<Text style={[styles.sectionLabel, { color: colors.textSecondary }]}>{t('menu.theme')}</Text>
+				<Text style={[styles.sectionLabel, { color: colors.textSecondary }]}>{t('menu.theme')}</Text>
 
-					{themeOptions.map((option) => {
-						const isSelected = option.mode === themeMode;
-						return (
-							<Pressable key={option.mode} style={styles.menuItem} onPress={() => { setThemeMode(option.mode); closeDrawerJS(); }}>
-								<Ionicons name={option.icon as keyof typeof Ionicons.glyphMap} size={22} color={isSelected ? colors.primary : colors.panelText} />
-								<Text style={[styles.menuItemText, styles.menuItemTextFlex, { color: isSelected ? colors.primary : colors.panelText }]}>{t(option.labelKey)}</Text>
-								{isSelected && <Ionicons name="checkmark-circle" size={20} color={colors.primary} />}
-							</Pressable>
-						);
-					})}
+				{themeOptions.map((option) => {
+					const isSelected = option.mode === themeMode;
+					return (
+						<Pressable key={option.mode} style={styles.menuItem} onPress={() => { setThemeMode(option.mode); closeDrawer(); }}>
+							<Ionicons name={option.icon as keyof typeof Ionicons.glyphMap} size={22} color={isSelected ? colors.primary : colors.panelText} />
+							<Text style={[styles.menuItemText, styles.menuItemTextFlex, { color: isSelected ? colors.primary : colors.panelText }]}>{t(option.labelKey)}</Text>
+							{isSelected && <Ionicons name="checkmark-circle" size={20} color={colors.primary} />}
+						</Pressable>
+					);
+				})}
 
-					<View style={[styles.divider, { backgroundColor: colors.panelBorder }]} />
+				<View style={[styles.divider, { backgroundColor: colors.panelBorder }]} />
 
-					<Text style={[styles.sectionLabel, { color: colors.textSecondary }]}>{t('menu.language')}</Text>
+				<Text style={[styles.sectionLabel, { color: colors.textSecondary }]}>{t('menu.language')}</Text>
 
-					{languageOptions.map((option) => {
-						const isSelected = option.lang === language;
-						return (
-							<Pressable key={option.lang} style={styles.menuItem} onPress={async () => { await setLanguage(option.lang); closeDrawerJS(); }}>
-								<Ionicons name="language-outline" size={22} color={isSelected ? colors.primary : colors.panelText} />
-								<Text style={[styles.menuItemText, styles.menuItemTextFlex, { color: isSelected ? colors.primary : colors.panelText }]}>{t(option.labelKey)}</Text>
-								{isSelected && <Ionicons name="checkmark-circle" size={20} color={colors.primary} />}
-							</Pressable>
-						);
-					})}
+				{languageOptions.map((option) => {
+					const isSelected = option.lang === language;
+					return (
+						<Pressable key={option.lang} style={styles.menuItem} onPress={async () => { await setLanguage(option.lang); closeDrawer(); }}>
+							<Ionicons name="language-outline" size={22} color={isSelected ? colors.primary : colors.panelText} />
+							<Text style={[styles.menuItemText, styles.menuItemTextFlex, { color: isSelected ? colors.primary : colors.panelText }]}>{t(option.labelKey)}</Text>
+							{isSelected && <Ionicons name="checkmark-circle" size={20} color={colors.primary} />}
+						</Pressable>
+					);
+				})}
 
-					<View style={[styles.divider, { backgroundColor: colors.panelBorder }]} />
+				<View style={[styles.divider, { backgroundColor: colors.panelBorder }]} />
 
-					<Pressable style={styles.menuItem} onPress={() => { setIsAboutOpen(true); }}>
-						<Ionicons name="information-circle-outline" size={22} color={colors.panelText} />
-						<Text style={[styles.menuItemText, { color: colors.panelText }]}>{t('menu.about')}</Text>
-					</Pressable>
+				<Pressable style={styles.menuItem} onPress={() => { setIsAboutOpen(true); }}>
+					<Ionicons name="information-circle-outline" size={22} color={colors.panelText} />
+					<Text style={[styles.menuItemText, { color: colors.panelText }]}>{t('menu.about')}</Text>
+				</Pressable>
 
-					{/* <View style={[styles.divider, { backgroundColor: colors.panelBorder }]} />
+				{/* <View style={[styles.divider, { backgroundColor: colors.panelBorder }]} />
 
           <Pressable style={styles.menuItem} onPress={closeDrawer}>
             <Ionicons name="download-outline" size={22} color={colors.panelText} />
@@ -136,8 +132,7 @@ function MainMenu() {
             <Ionicons name="cloud-upload-outline" size={22} color={colors.panelText} />
             <Text style={[styles.menuItemText, { color: colors.panelText }]}>{t('menu.importData')}</Text>
           </Pressable> */}
-				</Animated.View>
-			</GestureDetector>
+			</Animated.View>
 
 			<About isOpen={isAboutOpen} onClose={() => { setIsAboutOpen(false); }} />
 		</View>

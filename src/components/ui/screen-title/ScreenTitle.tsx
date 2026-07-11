@@ -22,7 +22,7 @@ export default function ScreenTitle({ children }: ScreenTitleProps) {
 
 const styles = StyleSheet.create({
   container: {
-    marginBottom: 20,
+    marginBottom: 6,
   },
   title: {
     fontSize: 24,

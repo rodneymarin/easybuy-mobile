@@ -133,10 +133,9 @@ export default function InicioScreen() {
         </View>
       </ActionBar>
       {filteredLists.length > 0 ? (
-        <>
+        <ShoppingList data={filteredLists} onListPress={openDetail} onRemoveList={handleRemovePress}>
           <Text style={[styles.countLabel, { color: colors.textSecondary }]}>{t('lists.showingCount', { count: filteredLists.length })}</Text>
-          <ShoppingList data={filteredLists} onListPress={openDetail} onRemoveList={handleRemovePress} />
-        </>
+        </ShoppingList>
       ) : searchQuery !== debouncedSearch ? (
         <View style={styles.emptyContainer}>
           <ActivityIndicator size="large" color={colors.text} />
