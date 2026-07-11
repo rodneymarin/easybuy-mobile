@@ -1,7 +1,6 @@
-import { useState, useEffect, useCallback, useRef } from 'react';
+import { useEffect, useCallback, useRef } from 'react';
 import { Animated, Easing, PanResponder, Pressable, StyleSheet, Text, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { About } from '@components/ui/about';
 import { useDrawer } from '@lib/drawer';
 import { useI18n, type Language } from '@lib/i18n';
 import { useTheme, type ThemeMode } from '@lib/theme';
@@ -25,11 +24,14 @@ const languageOptions: { lang: Language; labelKey: string; }[] = [
 	{ lang: 'es', labelKey: 'menu.switchToSpanish' },
 ];
 
-function MainMenu() {
+interface MainMenuProps {
+	onOpenAbout: () => void;
+}
+
+function MainMenu({ onOpenAbout }: MainMenuProps) {
 	const { isDrawerOpen, closeDrawer } = useDrawer();
 	const { themeMode, colors, setThemeMode } = useTheme();
 	const { language, setLanguage, t } = useI18n();
-	const [isAboutOpen, setIsAboutOpen] = useState(false);
 
 	const translateX = useRef(new Animated.Value(PANEL_WIDTH)).current;
 	const backdropOpacity = useRef(new Animated.Value(0)).current;
@@ -116,7 +118,7 @@ function MainMenu() {
 
 				<View style={[styles.divider, { backgroundColor: colors.panelBorder }]} />
 
-				<Pressable style={styles.menuItem} onPress={() => { setIsAboutOpen(true); }}>
+				<Pressable style={styles.menuItem} onPress={() => { onOpenAbout(); closeDrawer(); }}>
 					<Ionicons name="information-circle-outline" size={22} color={colors.panelText} />
 					<Text style={[styles.menuItemText, { color: colors.panelText }]}>{t('menu.about')}</Text>
 				</Pressable>
@@ -132,10 +134,8 @@ function MainMenu() {
             <Ionicons name="cloud-upload-outline" size={22} color={colors.panelText} />
             <Text style={[styles.menuItemText, { color: colors.panelText }]}>{t('menu.importData')}</Text>
           </Pressable> */}
-			</Animated.View>
-
-			<About isOpen={isAboutOpen} onClose={() => { setIsAboutOpen(false); }} />
-		</View>
+		</Animated.View>
+	</View>
 	);
 }
 

@@ -5,7 +5,7 @@ import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { useTheme, ThemeProvider } from '@lib/theme';
 import { DrawerProvider } from '@lib/drawer';
 import { I18nProvider } from '@lib/i18n';
-import { MainMenu, ToastProvider } from '@components/ui';
+import { MainMenu, About, ToastProvider } from '@components/ui';
 import { DefaultTheme, DarkTheme, NavigationContainer } from '@react-navigation/native';
 import { StatusBar } from 'expo-status-bar';
 import { getDatabase } from '@lib/database';
@@ -13,6 +13,7 @@ import { TabNavigator } from './navigation';
 
 function AppContent() {
   const { isDark, colors } = useTheme();
+  const [isAboutOpen, setIsAboutOpen] = useState(false);
 
   const navigationTheme = useMemo(() => {
     const base = isDark ? DarkTheme : DefaultTheme;
@@ -38,7 +39,8 @@ function AppContent() {
               <StatusBar style={isDark ? 'light' : 'dark'} />
               <TabNavigator />
             </NavigationContainer>
-            <MainMenu />
+            <MainMenu onOpenAbout={() => setIsAboutOpen(true)} />
+            <About isOpen={isAboutOpen} onClose={() => setIsAboutOpen(false)} />
           </ToastProvider>
         </SafeAreaProvider>
       </GestureHandlerRootView>
