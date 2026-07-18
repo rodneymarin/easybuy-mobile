@@ -1,7 +1,7 @@
 import { useMemo, useRef, useState } from 'react';
-import { Animated, Pressable, StyleSheet, Text, View } from 'react-native';
+import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
-import { createMaterialTopTabNavigator, type MaterialTopTabBarProps } from '@react-navigation/material-top-tabs';
+import { createMaterialTopTabNavigator } from '@react-navigation/material-top-tabs';
 import { DarkTheme, DefaultTheme, NavigationContainer } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -83,25 +83,6 @@ const TAB_ICONS = [
 
 const TAB_ROUTES = ['inicio', 'productos', 'tiendas'] as const;
 
-function TabBarIndicator(props: MaterialTopTabBarProps) {
-  const { colors } = useTheme();
-  const { position, state, layout } = props;
-  const tabCount = state.routes.length;
-  const tabWidth = layout.width / tabCount;
-  const barWidth = tabWidth * 0.35;
-
-  const translateX = position.interpolate({
-    inputRange: [0, tabCount - 1],
-    outputRange: [0, (tabCount - 1) * tabWidth],
-  });
-
-  return (
-    <View style={[styles.indicatorContainer, { backgroundColor: colors.background }]}>
-      <Animated.View style={{ height: 2, backgroundColor: colors.primary, width: barWidth, transform: [{ translateX }], marginLeft: (tabWidth - barWidth) / 2 }} />
-    </View>
-  );
-}
-
 interface CustomBottomBarProps {
   currentIndex: number;
   onTabPress: (routeName: string) => void;
@@ -158,7 +139,7 @@ function TabNavigator() {
       <View style={{ flex: 1 }}>
         <Tab.Navigator
           initialRouteName="inicio"
-          tabBar={(props) => <TabBarIndicator {...props} />}
+          tabBar={() => null}
           screenOptions={{
             swipeEnabled: true,
             lazy: false,
@@ -176,14 +157,6 @@ function TabNavigator() {
 }
 
 const styles = StyleSheet.create({
-  indicatorContainer: {
-    flexDirection: 'row',
-    height: 2,
-  },
-  indicator: {
-    height: 2,
-    position: 'absolute',
-  },
   tabBar: {
     flexDirection: 'row',
     borderTopWidth: 1,
