@@ -410,12 +410,7 @@ export default function ShoppingListDetailScreen() {
 
 	async function handleCopyList() {
 		if (!shoppingList) return;
-		const lines: string[] = [
-			shoppingList.title,
-			`Total: ${globalTotal.toFixed(2)}`,
-			'',
-			...items.map((item) => `${item.productName} ... ${item.quantity} ${item.unitLabel}`),
-		];
+		const lines: string[] = filteredItems.map((item) => `${item.productName} ... ${item.quantity} ${item.unitLabel}`);
 		const text = lines.join('\n');
 		await Clipboard.setStringAsync(text);
 		toast.show({ message: t('toast.listCopied'), type: 'success' });
@@ -492,13 +487,11 @@ export default function ShoppingListDetailScreen() {
 						<View style={styles.itemContent}>
 							<ShoppingListItemTitle name={item.productName} isDone={false} />
 							<View style={styles.itemTags}>
-								{!activeStoreId ? (
-									item.storeDescription ? (
-										<Tag size="sm" label={item.storeDescription} colorIndex={item.storeColor} />
-									) : (
-										<Text style={[styles.noStoreTag, { color: noStoreColor, borderColor: colors.border }]}>{t('listDetail.noStore')}</Text>
-									)
-								) : null}
+								{item.storeDescription ? (
+									<Tag size="sm" label={item.storeDescription} colorIndex={item.storeColor} />
+								) : (
+									<Text style={[styles.noStoreTag, { color: noStoreColor, borderColor: colors.border }]}>{t('listDetail.noStore')}</Text>
+								)}
 								<View style={styles.itemTagsRight}>
 									{item.price * item.quantity > 0 ? (
 										<Tag size="sm" label={`$${(item.price * item.quantity).toFixed(2)}`} />
@@ -528,13 +521,11 @@ export default function ShoppingListDetailScreen() {
 									<View style={styles.itemContent}>
 										<ShoppingListItemTitle name={item.productName} isDone={true} />
 										<View style={styles.itemTags}>
-											{!activeStoreId ? (
-												item.storeDescription ? (
-													<Tag size="sm" label={item.storeDescription} colorIndex={item.storeColor} />
-												) : (
-													<Text style={[styles.noStoreTag, { color: noStoreColor, borderColor: colors.border }]}>{t('listDetail.noStore')}</Text>
-												)
-											) : null}
+											{item.storeDescription ? (
+												<Tag size="sm" label={item.storeDescription} colorIndex={item.storeColor} />
+											) : (
+												<Text style={[styles.noStoreTag, { color: noStoreColor, borderColor: colors.border }]}>{t('listDetail.noStore')}</Text>
+											)}
 											<View style={styles.itemTagsRight}>
 												{item.price * item.quantity > 0 ? (
 													<Tag size="sm" label={`$${(item.price * item.quantity).toFixed(2)}`} />

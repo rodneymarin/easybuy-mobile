@@ -1,5 +1,5 @@
 /node_modules
 /.expo/
 /dist
-/node_modules
 dist/app-release.apk
+node_modules
