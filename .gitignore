@@ -2,4 +2,4 @@
 /.expo/
 /dist
 dist/app-release.apk
-node_modules
+*.log
