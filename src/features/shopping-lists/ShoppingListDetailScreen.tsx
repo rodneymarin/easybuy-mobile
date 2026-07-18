@@ -482,25 +482,36 @@ export default function ShoppingListDetailScreen() {
 
 			<ScrollableList data={pendingItems} keyExtractor={(item) => String(item.rowId)}
 				renderItem={({ item }) => (
-					<ShoppingListItemCard isSelected={selectedItemRowIds.has(item.rowId)} isSelectionMode={isSelectionMode} onPress={() => handleItemPress(item)} onLongPress={() => handleItemLongPress(item)}>
+					<ShoppingListItemCard onPress={() => handleItemPress(item)} onLongPress={() => handleItemLongPress(item)}>
 						{item.isPinned && <MaterialCommunityIcons name="pin" size={14} color={colors.primary} style={styles.pinIconAbsolute} />}
-						<View style={styles.itemContent}>
-							<ShoppingListItemTitle name={item.productName} isDone={false} />
-							<View style={styles.itemTags}>
-								{item.storeDescription ? (
-									<Tag size="sm" label={item.storeDescription} colorIndex={item.storeColor} />
+						<View style={styles.itemRow}>
+							{isSelectionMode && (
+								selectedItemRowIds.has(item.rowId) ? (
+									<View style={[styles.circleFilled, { backgroundColor: colors.primary }]}>
+										<Ionicons name="checkmark" size={14} color="#fff" />
+									</View>
 								) : (
-									<Text style={[styles.noStoreTag, { color: noStoreColor, borderColor: colors.border }]}>{t('listDetail.noStore')}</Text>
-								)}
-								<View style={styles.itemTagsRight}>
-									{item.price * item.quantity > 0 ? (
-										<Tag size="sm" label={`$${(item.price * item.quantity).toFixed(2)}`} />
-									) : null}
-									<Tag size="sm" label={`${item.quantity} ${item.unitLabel}`} />
+									<View style={[styles.circleEmpty, { borderColor: colors.textSecondary }]} />
+								)
+							)}
+							<View style={styles.itemContent}>
+								<ShoppingListItemTitle name={item.productName} isDone={false} />
+								<View style={styles.itemTags}>
+									{item.storeDescription ? (
+										<Tag size="sm" label={item.storeDescription} colorIndex={item.storeColor} />
+									) : (
+										<Text style={[styles.noStoreTag, { color: noStoreColor, borderColor: colors.border }]}>{t('listDetail.noStore')}</Text>
+									)}
+									<View style={styles.itemTagsRight}>
+										{item.price * item.quantity > 0 ? (
+											<Tag size="sm" label={`$${(item.price * item.quantity).toFixed(2)}`} />
+										) : null}
+										<Tag size="sm" label={`${item.quantity} ${item.unitLabel}`} />
+									</View>
 								</View>
 							</View>
+							{!isSelectionMode && <ShoppingListCheckCircle isDone={false} onToggle={() => handleToggleDone(item.rowId)} />}
 						</View>
-						{!isSelectionMode && <ShoppingListCheckCircle isDone={false} onToggle={() => handleToggleDone(item.rowId)} />}
 					</ShoppingListItemCard>
 				)}
 				ListEmptyComponent={
@@ -517,24 +528,35 @@ export default function ShoppingListDetailScreen() {
 							<Text style={[styles.doneSectionTitle, { color: colors.textSecondary }]}>{t('listDetail.doneSection')}</Text>
 							<View style={[styles.doneDivider, { backgroundColor: colors.border }]} />
 							{doneItems.map((item) => (
-								<ShoppingListItemCard key={item.rowId} isSelected={selectedItemRowIds.has(item.rowId)} isSelectionMode={isSelectionMode} onPress={() => handleItemPress(item)} onLongPress={() => handleItemLongPress(item)}>
-									<View style={styles.itemContent}>
-										<ShoppingListItemTitle name={item.productName} isDone={true} />
-										<View style={styles.itemTags}>
-											{item.storeDescription ? (
-												<Tag size="sm" label={item.storeDescription} colorIndex={item.storeColor} />
+								<ShoppingListItemCard key={item.rowId} onPress={() => handleItemPress(item)} onLongPress={() => handleItemLongPress(item)}>
+									<View style={styles.itemRow}>
+										{isSelectionMode && (
+											selectedItemRowIds.has(item.rowId) ? (
+												<View style={[styles.circleFilled, { backgroundColor: colors.primary }]}>
+													<Ionicons name="checkmark" size={14} color="#fff" />
+												</View>
 											) : (
-												<Text style={[styles.noStoreTag, { color: noStoreColor, borderColor: colors.border }]}>{t('listDetail.noStore')}</Text>
-											)}
-											<View style={styles.itemTagsRight}>
-												{item.price * item.quantity > 0 ? (
-													<Tag size="sm" label={`$${(item.price * item.quantity).toFixed(2)}`} />
-												) : null}
-												<Tag size="sm" label={`${item.quantity} ${item.unitLabel}`} />
+												<View style={[styles.circleEmpty, { borderColor: colors.textSecondary }]} />
+											)
+										)}
+										<View style={styles.itemContent}>
+											<ShoppingListItemTitle name={item.productName} isDone={true} />
+											<View style={styles.itemTags}>
+												{item.storeDescription ? (
+													<Tag size="sm" label={item.storeDescription} colorIndex={item.storeColor} />
+												) : (
+													<Text style={[styles.noStoreTag, { color: noStoreColor, borderColor: colors.border }]}>{t('listDetail.noStore')}</Text>
+												)}
+												<View style={styles.itemTagsRight}>
+													{item.price * item.quantity > 0 ? (
+														<Tag size="sm" label={`$${(item.price * item.quantity).toFixed(2)}`} />
+													) : null}
+													<Tag size="sm" label={`${item.quantity} ${item.unitLabel}`} />
+												</View>
 											</View>
 										</View>
+										{!isSelectionMode && <ShoppingListCheckCircle isDone={true} onToggle={() => handleToggleDone(item.rowId)} />}
 									</View>
-									{!isSelectionMode && <ShoppingListCheckCircle isDone={true} onToggle={() => handleToggleDone(item.rowId)} />}
 								</ShoppingListItemCard>
 							))}
 						</View>
@@ -642,10 +664,29 @@ const styles = StyleSheet.create({
 		height: 1,
 		marginBottom: 12,
 	},
+	itemRow: {
+		flexDirection: 'row',
+		alignItems: 'center',
+	},
 	itemContent: {
 		flex: 1,
 		marginRight: 8,
 		paddingLeft: 8,
+	},
+	circleEmpty: {
+		width: 24,
+		height: 24,
+		borderRadius: 12,
+		borderWidth: 2,
+		marginRight: 10,
+	},
+	circleFilled: {
+		width: 24,
+		height: 24,
+		borderRadius: 12,
+		justifyContent: 'center',
+		alignItems: 'center',
+		marginRight: 10,
 	},
 	pinIconAbsolute: {
 		position: 'absolute',

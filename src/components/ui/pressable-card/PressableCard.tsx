@@ -30,7 +30,7 @@ export default function PressableCard({ children, onPressIn, onPressOut, bgColor
   }
 
   return (
-    <AnimatedPressable onPressIn={handlePressIn} onPressOut={handlePressOut} {...props} style={[{ borderWidth: 1, borderRadius: 12, padding: 10, marginHorizontal: 16, marginBottom: 12, borderColor: colors.border }, props.style, { backgroundColor }]}>
+    <AnimatedPressable onPressIn={handlePressIn} onPressOut={handlePressOut} {...props} style={[{ position: 'relative', flexDirection: 'column', borderWidth: 1, borderRadius: 12, padding: 10, marginHorizontal: 16, marginBottom: 12, borderColor: colors.border }, props.style, { backgroundColor }]}>
       {children}
     </AnimatedPressable>
   );
