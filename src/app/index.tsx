@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { StyleSheet, View, Text } from 'react-native';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
@@ -6,39 +6,21 @@ import { useTheme, ThemeProvider } from '@lib/theme';
 import { DrawerProvider } from '@lib/drawer';
 import { I18nProvider } from '@lib/i18n';
 import { MainMenu, About, ToastProvider } from '@components/ui';
-import { DefaultTheme, DarkTheme, NavigationContainer } from '@react-navigation/native';
 import { StatusBar } from 'expo-status-bar';
 import { getDatabase } from '@lib/database';
 import { TabNavigator } from './navigation';
 
 function AppContent() {
-  const { isDark, colors } = useTheme();
+  const { isDark } = useTheme();
   const [isAboutOpen, setIsAboutOpen] = useState(false);
-
-  const navigationTheme = useMemo(() => {
-    const base = isDark ? DarkTheme : DefaultTheme;
-    return {
-      ...base,
-      colors: {
-        ...base.colors,
-        background: colors.background,
-        card: colors.cardBackground,
-        text: colors.text,
-        border: colors.border,
-        primary: colors.primary,
-      },
-    };
-  }, [isDark, colors]);
 
   return (
     <DrawerProvider>
       <GestureHandlerRootView style={styles.gestureRoot}>
         <SafeAreaProvider>
           <ToastProvider>
-            <NavigationContainer theme={navigationTheme}>
-              <StatusBar style={isDark ? 'light' : 'dark'} />
-              <TabNavigator />
-            </NavigationContainer>
+            <StatusBar style={isDark ? 'light' : 'dark'} />
+            <TabNavigator />
             <MainMenu onOpenAbout={() => setIsAboutOpen(true)} />
             <About isOpen={isAboutOpen} onClose={() => setIsAboutOpen(false)} />
           </ToastProvider>

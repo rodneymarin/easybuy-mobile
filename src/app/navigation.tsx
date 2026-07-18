@@ -1,9 +1,10 @@
-import { BottomTabBar, type BottomTabBarProps } from '@react-navigation/bottom-tabs';
-import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
-import { CommonActions } from '@react-navigation/native';
+import { useMemo, useRef, useState } from 'react';
+import { Animated, Pressable, StyleSheet, Text, View } from 'react-native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
+import { createMaterialTopTabNavigator, type MaterialTopTabBarProps } from '@react-navigation/material-top-tabs';
+import { DarkTheme, DefaultTheme, NavigationContainer } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
-import { StyleSheet, View } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useI18n } from '@lib/i18n';
 import { useTheme } from '@lib/theme';
 import InicioScreen from './(tabs)/inicio';
@@ -17,8 +18,6 @@ import type { Price } from '@models/price.model';
 import type { Product } from '@models/product.model';
 import type { Store } from '@models/store.model';
 import type { StoreListData } from '@features/stores';
-
-const Tab = createBottomTabNavigator();
 
 type ListsStackParamList = {
   InicioList: undefined;
@@ -74,71 +73,104 @@ function StoresStackScreen() {
   );
 }
 
-function TabBarIndicator({ state, ...rest }: BottomTabBarProps) {
+const Tab = createMaterialTopTabNavigator();
+
+const TAB_ICONS = [
+  { focused: 'list', unfocused: 'list-outline' },
+  { focused: 'cube', unfocused: 'cube-outline' },
+  { focused: 'storefront', unfocused: 'storefront-outline' },
+] as const;
+
+const TAB_ROUTES = ['inicio', 'productos', 'tiendas'] as const;
+
+function TabBarIndicator(props: MaterialTopTabBarProps) {
   const { colors } = useTheme();
+  const { position, state, layout } = props;
   const tabCount = state.routes.length;
-  const tabWidth = 100 / tabCount;
+  const tabWidth = layout.width / tabCount;
   const barWidth = tabWidth * 0.35;
-  const left = state.index * tabWidth + (tabWidth - barWidth) / 2;
+
+  const translateX = position.interpolate({
+    inputRange: [0, tabCount - 1],
+    outputRange: [0, (tabCount - 1) * tabWidth],
+  });
 
   return (
-    <>
-      <View style={[styles.indicatorContainer, { backgroundColor: colors.background }]}>
-        <View style={[styles.indicator, { backgroundColor: colors.primary, width: `${barWidth}%`, left: `${left}%` }]} />
-      </View>
-      <BottomTabBar state={state} {...rest} />
-    </>
+    <View style={[styles.indicatorContainer, { backgroundColor: colors.background }]}>
+      <Animated.View style={{ height: 2, backgroundColor: colors.primary, width: barWidth, transform: [{ translateX }], marginLeft: (tabWidth - barWidth) / 2 }} />
+    </View>
   );
 }
 
-function CustomTabBar(props: BottomTabBarProps) {
-  return <TabBarIndicator {...props} />;
+interface CustomBottomBarProps {
+  currentIndex: number;
+  onTabPress: (routeName: string) => void;
 }
 
-function resetStackOnTabPress(e: any, navigation: any, route: any) {
-  if (route.state && route.state.index > 0) {
-    e.preventDefault();
-    const state = navigation.getState();
-    const pressedIndex = state.routes.findIndex((r: any) => r.key === route.key);
-    navigation.dispatch(CommonActions.reset({
-      index: pressedIndex,
-      routes: state.routes.map((r: any) =>
-        r.key === route.key
-          ? { ...r, state: { routes: [{ name: route.state.routes[0].name }] } }
-          : r
-      ),
-    }));
-  }
+function CustomBottomBar({ currentIndex, onTabPress }: CustomBottomBarProps) {
+  const { colors } = useTheme();
+  const { t } = useI18n();
+  const insets = useSafeAreaInsets();
+
+  return (
+    <View style={[styles.tabBar, { backgroundColor: colors.background, borderTopColor: colors.border }, { paddingBottom: insets.bottom }]}>
+      {TAB_ICONS.map((icons, index) => {
+        const isFocused = index === currentIndex;
+        return (
+          <Pressable key={index} onPress={() => onTabPress(TAB_ROUTES[index])} style={styles.tabItem}>
+            <Ionicons name={isFocused ? icons.focused : icons.unfocused} size={24} color={isFocused ? colors.primary : colors.tabBarInactive} />
+            <Text style={[styles.tabLabel, { color: isFocused ? colors.primary : colors.tabBarInactive }]}>
+              {index === 0 ? t('tab.lists') : index === 1 ? t('tab.products') : t('tab.stores')}
+            </Text>
+          </Pressable>
+        );
+      })}
+    </View>
+  );
 }
 
 function TabNavigator() {
-  const { colors } = useTheme();
-  const { t } = useI18n();
+  const { isDark, colors } = useTheme();
+  const [currentIndex, setCurrentIndex] = useState(0);
+  const navigationRef = useRef<any>(null);
+
+  const navigationTheme = useMemo(() => {
+    const base = isDark ? DarkTheme : DefaultTheme;
+    return {
+      ...base,
+      colors: {
+        ...base.colors,
+        background: colors.background,
+        card: colors.cardBackground,
+        text: colors.text,
+        border: colors.border,
+        primary: colors.primary,
+      },
+    };
+  }, [isDark, colors]);
+
+  function handleTabPress(routeName: string) {
+    navigationRef.current?.navigate(routeName);
+  }
 
   return (
-    <Tab.Navigator tabBar={CustomTabBar} screenOptions={{ headerShown: false, tabBarActiveTintColor: colors.primary, tabBarInactiveTintColor: colors.tabBarInactive, tabBarStyle: { backgroundColor: colors.background, borderTopColor: colors.border } }}>
-      <Tab.Screen name="inicio" component={ListsStackScreen} options={{
-          tabBarLabel: t('tab.lists'),
-          tabBarIcon: ({ focused, color, size }) => (
-            <Ionicons name={focused ? 'list' : 'list-outline'} size={size} color={color} />
-          ),
-        }}
-        listeners={({ navigation, route }) => ({ tabPress: (e) => resetStackOnTabPress(e, navigation, route) })} />
-      <Tab.Screen name="productos" component={ProductsStackScreen} options={{
-          tabBarLabel: t('tab.products'),
-          tabBarIcon: ({ focused, color, size }) => (
-            <Ionicons name={focused ? 'cube' : 'cube-outline'} size={size} color={color} />
-          ),
-        }}
-        listeners={({ navigation, route }) => ({ tabPress: (e) => resetStackOnTabPress(e, navigation, route) })} />
-      <Tab.Screen name="tiendas" component={StoresStackScreen} options={{
-          tabBarLabel: t('tab.stores'),
-          tabBarIcon: ({ focused, color, size }) => (
-            <Ionicons name={focused ? 'storefront' : 'storefront-outline'} size={size} color={color} />
-          ),
-        }}
-        listeners={({ navigation, route }) => ({ tabPress: (e) => resetStackOnTabPress(e, navigation, route) })} />
-    </Tab.Navigator>
+    <NavigationContainer ref={navigationRef} theme={navigationTheme} onStateChange={(state) => setCurrentIndex(state?.index ?? 0)}>
+      <View style={{ flex: 1 }}>
+        <Tab.Navigator
+          initialRouteName="inicio"
+          tabBar={(props) => <TabBarIndicator {...props} />}
+          screenOptions={{
+            swipeEnabled: true,
+            lazy: false,
+          }}
+        >
+          <Tab.Screen name="inicio" component={ListsStackScreen} />
+          <Tab.Screen name="productos" component={ProductsStackScreen} />
+          <Tab.Screen name="tiendas" component={StoresStackScreen} />
+        </Tab.Navigator>
+        <CustomBottomBar currentIndex={currentIndex} onTabPress={handleTabPress} />
+      </View>
+    </NavigationContainer>
   );
 }
 
@@ -150,6 +182,20 @@ const styles = StyleSheet.create({
   indicator: {
     height: 2,
     position: 'absolute',
+  },
+  tabBar: {
+    flexDirection: 'row',
+    borderTopWidth: 1,
+    paddingTop: 8,
+  },
+  tabItem: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  tabLabel: {
+    fontSize: 10,
+    marginTop: 4,
   },
 });
 
