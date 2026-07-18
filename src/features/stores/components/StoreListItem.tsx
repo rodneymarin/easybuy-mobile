@@ -1,6 +1,7 @@
-import { StyleSheet, Text, View } from 'react-native';
+import { StyleSheet, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { PressableCard } from '@components/ui/pressable-card';
+import { CardTitle } from '@components/ui';
 import { useTheme } from '@lib/theme';
 import { getStoreColor } from '@lib/store-colors';
 
@@ -33,7 +34,7 @@ export default function StoreListItem({ id, description, color, isSelected, isSe
           </>
         )}
         <View style={[styles.colorDot, { backgroundColor: resolvedColor }]} />
-        <Text style={[styles.title, { color: colors.text }]} numberOfLines={1} ellipsizeMode="tail">{description}</Text>
+        <CardTitle style={{ flex: 1 }}>{description}</CardTitle>
       </View>
     </PressableCard>
   );
@@ -44,11 +45,6 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 12,
-  },
-  title: {
-    flex: 1,
-    fontSize: 17,
-    fontWeight: '500',
   },
   circleEmpty: {
     width: 24,

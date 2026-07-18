@@ -1,7 +1,7 @@
-import { StyleSheet, Text, View } from 'react-native';
+import { StyleSheet, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { PressableCard } from '@components/ui/pressable-card';
-import { Tag } from '@components/ui';
+import { CardTitle, Tag } from '@components/ui';
 import { tUnit, useI18n } from '@lib/i18n';
 import { useTheme } from '@lib/theme';
 
@@ -34,7 +34,7 @@ export default function ProductListItem({ productName, unitOfMeasurement, isSele
 						)}
 					</>
 				)}
-				<Text style={[styles.title, { color: colors.text }]} numberOfLines={1} ellipsizeMode="tail">{productName}</Text>
+				<CardTitle style={{ flex: 1 }}>{productName}</CardTitle>
 				<Tag label={unitLabel} />
 			</View>
 		</PressableCard>
@@ -46,11 +46,6 @@ const styles = StyleSheet.create({
 		flexDirection: 'row',
 		alignItems: 'center',
 		gap: 12,
-	},
-	title: {
-		flex: 1,
-		fontSize: 17,
-		fontWeight: '500',
 	},
 	circleEmpty: {
 		width: 24,

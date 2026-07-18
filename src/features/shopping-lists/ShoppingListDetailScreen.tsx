@@ -691,7 +691,7 @@ const styles = StyleSheet.create({
 	pinIconAbsolute: {
 		position: 'absolute',
 		top: 2,
-		left: 2,
+		left: 18,
 		zIndex: 1,
 	},
 	itemTags: {

@@ -1,7 +1,6 @@
-import { StyleSheet, Text, View } from 'react-native';
-import { CloseButton, PressableCard, Tag } from '@components/ui';
+import { StyleSheet, View } from 'react-native';
+import { CardTitle, CloseButton, PressableCard, Tag } from '@components/ui';
 import { useI18n } from '@lib/i18n';
-import { useTheme } from '@lib/theme';
 
 interface ShoppingListItemProps {
 	title: string;
@@ -13,14 +12,13 @@ interface ShoppingListItemProps {
 }
 
 export default function ShoppingListItem({ title, itemCount, completedCount, totalAmount, onPress, onRemove }: ShoppingListItemProps) {
-	const { colors } = useTheme();
 	const { t } = useI18n();
 
 	return (
 		<PressableCard onPress={onPress}>
 			<View style={styles.cardContent}>
 				<View style={styles.cardLeft}>
-					<Text style={[styles.title, { color: colors.text }]}>{title}</Text>
+					<CardTitle style={{ marginBottom: 8 }}>{title}</CardTitle>
 					<View style={styles.tags}>
 						<Tag size="sm" label={t('list.items', { completed: completedCount, count: itemCount })} />
 						<Tag size="sm" label={t('list.total', { amount: totalAmount.toFixed(2) })} />
@@ -39,11 +37,6 @@ const styles = StyleSheet.create({
 	},
 	cardLeft: {
 		flex: 1,
-	},
-	title: {
-		fontSize: 17,
-		fontWeight: '500',
-		marginBottom: 8,
 	},
 	tags: {
 		flexDirection: 'row',

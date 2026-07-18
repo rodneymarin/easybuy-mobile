@@ -18,3 +18,4 @@ export { ProductPicker } from './product-picker';
 export { ConfirmDeleteSheet } from './confirm-delete-sheet';
 export { ActionBar } from './action-bar';
 export { ScrollableList } from './scrollable-list';
+export { CardTitle } from './card-title';
