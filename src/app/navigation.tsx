@@ -162,6 +162,7 @@ function TabNavigator() {
           screenOptions={{
             swipeEnabled: true,
             lazy: false,
+            animationEnabled: false,
           }}
         >
           <Tab.Screen name="inicio" component={ListsStackScreen} />

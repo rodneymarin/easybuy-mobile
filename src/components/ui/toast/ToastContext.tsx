@@ -22,7 +22,11 @@ const ToastContext = createContext<ToastContextValue | null>(null);
 
 let nextId = 0;
 
-export function ToastProvider({ children }: { children: ReactNode }) {
+interface ToastProviderProps {
+  children: ReactNode;
+}
+
+export function ToastProvider({ children }: ToastProviderProps) {
   const [currentToast, setCurrentToast] = useState<ToastItem | null>(null);
   const queueRef = useRef<ToastItem[]>([]);
   const isVisibleRef = useRef(false);

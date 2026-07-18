@@ -1,3 +1,4 @@
+import { type ViewStyle } from 'react-native';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { FlatList, StyleSheet, Text, TextInput, View } from 'react-native';
 import { Input } from '@components/ui/input';
@@ -6,6 +7,13 @@ import { useDebounce } from '@lib/hooks/useDebounce';
 import { useI18n } from '@lib/i18n';
 import { normalizeText } from '@lib/utils';
 import type { Product } from '@models/product.model';
+
+interface ProductPickerContentProps {
+  searchQuery: string;
+  setSearchQuery: (v: string) => void;
+  filteredProducts: Product[];
+  debouncedSearch: string;
+}
 
 export interface ProductPickerProps {
   value: string | null;
@@ -16,9 +24,7 @@ export interface ProductPickerProps {
   style?: ViewStyle;
 }
 
-type ViewStyle = import('react-native').ViewStyle;
-
-function ProductPickerContent({ searchQuery, setSearchQuery, filteredProducts, debouncedSearch }: { searchQuery: string; setSearchQuery: (v: string) => void; filteredProducts: Product[]; debouncedSearch: string }) {
+function ProductPickerContent({ searchQuery, setSearchQuery, filteredProducts, debouncedSearch }: ProductPickerContentProps) {
   const { t } = useI18n();
   const inputRef = useRef<TextInput>(null);
   const { isOpen } = useSelectContext();

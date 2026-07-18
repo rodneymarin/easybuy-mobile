@@ -1,8 +1,12 @@
-import { type ReactElement } from 'react';
 import { FlatList, StyleSheet } from 'react-native';
 import type { FlatListProps } from 'react-native';
+import type { ReactElement } from 'react';
 
-export default function ScrollableList<T>({ style, contentContainerStyle, children, ...props }: FlatListProps<T> & { children?: ReactElement }) {
+interface ScrollableListProps<T> extends FlatListProps<T> {
+  children?: ReactElement;
+}
+
+export default function ScrollableList<T>({ style, contentContainerStyle, children, ...props }: ScrollableListProps<T>) {
   return (
     <FlatList style={[styles.body, style]} contentContainerStyle={[styles.content, contentContainerStyle]} ListFooterComponent={children} {...props} />
   );
