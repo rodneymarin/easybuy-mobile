@@ -16,32 +16,29 @@ function ShoppingListItemCard({ children, isSelected, isSelectionMode, onPress, 
   const { colors } = useTheme();
 
   return (
-    <PressableCard onPress={onPress} onLongPress={onLongPress} style={[styles.card, { borderColor: colors.border }]}>
-      {isSelectionMode && (
-        <>
-          {isSelected ? (
-            <View style={[styles.circleFilled, { backgroundColor: colors.primary }]}>
-              <Ionicons name="checkmark" size={14} color="#fff" />
-            </View>
-          ) : (
-            <View style={[styles.circleEmpty, { borderColor: colors.textSecondary }]} />
-          )}
-        </>
-      )}
-      {children}
+    <PressableCard onPress={onPress} onLongPress={onLongPress}>
+      <View style={styles.cardContent}>
+        {isSelectionMode && (
+          <>
+            {isSelected ? (
+              <View style={[styles.circleFilled, { backgroundColor: colors.primary }]}>
+                <Ionicons name="checkmark" size={14} color="#fff" />
+              </View>
+            ) : (
+              <View style={[styles.circleEmpty, { borderColor: colors.textSecondary }]} />
+            )}
+          </>
+        )}
+        {children}
+      </View>
     </PressableCard>
   );
 }
 
 const styles = StyleSheet.create({
-  card: {
+  cardContent: {
     flexDirection: 'row',
     alignItems: 'center',
-    borderWidth: 1,
-    borderRadius: 12,
-    padding: 10,
-    marginHorizontal: 16,
-    marginBottom: 12,
   },
   circleEmpty: {
     width: 24,

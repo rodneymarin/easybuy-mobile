@@ -19,7 +19,7 @@ export default function StoreListItem({ id, description, color, isSelected, isSe
   const resolvedColor = getStoreColor(color, isDark);
 
   return (
-    <PressableCard style={[styles.card, { borderColor: colors.border, borderRightColor: resolvedColor, borderRightWidth: 6 }]} onPress={() => onPress(id)} onLongPress={onLongPress ? () => onLongPress(id) : undefined}>
+    <PressableCard onPress={() => onPress(id)} onLongPress={onLongPress ? () => onLongPress(id) : undefined}>
       <View style={styles.cardContent}>
         {isSelectionMode && (
           <>
@@ -32,6 +32,7 @@ export default function StoreListItem({ id, description, color, isSelected, isSe
             )}
           </>
         )}
+        <View style={[styles.colorDot, { backgroundColor: resolvedColor }]} />
         <Text style={[styles.title, { color: colors.text }]} numberOfLines={1} ellipsizeMode="tail">{description}</Text>
       </View>
     </PressableCard>
@@ -39,13 +40,6 @@ export default function StoreListItem({ id, description, color, isSelected, isSe
 }
 
 const styles = StyleSheet.create({
-  card: {
-    borderWidth: 1,
-    borderRadius: 12,
-    padding: 10,
-    marginHorizontal: 16,
-    marginBottom: 12,
-  },
   cardContent: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -70,5 +64,10 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     marginRight: 2,
+  },
+  colorDot: {
+    width: 12,
+    height: 12,
+    borderRadius: 6,
   },
 });

@@ -21,7 +21,7 @@ export default function ProductListItem({ productName, unitOfMeasurement, isSele
 	const unitLabel = tUnit(t, unitOfMeasurement);
 
 	return (
-		<PressableCard onPress={onPress} onLongPress={onLongPress} style={[styles.card, { borderColor: colors.border }]}>
+		<PressableCard onPress={onPress} onLongPress={onLongPress}>
 			<View style={styles.cardContent}>
 				{isSelectionMode && (
 					<>
@@ -42,13 +42,6 @@ export default function ProductListItem({ productName, unitOfMeasurement, isSele
 }
 
 const styles = StyleSheet.create({
-	card: {
-		borderWidth: 1,
-		borderRadius: 12,
-		padding: 10,
-		marginHorizontal: 16,
-		marginBottom: 12,
-	},
 	cardContent: {
 		flexDirection: 'row',
 		alignItems: 'center',

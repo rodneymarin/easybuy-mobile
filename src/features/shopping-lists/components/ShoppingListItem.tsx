@@ -17,7 +17,7 @@ export default function ShoppingListItem({ title, itemCount, completedCount, tot
 	const { t } = useI18n();
 
 	return (
-		<PressableCard onPress={onPress} style={[styles.card, { borderColor: colors.border }]}>
+		<PressableCard onPress={onPress}>
 			<View style={styles.cardContent}>
 				<View style={styles.cardLeft}>
 					<Text style={[styles.title, { color: colors.text }]}>{title}</Text>
@@ -33,13 +33,6 @@ export default function ShoppingListItem({ title, itemCount, completedCount, tot
 }
 
 const styles = StyleSheet.create({
-	card: {
-		borderWidth: 1,
-		borderRadius: 12,
-		padding: 10,
-		marginHorizontal: 16,
-		marginBottom: 12,
-	},
 	cardContent: {
 		flexDirection: 'row',
 		alignItems: 'center',
