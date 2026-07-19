@@ -2,7 +2,7 @@
   "expo": {
     "name": "EasyBuy",
     "slug": "easybuy-mobile",
-    "version": "0.1.0-beta.8",
+    "version": "0.1.0-beta.9",
     "orientation": "portrait",
     "icon": "./src/assets/icon.png",
     "userInterfaceStyle": "automatic",
@@ -26,16 +26,18 @@
       "bundler": "metro"
     },
     "autolinking": {
-      "exclude": ["@expo/dom-webview"]
+      "exclude": [
+        "@expo/dom-webview"
+      ]
     },
     "plugins": [
       "expo-sqlite"
     ],
-      "extra": {
-        "eas": {
-          "projectId": "342f2913-0fc4-4484-9cb8-04f93621d7fa"
-        }
-      },
+    "extra": {
+      "eas": {
+        "projectId": "342f2913-0fc4-4484-9cb8-04f93621d7fa"
+      }
+    },
     "owner": "rodneymarin"
   }
 }
