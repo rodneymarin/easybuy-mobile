@@ -1,6 +1,4 @@
 /node_modules
 /.expo/
-/dist
-dist/app-release.apk
 *.log
 .env
