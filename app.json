@@ -25,14 +25,17 @@
     "web": {
       "bundler": "metro"
     },
+    "autolinking": {
+      "exclude": ["@expo/dom-webview"]
+    },
     "plugins": [
       "expo-sqlite"
     ],
-    "extra": {
-      "eas": {
-        "projectId": "342f2913-0fc4-4484-9cb8-04f93621d7fa"
-      }
-    },
+      "extra": {
+        "eas": {
+          "projectId": "342f2913-0fc4-4484-9cb8-04f93621d7fa"
+        }
+      },
     "owner": "rodneymarin"
   }
 }

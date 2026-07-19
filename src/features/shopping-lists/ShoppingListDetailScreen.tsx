@@ -11,6 +11,7 @@ import { getAllProducts } from '@lib/repositories/products';
 import { getAllStores } from '@lib/repositories/stores';
 import { tUnit, useI18n } from '@lib/i18n';
 import { useTheme } from '@lib/theme';
+import { useDataSource } from '@lib/data-source';
 import type { ShoppingList } from '@models/shopping-list.model';
 import type { Product } from '@models/product.model';
 import type { Store } from '@models/store.model';
@@ -53,6 +54,7 @@ export default function ShoppingListDetailScreen() {
 	const [availableLists, setAvailableLists] = useState<{ id: string; title: string; }[]>([]);
 	const [isRemoveCompletedSheetOpen, setIsRemoveCompletedSheetOpen] = useState(false);
 	const [isTitleSheetOpen, setIsTitleSheetOpen] = useState(false);
+	const { refreshVersion } = useDataSource();
 	const toast = useToast();
 
 	const loadData = useCallback(async () => {
@@ -70,7 +72,7 @@ export default function ShoppingListDetailScreen() {
 		} finally {
 			setIsLoading(false);
 		}
-	}, [shoppingListId]);
+	}, [shoppingListId, refreshVersion]);
 
 	useFocusEffect(
 		useCallback(() => {

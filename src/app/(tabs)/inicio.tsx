@@ -14,6 +14,7 @@ import { useI18n } from '@lib/i18n';
 import { normalizeText } from '@lib/utils';
 import { calcListTotalAmount } from '@models/shopping-list.model';
 import { useTheme } from '@lib/theme';
+import { useDataSource } from '@lib/data-source';
 
 type InicioStackParamList = {
   InicioList: undefined;
@@ -34,6 +35,7 @@ export default function InicioScreen() {
   const [listToDelete, setListToDelete] = useState<{ id: string; title: string } | null>(null);
   const debouncedSearch = useDebounce(searchQuery, 300);
   const toast = useToast();
+  const { refreshVersion } = useDataSource();
 
   const isFirstFocus = useRef(true);
 
@@ -54,7 +56,7 @@ export default function InicioScreen() {
     } finally {
       setIsLoading(false);
     }
-  }, []);
+  }, [refreshVersion]);
 
   useFocusEffect(
     useCallback(() => {

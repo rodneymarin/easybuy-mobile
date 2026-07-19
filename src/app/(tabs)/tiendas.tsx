@@ -11,6 +11,7 @@ import { useDebounce, useSelectionMode } from '@lib/hooks';
 import { useI18n } from '@lib/i18n';
 import { normalizeText } from '@lib/utils';
 import { useTheme } from '@lib/theme';
+import { useDataSource } from '@lib/data-source';
 import { generateUUID } from '@lib/uuid';
 import type { StoresStackParamList } from '../navigation';
 
@@ -27,6 +28,7 @@ export default function TiendasScreen() {
   const [isDeleteSelectedSheetOpen, setIsDeleteSelectedSheetOpen] = useState(false);
   const debouncedSearch = useDebounce(searchQuery, 300);
   const toast = useToast();
+  const { refreshVersion } = useDataSource();
 
   const isFirstFocus = useRef(true);
 
@@ -45,7 +47,7 @@ export default function TiendasScreen() {
     } finally {
       if (isInitial) setIsLoading(false);
     }
-  }, []);
+  }, [refreshVersion]);
 
   useFocusEffect(
     useCallback(() => {

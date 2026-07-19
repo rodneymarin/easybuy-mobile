@@ -82,7 +82,7 @@ def enableMinifyInReleaseBuilds = (findProperty('android.enableMinifyInReleaseBu
 def jscFlavor = 'io.github.react-native-community:jsc-android:2026004.+'
 
 android {
-    ndkVersion "28.0.12674087"
+    ndkVersion rootProject.ext.ndkVersion
 
     buildToolsVersion rootProject.ext.buildToolsVersion
     compileSdk rootProject.ext.compileSdkVersion
@@ -92,8 +92,8 @@ android {
         applicationId 'com.easybuy.mobile'
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
-        versionCode 2
-        versionName "1.2.2"
+        versionCode 1
+        versionName "0.1.0-beta.8"
 
         buildConfigField "String", "REACT_NATIVE_RELEASE_LEVEL", "\"${findProperty('reactNativeReleaseLevel') ?: 'stable'}\""
     }
@@ -120,10 +120,6 @@ android {
             def enablePngCrunchInRelease = findProperty('android.enablePngCrunchInReleaseBuilds') ?: 'true'
             crunchPngs enablePngCrunchInRelease.toBoolean()
         }
-    }
-    lintOptions {
-        abortOnError false
-        checkReleaseBuilds false
     }
     packagingOptions {
         jniLibs {
@@ -184,20 +180,3 @@ dependencies {
         implementation jscFlavor
     }
 }
-
-def patchGraphicsConversions() {
-    def rnDir = file(["node", "--print", "require.resolve('react-native/package.json')"].execute(null, rootDir).text.trim()).getParentFile()
-    def headerFile = new File(rnDir, "ReactCommon/react/renderer/core/graphicsConversions.h")
-    def content = headerFile.text
-    if (content.contains('#include <format>')) return
-    def patched = content.replace(
-        "#ifdef RN_SERIALIZABLE_STATE\n#include <yoga/Yoga.h>\n#endif",
-        "#ifdef RN_SERIALIZABLE_STATE\n#include <yoga/Yoga.h>\n#include <format>\n#endif"
-    )
-    if (patched != content) {
-        headerFile.text = patched
-        println "Patched graphicsConversions.h to include <format>"
-    }
-}
-
-patchGraphicsConversions()

@@ -3,3 +3,4 @@
 /dist
 dist/app-release.apk
 *.log
+.env

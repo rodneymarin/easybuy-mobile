@@ -1,77 +1,29 @@
+import { getDataSource } from '@lib/data-source/data-source';
 import type { Product } from '@models/product.model';
 import type { Price } from '@models/price.model';
-import { getDatabase } from '@lib/database';
-
-interface ProductRow {
-  id: string;
-  product_name: string;
-  unit_of_measurement: string;
-}
-
-interface PriceRow {
-  product_id: string;
-  store_id: string;
-  value: number;
-}
+import * as local from './local/products';
+import * as remote from './remote/products';
 
 export async function getAllProducts(): Promise<Product[]> {
-  const db = await getDatabase();
-  const products = await db.getAllAsync<ProductRow>("SELECT id, product_name, unit_of_measurement FROM products ORDER BY product_name");
-  const prices = await db.getAllAsync<PriceRow>("SELECT product_id, store_id, value FROM product_prices");
-
-  return products.map((p) => ({
-    id: p.id,
-    productName: p.product_name,
-    unitOfMeasurement: p.unit_of_measurement,
-    prices: prices
-      .filter((pr) => pr.product_id === p.id)
-      .map((pr): Price => ({ storeId: pr.store_id, value: pr.value })),
-  }));
+  return getDataSource() === 'local' ? local.getAllProducts() : remote.getAllProducts();
 }
 
 export async function getProductByName(productName: string, excludeId?: string): Promise<Product | null> {
-  const db = await getDatabase();
-  const product = await db.getFirstAsync<ProductRow>(
-    "SELECT id, product_name, unit_of_measurement FROM products WHERE LOWER(product_name) = LOWER(?) AND (? IS NULL OR id != ?)",
-    [productName, excludeId ?? null, excludeId ?? null]
-  );
-  if (!product) return null;
-  return {
-    id: product.id,
-    productName: product.product_name,
-    unitOfMeasurement: product.unit_of_measurement,
-  };
+  return getDataSource() === 'local' ? local.getProductByName(productName, excludeId) : remote.getProductByName(productName, excludeId);
 }
 
 export async function createProduct(id: string, productName: string, unitOfMeasurement: string, prices: Price[]): Promise<void> {
-  const db = await getDatabase();
-  await db.runAsync("INSERT INTO products (id, product_name, unit_of_measurement) VALUES (?, ?, ?)", [id, productName, unitOfMeasurement]);
-  for (const price of prices) {
-    await db.runAsync("INSERT INTO product_prices (product_id, store_id, value) VALUES (?, ?, ?)", [id, price.storeId, price.value]);
-  }
+  return getDataSource() === 'local' ? local.createProduct(id, productName, unitOfMeasurement, prices) : remote.createProduct(id, productName, unitOfMeasurement, prices);
 }
 
 export async function updateProduct(id: string, productName: string, unitOfMeasurement: string, prices: Price[]): Promise<void> {
-  const db = await getDatabase();
-  await db.runAsync("UPDATE products SET product_name = ?, unit_of_measurement = ? WHERE id = ?", [productName, unitOfMeasurement, id]);
-  await db.runAsync("DELETE FROM product_prices WHERE product_id = ?", [id]);
-  for (const price of prices) {
-    await db.runAsync("INSERT INTO product_prices (product_id, store_id, value) VALUES (?, ?, ?)", [id, price.storeId, price.value]);
-  }
+  return getDataSource() === 'local' ? local.updateProduct(id, productName, unitOfMeasurement, prices) : remote.updateProduct(id, productName, unitOfMeasurement, prices);
 }
 
 export async function deleteProduct(id: string): Promise<void> {
-  const db = await getDatabase();
-  await db.runAsync("DELETE FROM product_prices WHERE product_id = ?", [id]);
-  await db.runAsync("DELETE FROM shopping_list_items WHERE product_id = ?", [id]);
-  await db.runAsync("DELETE FROM products WHERE id = ?", [id]);
+  return getDataSource() === 'local' ? local.deleteProduct(id) : remote.deleteProduct(id);
 }
 
 export async function deleteProducts(ids: string[]): Promise<void> {
-  if (ids.length === 0) return;
-  const db = await getDatabase();
-  const placeholders = ids.map(() => '?').join(',');
-  await db.runAsync(`DELETE FROM product_prices WHERE product_id IN (${placeholders})`, ids);
-  await db.runAsync(`DELETE FROM shopping_list_items WHERE product_id IN (${placeholders})`, ids);
-  await db.runAsync(`DELETE FROM products WHERE id IN (${placeholders})`, ids);
+  return getDataSource() === 'local' ? local.deleteProducts(ids) : remote.deleteProducts(ids);
 }
