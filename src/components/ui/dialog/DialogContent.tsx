@@ -1,5 +1,5 @@
 import { useCallback, useState } from 'react';
-import { LayoutChangeEvent, Pressable, StyleSheet, View, type ReactNode, type StyleProp, type ViewStyle } from 'react-native';
+import { LayoutChangeEvent, Platform, Pressable, StyleSheet, View, type ReactNode, type StyleProp, type ViewStyle } from 'react-native';
 import { FadeIn } from '@components/ui/fade-in';
 import { useTheme } from '@lib/theme';
 import { useDialogContext } from './Dialog';
@@ -25,7 +25,7 @@ export default function DialogContent({ children, style }: DialogContentProps) {
   return (
     <FadeIn style={styles.backdrop}>
       <Pressable style={StyleSheet.absoluteFill} onPress={onClose} />
-      <View onLayout={handleLayout} style={[styles.card, { backgroundColor: colors.cardBackground }, style, isContentTall && { height: MAX_CARD_HEIGHT }]}>
+      <View onLayout={handleLayout} style={[styles.card, { backgroundColor: colors.cardBackground, maxWidth: Platform.OS === 'web' ? 768 : undefined }, style, isContentTall && { height: MAX_CARD_HEIGHT }]}>
         {children}
       </View>
     </FadeIn>
