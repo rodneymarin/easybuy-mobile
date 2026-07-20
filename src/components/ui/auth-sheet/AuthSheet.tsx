@@ -76,7 +76,7 @@ function AuthSheet({ isOpen, onClose, onAuthenticated }: AuthSheetProps) {
   }
 
   return (
-    <BottomSheet isOpen={isOpen} onClose={onClose} percentage={0.55}>
+    <BottomSheet isOpen={isOpen} onClose={onClose} percentage={0.825}>
       <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : 'height'}>
         <Text style={[styles.title, { color: colors.text }]}>{isSignUp ? t('auth.createAccount') : t('auth.signIn')}</Text>
         <Text style={[styles.subtitle, { color: colors.textSecondary }]}>{t('auth.enterCredentials')}</Text>
