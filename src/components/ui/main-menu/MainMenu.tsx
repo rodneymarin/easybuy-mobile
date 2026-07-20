@@ -5,7 +5,7 @@ import { useDrawer } from '@lib/drawer';
 import { useI18n, type Language } from '@lib/i18n';
 import { useTheme, type ThemeMode } from '@lib/theme';
 import { useDataSource, type DataSourceType } from '@lib/data-source';
-import { useAuth } from '@lib/auth';
+import { useAuth, subscribeToAuthError } from '@lib/auth';
 import { useToast } from '../toast';
 import { ConfirmDeleteSheet } from '../confirm-delete-sheet';
 import AuthSheet from '../auth-sheet/AuthSheet';
@@ -46,12 +46,21 @@ function MainMenu({ onOpenAbout }: MainMenuProps) {
   const { isAuthenticated, user, signOut } = useAuth();
   const toast = useToast();
   const [isAuthSheetOpen, setIsAuthSheetOpen] = useState(false);
+  const [isSessionExpired, setIsSessionExpired] = useState(false);
   const [isLogoutSheetOpen, setIsLogoutSheetOpen] = useState(false);
 
   const translateX = useRef(new Animated.Value(PANEL_WIDTH)).current;
   const backdropOpacity = useRef(new Animated.Value(0)).current;
   const closeDrawerRef = useRef(closeDrawer);
   closeDrawerRef.current = closeDrawer;
+
+  useEffect(() => {
+    const unsubscribe = subscribeToAuthError(() => {
+      setIsSessionExpired(true);
+      setIsAuthSheetOpen(true);
+    });
+    return unsubscribe;
+  }, []);
 
   useEffect(() => {
     const toValue = isDrawerOpen ? 0 : PANEL_WIDTH;
@@ -103,8 +112,22 @@ function MainMenu({ onOpenAbout }: MainMenuProps) {
   }
 
   function handleAuthenticated() {
+    setIsSessionExpired(false);
     setDataSource('cloud');
     closeDrawer();
+  }
+
+  function handleUseLocalData() {
+    setIsSessionExpired(false);
+    setIsAuthSheetOpen(false);
+    setDataSource('local');
+    toast.show({ message: t('toast.switchedToLocal'), type: 'info' });
+    closeDrawer();
+  }
+
+  function handleCloseAuthSheet() {
+    setIsAuthSheetOpen(false);
+    setIsSessionExpired(false);
   }
 
   async function handleLogout() {
@@ -206,7 +229,7 @@ function MainMenu({ onOpenAbout }: MainMenuProps) {
         </ScrollView>
       </Animated.View>
 
-      <AuthSheet isOpen={isAuthSheetOpen} onClose={() => setIsAuthSheetOpen(false)} onAuthenticated={handleAuthenticated} />
+      <AuthSheet isOpen={isAuthSheetOpen} onClose={handleCloseAuthSheet} onAuthenticated={handleAuthenticated} sessionExpired={isSessionExpired} onUseLocalData={handleUseLocalData} />
 
       <ConfirmDeleteSheet
         isOpen={isLogoutSheetOpen}

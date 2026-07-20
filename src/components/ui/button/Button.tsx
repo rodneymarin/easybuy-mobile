@@ -1,5 +1,5 @@
 import { type ReactNode, useRef } from 'react';
-import { Animated, type GestureResponderEvent, Pressable, type PressableProps, StyleSheet, type StyleProp, type ViewStyle } from 'react-native';
+import { ActivityIndicator, Animated, type GestureResponderEvent, Pressable, type PressableProps, StyleSheet, type StyleProp, type ViewStyle } from 'react-native';
 import { darkenColor, useTheme } from '@lib/theme';
 
 type ButtonVariant = 'primary' | 'secondary' | 'destructive';
@@ -10,11 +10,12 @@ interface ButtonProps extends Omit<PressableProps, 'style'> {
   style?: StyleProp<ViewStyle>;
   variant?: ButtonVariant;
   size?: ButtonSize;
+  isLoading?: boolean;
 }
 
 const AnimatedPressable = Animated.createAnimatedComponent(Pressable);
 
-export default function Button({ children, onPressIn, onPressOut, style, variant = 'primary', size = 'default', disabled, ...props }: ButtonProps) {
+export default function Button({ children, onPressIn, onPressOut, style, variant = 'primary', size = 'default', disabled, isLoading, ...props }: ButtonProps) {
   const { colors } = useTheme();
   const darkAnim = useRef(new Animated.Value(0)).current;
 
@@ -33,21 +34,27 @@ export default function Button({ children, onPressIn, onPressOut, style, variant
     outputRange: [bgColor, darkenColor(bgColor, 0.15)],
   });
 
+  const isDisabled = disabled || isLoading;
+
   function handlePressIn(event: GestureResponderEvent) {
-    if (disabled) return;
+    if (isDisabled) return;
     Animated.timing(darkAnim, { toValue: 1, duration: 150, useNativeDriver: false }).start();
     onPressIn?.(event);
   }
 
   function handlePressOut(event: GestureResponderEvent) {
-    if (disabled) return;
+    if (isDisabled) return;
     Animated.timing(darkAnim, { toValue: 0, duration: 150, useNativeDriver: false }).start();
     onPressOut?.(event);
   }
 
+  const spinnerColor = variant === 'primary' ? '#fff'
+    : variant === 'destructive' ? colors.destructiveBorder
+    : colors.text;
+
   return (
-    <AnimatedPressable onPressIn={handlePressIn} onPressOut={handlePressOut} disabled={disabled} {...props} style={[styles.button, size === 'icon' && styles.icon, { backgroundColor, borderColor, borderWidth, opacity: disabled ? 0.35 : 1 }, style]}>
-      {children}
+    <AnimatedPressable onPressIn={handlePressIn} onPressOut={handlePressOut} disabled={isDisabled} {...props} style={[styles.button, size === 'icon' && styles.icon, { backgroundColor, borderColor, borderWidth, opacity: isDisabled ? 0.35 : 1 }, style]}>
+      {isLoading ? <ActivityIndicator color={spinnerColor} size="small" /> : children}
     </AnimatedPressable>
   );
 }

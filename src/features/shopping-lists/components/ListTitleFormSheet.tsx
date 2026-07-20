@@ -9,9 +9,10 @@ interface ListTitleFormSheetProps {
   initialTitle?: string;
   onSave: (title: string) => void;
   onClose: () => void;
+  isLoading?: boolean;
 }
 
-export default function ListTitleFormSheet({ isOpen, initialTitle, onSave, onClose }: ListTitleFormSheetProps) {
+export default function ListTitleFormSheet({ isOpen, initialTitle, onSave, onClose, isLoading }: ListTitleFormSheetProps) {
   const { colors } = useTheme();
   const { t } = useI18n();
   const [title, setTitle] = useState(initialTitle ?? '');
@@ -33,7 +34,7 @@ export default function ListTitleFormSheet({ isOpen, initialTitle, onSave, onClo
     <BottomSheet isOpen={isOpen} onClose={handleClose} percentage={0.75}>
       <Text style={[styles.title, { color: colors.text }]}>{initialTitle !== undefined ? t('listForm.editTitle') : t('listForm.newTitle')}</Text>
       <Input value={title} onChangeText={setTitle} placeholder={t('listForm.placeholder')} autoFocus returnKeyType="done" onSubmitEditing={handleSave} />
-      <Button variant="primary" style={styles.saveButton} onPress={handleSave} disabled={!isFormValid}>
+      <Button variant="primary" style={styles.saveButton} onPress={handleSave} disabled={!isFormValid} isLoading={isLoading}>
         <Text style={styles.buttonTextPrimary}>{initialTitle !== undefined ? t('common.save') : t('common.create')}</Text>
       </Button>
     </BottomSheet>

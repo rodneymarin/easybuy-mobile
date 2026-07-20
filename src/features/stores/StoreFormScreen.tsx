@@ -18,6 +18,8 @@ export default function StoreFormScreen() {
   const [description, setDescription] = useState('');
   const [selectedColor, setSelectedColor] = useState(0);
   const [isDeleteSheetOpen, setIsDeleteSheetOpen] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
   const toast = useToast();
 
   const isEditMode = store !== undefined;
@@ -31,16 +33,22 @@ export default function StoreFormScreen() {
   }, [store]);
 
   async function handleSave() {
-    if (!isFormValid) return;
+    if (!isFormValid || isSaving) return;
     Keyboard.dismiss();
-    if (store) {
-      await updateStore(store.id, description.trim(), selectedColor);
-      toast.show({ message: t('toast.storeUpdated'), type: 'success' });
-    } else {
-      await createStore(generateUUID(), description.trim(), selectedColor);
-      toast.show({ message: t('toast.storeCreated'), type: 'success' });
+    setIsSaving(true);
+    try {
+      if (store) {
+        await updateStore(store.id, description.trim(), selectedColor);
+        toast.show({ message: t('toast.storeUpdated'), type: 'success' });
+      } else {
+        await createStore(generateUUID(), description.trim(), selectedColor);
+        toast.show({ message: t('toast.storeCreated'), type: 'success' });
+      }
+      navigation.goBack();
+    } catch (error) {
+      console.error("Failed to save store:", error);
+      setIsSaving(false);
     }
-    navigation.goBack();
   }
 
   function handleDeletePress() {
@@ -49,12 +57,18 @@ export default function StoreFormScreen() {
   }
 
   async function handleConfirmDelete() {
-    if (!store) return;
+    if (!store || isDeleting) return;
     Keyboard.dismiss();
-    await deleteStore(store.id);
-    setIsDeleteSheetOpen(false);
-    toast.show({ message: t('toast.storeDeleted'), type: 'success' });
-    navigation.goBack();
+    setIsDeleting(true);
+    try {
+      await deleteStore(store.id);
+      setIsDeleteSheetOpen(false);
+      toast.show({ message: t('toast.storeDeleted'), type: 'success' });
+      navigation.goBack();
+    } catch (error) {
+      console.error("Failed to delete store:", error);
+      setIsDeleting(false);
+    }
   }
 
   function handleGoBack() {
@@ -93,12 +107,12 @@ export default function StoreFormScreen() {
             <Text style={[styles.buttonTextSecondary, { color: colors.text }]}>{t('stores.addModal.cancel')}</Text>
           </Button>
         </View>
-        <Button variant="primary" style={styles.actionButton} onPress={handleSave} disabled={!isFormValid}>
+        <Button variant="primary" style={styles.actionButton} onPress={handleSave} disabled={!isFormValid} isLoading={isSaving}>
           <Text style={styles.buttonTextPrimary}>{t('stores.addModal.save')}</Text>
         </Button>
       </View>
 
-      <ConfirmDeleteSheet isOpen={isDeleteSheetOpen} onClose={() => setIsDeleteSheetOpen(false)} onConfirm={handleConfirmDelete} title={t('stores.deleteModal.title')} message={t('stores.deleteModal.confirmMessage', { store: store?.description ?? '' })} warning={t('stores.deleteModal.warning')} confirmLabel={t('stores.deleteModal.confirm')} />
+      <ConfirmDeleteSheet isOpen={isDeleteSheetOpen} onClose={() => setIsDeleteSheetOpen(false)} onConfirm={handleConfirmDelete} title={t('stores.deleteModal.title')} message={t('stores.deleteModal.confirmMessage', { store: store?.description ?? '' })} warning={t('stores.deleteModal.warning')} confirmLabel={t('stores.deleteModal.confirm')} isLoading={isDeleting} />
     </KeyboardAvoidingView>
   );
 }

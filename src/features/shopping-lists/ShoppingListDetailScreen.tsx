@@ -53,9 +53,14 @@ export default function ShoppingListDetailScreen() {
 	const [isMoveSheetOpen, setIsMoveSheetOpen] = useState(false);
 	const [availableLists, setAvailableLists] = useState<{ id: string; title: string; }[]>([]);
 	const [isRemoveCompletedSheetOpen, setIsRemoveCompletedSheetOpen] = useState(false);
-	const [isTitleSheetOpen, setIsTitleSheetOpen] = useState(false);
-	const { refreshVersion } = useDataSource();
-	const toast = useToast();
+  const [isTitleSheetOpen, setIsTitleSheetOpen] = useState(false);
+  const [isSavingTitle, setIsSavingTitle] = useState(false);
+  const [isDeletingSelected, setIsDeletingSelected] = useState(false);
+  const [isMovingSelected, setIsMovingSelected] = useState(false);
+  const [isRemovingCompleted, setIsRemovingCompleted] = useState(false);
+  const [isPinning, setIsPinning] = useState(false);
+  const { refreshVersion } = useDataSource();
+  const toast = useToast();
 
 	const loadData = useCallback(async () => {
 		try {
@@ -243,12 +248,20 @@ export default function ShoppingListDetailScreen() {
 		setIsTitleSheetOpen(true);
 	}
 
-	async function handleSaveTitle(title: string) {
-		await updateShoppingListTitle(shoppingListId, title);
-		setShoppingList((prev) => prev ? { ...prev, title } : prev);
-		setIsTitleSheetOpen(false);
-		toast.show({ message: t('toast.listRenamed'), type: 'success' });
-	}
+  async function handleSaveTitle(title: string) {
+    if (isSavingTitle) return;
+    setIsSavingTitle(true);
+    try {
+      await updateShoppingListTitle(shoppingListId, title);
+      setShoppingList((prev) => prev ? { ...prev, title } : prev);
+      setIsTitleSheetOpen(false);
+      toast.show({ message: t('toast.listRenamed'), type: 'success' });
+    } catch (error) {
+      console.error("Failed to save title:", error);
+    } finally {
+      setIsSavingTitle(false);
+    }
+  }
 
 	function resetSelection() {
 		setIsSelectionMode(false);
@@ -304,68 +317,92 @@ export default function ShoppingListDetailScreen() {
 		setIsMoveSheetOpen(true);
 	}
 
-	async function handleConfirmMoveItems(targetListId: string) {
-		const rowIds = Array.from(selectedItemRowIds);
-		setIsMoveSheetOpen(false);
-		setShoppingList((prev) => {
-			if (!prev) return prev;
-			return {
-				...prev,
-				items: prev.items.filter((item) => !rowIds.includes(item.rowId)),
-			};
-		});
-		if (activeStoreId) {
-			const remainingAfterMove = items.filter((item) => !rowIds.includes(item.rowId));
-			if (!remainingAfterMove.some((item) => item.storeId === activeStoreId)) {
-				setActiveStoreId(null);
-			}
-		}
-		resetSelection();
-		await moveItemsToList(rowIds, targetListId);
-		toast.show({ message: t('toast.itemsMoved'), type: 'success' });
-	}
+  async function handleConfirmMoveItems(targetListId: string) {
+    if (isMovingSelected) return;
+    const rowIds = Array.from(selectedItemRowIds);
+    setIsMovingSelected(true);
+    try {
+      await moveItemsToList(rowIds, targetListId);
+      setShoppingList((prev) => {
+        if (!prev) return prev;
+        return {
+          ...prev,
+          items: prev.items.filter((item) => !rowIds.includes(item.rowId)),
+        };
+      });
+      if (activeStoreId) {
+        const remainingAfterMove = items.filter((item) => !rowIds.includes(item.rowId));
+        if (!remainingAfterMove.some((item) => item.storeId === activeStoreId)) {
+          setActiveStoreId(null);
+        }
+      }
+      resetSelection();
+      setIsMoveSheetOpen(false);
+      toast.show({ message: t('toast.itemsMoved'), type: 'success' });
+    } catch (error) {
+      console.error("Failed to move items:", error);
+    } finally {
+      setIsMovingSelected(false);
+    }
+  }
 
 	function handleDeleteSelectedPress() {
 		setIsDeleteSelectedSheetOpen(true);
 	}
 
-	async function handleConfirmDeleteSelected() {
-		const rowIds = Array.from(selectedItemRowIds);
-		setIsDeleteSelectedSheetOpen(false);
-		setShoppingList((prev) => {
-			if (!prev) return prev;
-			return {
-				...prev,
-				items: prev.items.filter((item) => !rowIds.includes(item.rowId)),
-			};
-		});
-		if (activeStoreId) {
-			const remainingAfterDelete = items.filter((item) => !rowIds.includes(item.rowId));
-			if (!remainingAfterDelete.some((item) => item.storeId === activeStoreId)) {
-				setActiveStoreId(null);
-			}
-		}
-		resetSelection();
-		await removeItemsFromList(rowIds);
-		toast.show({ message: t('toast.itemsDeleted'), type: 'success' });
-	}
+  async function handleConfirmDeleteSelected() {
+    if (isDeletingSelected) return;
+    const rowIds = Array.from(selectedItemRowIds);
+    setIsDeletingSelected(true);
+    try {
+      await removeItemsFromList(rowIds);
+      setShoppingList((prev) => {
+        if (!prev) return prev;
+        return {
+          ...prev,
+          items: prev.items.filter((item) => !rowIds.includes(item.rowId)),
+        };
+      });
+      if (activeStoreId) {
+        const remainingAfterDelete = items.filter((item) => !rowIds.includes(item.rowId));
+        if (!remainingAfterDelete.some((item) => item.storeId === activeStoreId)) {
+          setActiveStoreId(null);
+        }
+      }
+      resetSelection();
+      setIsDeleteSelectedSheetOpen(false);
+      toast.show({ message: t('toast.itemsDeleted'), type: 'success' });
+    } catch (error) {
+      console.error("Failed to delete items:", error);
+    } finally {
+      setIsDeletingSelected(false);
+    }
+  }
 
-	function handlePinSelectedPress() {
-		const rowIds = Array.from(selectedItemRowIds);
-		const allPinned = rowIds.every((id) => items.find((item) => item.rowId === id)?.isPinned);
-		const newPinned = !allPinned;
-		setShoppingList((prev) => {
-			if (!prev) return prev;
-			return {
-				...prev,
-				items: prev.items.map((item) =>
-					rowIds.includes(item.rowId) ? { ...item, pinned: newPinned } : item
-				),
-			};
-		});
-		resetSelection();
-		pinItems(rowIds, newPinned);
-	}
+  async function handlePinSelectedPress() {
+    if (isPinning) return;
+    const rowIds = Array.from(selectedItemRowIds);
+    const allPinned = rowIds.every((id) => items.find((item) => item.rowId === id)?.isPinned);
+    const newPinned = !allPinned;
+    setIsPinning(true);
+    try {
+      await pinItems(rowIds, newPinned);
+      setShoppingList((prev) => {
+        if (!prev) return prev;
+        return {
+          ...prev,
+          items: prev.items.map((item) =>
+            rowIds.includes(item.rowId) ? { ...item, pinned: newPinned } : item
+          ),
+        };
+      });
+      resetSelection();
+    } catch (error) {
+      console.error("Failed to pin items:", error);
+    } finally {
+      setIsPinning(false);
+    }
+  }
 
 	function handleRemoveCompletedPress() {
 		setIsRemoveCompletedSheetOpen(true);
@@ -386,25 +423,33 @@ export default function ShoppingListDetailScreen() {
 		toast.show({ message: t('toast.listUnchecked'), type: 'success' });
 	}
 
-	async function handleConfirmRemoveCompleted() {
-		const doneRowIds = doneItems.map((item) => item.rowId);
-		setIsRemoveCompletedSheetOpen(false);
-		setShoppingList((prev) => {
-			if (!prev) return prev;
-			return {
-				...prev,
-				items: prev.items.filter((item) => !item.done),
-			};
-		});
-		if (activeStoreId) {
-			const remainingAfterRemove = items.filter((item) => !item.done && !doneRowIds.includes(item.rowId));
-			if (!remainingAfterRemove.some((item) => item.storeId === activeStoreId)) {
-				setActiveStoreId(null);
-			}
-		}
-		await removeItemsFromList(doneRowIds);
-		toast.show({ message: t('toast.completedDeleted'), type: 'success' });
-	}
+  async function handleConfirmRemoveCompleted() {
+    if (isRemovingCompleted) return;
+    const doneRowIds = doneItems.map((item) => item.rowId);
+    setIsRemovingCompleted(true);
+    try {
+      await removeItemsFromList(doneRowIds);
+      setShoppingList((prev) => {
+        if (!prev) return prev;
+        return {
+          ...prev,
+          items: prev.items.filter((item) => !item.done),
+        };
+      });
+      if (activeStoreId) {
+        const remainingAfterRemove = items.filter((item) => !item.isDone && !doneRowIds.includes(item.rowId));
+        if (!remainingAfterRemove.some((item) => item.storeId === activeStoreId)) {
+          setActiveStoreId(null);
+        }
+      }
+      setIsRemoveCompletedSheetOpen(false);
+      toast.show({ message: t('toast.completedDeleted'), type: 'success' });
+    } catch (error) {
+      console.error("Failed to remove completed items:", error);
+    } finally {
+      setIsRemovingCompleted(false);
+    }
+  }
 
 	function handleAddPress() {
 		navigation.navigate('ShoppingListItemForm', { item: undefined, shoppingListId, products, stores });
@@ -459,7 +504,7 @@ export default function ShoppingListDetailScreen() {
 
 			<ActionBar>
 				{isSelectionMode ? (
-					<SelectionActions selectedCount={selectedItemRowIds.size} onClose={resetSelection} onMove={handleMoveSelectedPress} onPin={handlePinSelectedPress} onDelete={handleDeleteSelectedPress} isAllPinned={allSelectedPinned} hasAvailableLists={availableLists.length > 0} />
+          <SelectionActions selectedCount={selectedItemRowIds.size} onClose={resetSelection} onMove={handleMoveSelectedPress} onPin={handlePinSelectedPress} onDelete={handleDeleteSelectedPress} isAllPinned={allSelectedPinned} hasAvailableLists={availableLists.length > 0} isLoading={isPinning} />
 				) : (
 					<>
 						<View style={styles.totalsRow}>
@@ -569,48 +614,52 @@ export default function ShoppingListDetailScreen() {
 				</View>
 			</ScrollableList>
 
-			<ListTitleFormSheet isOpen={isTitleSheetOpen} initialTitle={shoppingList.title} onSave={handleSaveTitle} onClose={() => setIsTitleSheetOpen(false)} />
+      <ListTitleFormSheet isOpen={isTitleSheetOpen} initialTitle={shoppingList.title} onSave={handleSaveTitle} onClose={() => setIsTitleSheetOpen(false)} isLoading={isSavingTitle} />
 
-			<BottomSheet isOpen={isRemoveCompletedSheetOpen} onClose={() => setIsRemoveCompletedSheetOpen(false)}>
-				<Text style={[styles.sheetTitle, { color: colors.text }]}>{t('listDetail.removeCompleted')}</Text>
-				<Text style={[styles.sheetMessage, { color: colors.textSecondary }]}>
-					{t('listDetail.removeCompletedConfirmMessage')}
-				</Text>
-				<View style={styles.sheetActions}>
-					<Pressable onPress={handleConfirmRemoveCompleted} style={[styles.sheetButton, { backgroundColor: colors.destructive }]}>
-						<Text style={[styles.sheetButtonText, { color: colors.destructiveBorder }]}>{t('listDetail.removeConfirm')}</Text>
-					</Pressable>
-					<Pressable onPress={() => setIsRemoveCompletedSheetOpen(false)} style={[styles.sheetButton, { backgroundColor: colors.surface }]}>
-						<Text style={[styles.sheetButtonText, { color: colors.text }]}>{t('products.addModal.cancel')}</Text>
-					</Pressable>
-				</View>
-			</BottomSheet>
+          <BottomSheet isOpen={isRemoveCompletedSheetOpen} onClose={() => setIsRemoveCompletedSheetOpen(false)}>
+            <Text style={[styles.sheetTitle, { color: colors.text }]}>{t('listDetail.removeCompleted')}</Text>
+            <Text style={[styles.sheetMessage, { color: colors.textSecondary }]}>
+              {t('listDetail.removeCompletedConfirmMessage')}
+            </Text>
+            <View style={styles.sheetActions}>
+              <Button variant="destructive" style={styles.sheetButton} onPress={handleConfirmRemoveCompleted} isLoading={isRemovingCompleted}>
+                <Text style={[styles.sheetButtonText, { color: colors.destructiveBorder }]}>{t('listDetail.removeConfirm')}</Text>
+              </Button>
+              <Button variant="secondary" style={styles.sheetButton} onPress={() => setIsRemoveCompletedSheetOpen(false)} disabled={isRemovingCompleted}>
+                <Text style={[styles.sheetButtonText, { color: colors.text }]}>{t('products.addModal.cancel')}</Text>
+              </Button>
+            </View>
+          </BottomSheet>
 
-			<BottomSheet isOpen={isMoveSheetOpen} onClose={() => setIsMoveSheetOpen(false)}>
-				<Text style={[styles.sheetTitle, { color: colors.text }]}>{t('listDetail.moveSelectedTitle')}</Text>
-				{availableLists.length === 0 ? (
-					<Text style={[styles.sheetMessage, { color: colors.textSecondary }]}>{t('listDetail.moveNoLists')}</Text>
-				) : (
-					<View style={styles.moveListContainer}>
-						{availableLists.map((list) => (
-							<Pressable key={list.id} style={[styles.moveListItem, { borderColor: colors.border }]} onPress={() => handleConfirmMoveItems(list.id)}>
-								<Text style={[styles.moveListItemText, { color: colors.text }]}>{list.title}</Text>
-								<Ionicons name="chevron-forward" size={18} color={colors.textSecondary} />
-							</Pressable>
-						))}
-					</View>
-				)}
-			</BottomSheet>
+          <BottomSheet isOpen={isMoveSheetOpen} onClose={() => setIsMoveSheetOpen(false)}>
+            <Text style={[styles.sheetTitle, { color: colors.text }]}>{t('listDetail.moveSelectedTitle')}</Text>
+            {availableLists.length === 0 ? (
+              <Text style={[styles.sheetMessage, { color: colors.textSecondary }]}>{t('listDetail.moveNoLists')}</Text>
+            ) : (
+              <View style={styles.moveListContainer}>
+                {isMovingSelected ? (
+                  <ActivityIndicator size="large" color={colors.text} style={styles.moveLoader} />
+                ) : (
+                  availableLists.map((list) => (
+                    <Pressable key={list.id} style={[styles.moveListItem, { borderColor: colors.border }]} onPress={() => handleConfirmMoveItems(list.id)}>
+                      <Text style={[styles.moveListItemText, { color: colors.text }]}>{list.title}</Text>
+                      <Ionicons name="chevron-forward" size={18} color={colors.textSecondary} />
+                    </Pressable>
+                  ))
+                )}
+              </View>
+            )}
+          </BottomSheet>
 
-			<BottomSheet isOpen={isDeleteSelectedSheetOpen} onClose={() => setIsDeleteSelectedSheetOpen(false)}>
-				<Text style={[styles.sheetTitle, { color: colors.text }]}>{t('listDetail.confirmDeleteSelected')}</Text>
-				<Text style={[styles.sheetMessage, { color: colors.textSecondary }]}>
-					{t('listDetail.confirmDeleteSelectedMessage', { count: selectedItemRowIds.size })}
-				</Text>
-				<Pressable onPress={handleConfirmDeleteSelected} style={[styles.sheetButton, { backgroundColor: colors.destructive }]}>
-					<Text style={[styles.sheetButtonText, { color: colors.destructiveBorder }]}>{t('listDetail.removeConfirm')}</Text>
-				</Pressable>
-			</BottomSheet>
+          <BottomSheet isOpen={isDeleteSelectedSheetOpen} onClose={() => setIsDeleteSelectedSheetOpen(false)}>
+            <Text style={[styles.sheetTitle, { color: colors.text }]}>{t('listDetail.confirmDeleteSelected')}</Text>
+            <Text style={[styles.sheetMessage, { color: colors.textSecondary }]}>
+              {t('listDetail.confirmDeleteSelectedMessage', { count: selectedItemRowIds.size })}
+            </Text>
+            <Button variant="destructive" style={styles.sheetButton} onPress={handleConfirmDeleteSelected} isLoading={isDeletingSelected}>
+              <Text style={[styles.sheetButtonText, { color: colors.destructiveBorder }]}>{t('listDetail.removeConfirm')}</Text>
+            </Button>
+          </BottomSheet>
 
 		</View>
 	);
@@ -753,15 +802,18 @@ const styles = StyleSheet.create({
 	moveListContainer: {
 		gap: 4,
 	},
-	moveListItem: {
-		flexDirection: 'row',
-		alignItems: 'center',
-		justifyContent: 'space-between',
-		borderWidth: 1,
-		borderRadius: 10,
-		padding: 14,
-		marginBottom: 4,
-	},
+  moveListItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    borderWidth: 1,
+    borderRadius: 10,
+    padding: 14,
+    marginBottom: 4,
+  },
+  moveLoader: {
+    paddingVertical: 20,
+  },
 	moveListItemText: {
 		fontSize: 16,
 		fontWeight: '500',

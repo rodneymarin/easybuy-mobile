@@ -11,9 +11,10 @@ interface ConfirmDeleteSheetProps {
   message: string;
   warning?: string;
   confirmLabel?: string;
+  isLoading?: boolean;
 }
 
-export default function ConfirmDeleteSheet({ isOpen, onClose, onConfirm, title, message, warning, confirmLabel }: ConfirmDeleteSheetProps) {
+export default function ConfirmDeleteSheet({ isOpen, onClose, onConfirm, title, message, warning, confirmLabel, isLoading }: ConfirmDeleteSheetProps) {
   const { colors } = useTheme();
 
   return (
@@ -21,7 +22,7 @@ export default function ConfirmDeleteSheet({ isOpen, onClose, onConfirm, title, 
       <Text style={[styles.title, { color: colors.text }]}>{title}</Text>
       <Text style={[styles.message, { color: colors.text }]}>{message}</Text>
       {warning && <Text style={[styles.warning, { color: colors.textSecondary }]}>{warning}</Text>}
-      <Button variant="destructive" style={styles.button} onPress={onConfirm}>
+      <Button variant="destructive" style={styles.button} onPress={onConfirm} isLoading={isLoading}>
         <Text style={[styles.buttonText, { color: colors.destructiveBorder }]}>{confirmLabel}</Text>
       </Button>
     </BottomSheet>

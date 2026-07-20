@@ -12,9 +12,11 @@ interface AuthSheetProps {
   isOpen: boolean;
   onClose: () => void;
   onAuthenticated: () => void;
+  sessionExpired?: boolean;
+  onUseLocalData?: () => void;
 }
 
-function AuthSheet({ isOpen, onClose, onAuthenticated }: AuthSheetProps) {
+function AuthSheet({ isOpen, onClose, onAuthenticated, sessionExpired, onUseLocalData }: AuthSheetProps) {
   const { colors } = useTheme();
   const { t } = useI18n();
   const { signIn, signUp } = useAuth();
@@ -24,6 +26,18 @@ function AuthSheet({ isOpen, onClose, onAuthenticated }: AuthSheetProps) {
   const [isSignUp, setIsSignUp] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+
+  function handleClose() {
+    setEmail('');
+    setPassword('');
+    setIsSignUp(false);
+    setErrorMessage(null);
+    if (sessionExpired) {
+      onUseLocalData?.();
+    } else {
+      onClose();
+    }
+  }
 
   async function handleSubmit() {
     if (!email.trim() || !password.trim()) return;
@@ -75,11 +89,21 @@ function AuthSheet({ isOpen, onClose, onAuthenticated }: AuthSheetProps) {
     setErrorMessage(null);
   }
 
+  function handleUseLocalData() {
+    setEmail('');
+    setPassword('');
+    setIsSignUp(false);
+    setErrorMessage(null);
+    onUseLocalData?.();
+  }
+
   return (
-    <BottomSheet isOpen={isOpen} onClose={onClose} percentage={0.825}>
+    <BottomSheet isOpen={isOpen} onClose={handleClose} percentage={0.825}>
       <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : 'height'}>
         <Text style={[styles.title, { color: colors.text }]}>{isSignUp ? t('auth.createAccount') : t('auth.signIn')}</Text>
-        <Text style={[styles.subtitle, { color: colors.textSecondary }]}>{t('auth.enterCredentials')}</Text>
+        <Text style={[styles.subtitle, { color: colors.textSecondary }]}>
+          {sessionExpired ? t('auth.sessionExpiredDescription') : t('auth.enterCredentials')}
+        </Text>
 
         <View style={styles.form}>
           <Input placeholder={t('auth.email')} value={email} onChangeText={setEmail} keyboardType="email-address" autoCapitalize="none" autoCorrect={false} />
@@ -94,17 +118,19 @@ function AuthSheet({ isOpen, onClose, onAuthenticated }: AuthSheetProps) {
 
           <View style={styles.spacer} />
 
-          <Button onPress={handleSubmit} disabled={isSubmitting || !email.trim() || !password.trim()} style={styles.submitButton}>
-            {isSubmitting ? (
-              <ActivityIndicator color="#fff" size="small" />
-            ) : (
-              <Text style={[styles.submitText, { color: '#fff' }]}>{isSignUp ? t('auth.createAccount') : t('auth.signIn')}</Text>
-            )}
+          <Button onPress={handleSubmit} disabled={isSubmitting || !email.trim() || !password.trim()} style={styles.submitButton} isLoading={isSubmitting}>
+            <Text style={[styles.submitText, { color: '#fff' }]}>{isSignUp ? t('auth.createAccount') : t('auth.signIn')}</Text>
           </Button>
 
           <Button onPress={handleToggleMode} variant="secondary" style={styles.toggleButton}>
             <Text style={{ color: colors.primary }}>{isSignUp ? t('auth.haveAccount') : t('auth.noAccount')}</Text>
           </Button>
+
+          {sessionExpired && (
+            <Button onPress={handleUseLocalData} variant="secondary" style={styles.useLocalButton}>
+              <Text style={[styles.useLocalText, { color: colors.textSecondary }]}>{t('auth.useLocalData')}</Text>
+            </Button>
+          )}
         </View>
       </KeyboardAvoidingView>
     </BottomSheet>
@@ -142,6 +168,14 @@ const styles = StyleSheet.create({
   toggleButton: {
     justifyContent: 'center',
     marginTop: 8,
+  },
+  useLocalButton: {
+    justifyContent: 'center',
+    marginTop: 4,
+  },
+  useLocalText: {
+    fontSize: 14,
+    fontWeight: '500',
   },
 });
 

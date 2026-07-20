@@ -15,9 +15,10 @@ interface ProductFormSheetProps {
   onSave: (productName: string, unitOfMeasurement: string, prices: Price[], productId?: string) => void;
   onClose: () => void;
   initialProduct?: Product | null;
+  isLoading?: boolean;
 }
 
-export default function ProductFormSheet({ isOpen, stores, onSave, onClose, initialProduct }: ProductFormSheetProps) {
+export default function ProductFormSheet({ isOpen, stores, onSave, onClose, initialProduct, isLoading }: ProductFormSheetProps) {
   const { colors } = useTheme();
   const { t } = useI18n();
   const pricesRef = useRef<ProductPricesHandle>(null);
@@ -67,7 +68,7 @@ export default function ProductFormSheet({ isOpen, stores, onSave, onClose, init
     <BottomSheet isOpen={isOpen} onClose={handleClose} percentage={0.75}>
       <Text style={[styles.title, { color: colors.text }]}>{isEditMode ? t('products.editTitle') : t('products.addTitle')}</Text>
       <ProductFormContent ref={pricesRef} productName={productName} unitOfMeasurement={unitOfMeasurement} prices={prices} stores={stores} noPadding onProductNameChange={setProductName} onUnitOfMeasurementChange={setUnitOfMeasurement} onPricesChange={handlePricesChange} style={styles.content} />
-      <Button variant="primary" style={styles.saveButton} onPress={handleSave} disabled={!isFormValid}>
+      <Button variant="primary" style={styles.saveButton} onPress={handleSave} disabled={!isFormValid} isLoading={isLoading}>
         <Text style={styles.buttonTextPrimary}>{t('products.addModal.save')}</Text>
       </Button>
     </BottomSheet>

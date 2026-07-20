@@ -29,6 +29,8 @@ export default function ProductFormScreen() {
     setPrices(newPrices);
   }
   const [isDeleteSheetOpen, setIsDeleteSheetOpen] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
   const toast = useToast();
 
   const isEditMode = product !== undefined;
@@ -43,24 +45,31 @@ export default function ProductFormScreen() {
   }, [product]);
 
   async function handleSave() {
-    if (!isFormValid) return;
+    if (!isFormValid || isSaving) return;
+    setIsSaving(true);
     pricesRef.current?.confirmPendingPrice();
     Keyboard.dismiss();
-    const trimmedName = productName.trim();
-    const existing = await getProductByName(trimmedName, product?.id);
-    if (existing) {
-      toast.show({ message: t('toast.productNameExists'), type: 'error' });
-      return;
+    try {
+      const trimmedName = productName.trim();
+      const existing = await getProductByName(trimmedName, product?.id);
+      if (existing) {
+        toast.show({ message: t('toast.productNameExists'), type: 'error' });
+        setIsSaving(false);
+        return;
+      }
+      const pricesToSave = latestPricesRef.current;
+      if (product) {
+        await updateProduct(product.id, trimmedName, unitOfMeasurement, pricesToSave);
+        toast.show({ message: t('toast.productUpdated'), type: 'success' });
+      } else {
+        await createProduct(generateUUID(), trimmedName, unitOfMeasurement, pricesToSave);
+        toast.show({ message: t('toast.productCreated'), type: 'success' });
+      }
+      navigation.goBack();
+    } catch (error) {
+      console.error("Failed to save product:", error);
+      setIsSaving(false);
     }
-    const pricesToSave = latestPricesRef.current;
-    if (product) {
-      await updateProduct(product.id, trimmedName, unitOfMeasurement, pricesToSave);
-      toast.show({ message: t('toast.productUpdated'), type: 'success' });
-    } else {
-      await createProduct(generateUUID(), trimmedName, unitOfMeasurement, pricesToSave);
-      toast.show({ message: t('toast.productCreated'), type: 'success' });
-    }
-    navigation.goBack();
   }
 
   function handleDeletePress() {
@@ -69,12 +78,18 @@ export default function ProductFormScreen() {
   }
 
   async function handleConfirmDelete() {
-    if (!product) return;
+    if (!product || isDeleting) return;
     Keyboard.dismiss();
-    await deleteProduct(product.id);
-    setIsDeleteSheetOpen(false);
-    toast.show({ message: t('toast.productDeleted'), type: 'success' });
-    navigation.goBack();
+    setIsDeleting(true);
+    try {
+      await deleteProduct(product.id);
+      setIsDeleteSheetOpen(false);
+      toast.show({ message: t('toast.productDeleted'), type: 'success' });
+      navigation.goBack();
+    } catch (error) {
+      console.error("Failed to delete product:", error);
+      setIsDeleting(false);
+    }
   }
 
   function handleGoBack() {
@@ -104,12 +119,12 @@ export default function ProductFormScreen() {
             <Text style={[styles.buttonTextSecondary, { color: colors.text }]}>{t('products.addModal.cancel')}</Text>
           </Button>
         </View>
-        <Button variant="primary" style={styles.actionButton} onPress={handleSave} disabled={!isFormValid}>
+        <Button variant="primary" style={styles.actionButton} onPress={handleSave} disabled={!isFormValid} isLoading={isSaving}>
           <Text style={styles.buttonTextPrimary}>{t('products.addModal.save')}</Text>
         </Button>
       </View>
 
-      <ConfirmDeleteSheet isOpen={isDeleteSheetOpen} onClose={() => setIsDeleteSheetOpen(false)} onConfirm={handleConfirmDelete} title={t('products.deleteModal.title')} message={t('products.deleteModal.confirmMessage', { product: product?.productName ?? '' })} warning={t('products.deleteModal.warning')} confirmLabel={t('products.deleteModal.confirm')} />
+      <ConfirmDeleteSheet isOpen={isDeleteSheetOpen} onClose={() => setIsDeleteSheetOpen(false)} onConfirm={handleConfirmDelete} title={t('products.deleteModal.title')} message={t('products.deleteModal.confirmMessage', { product: product?.productName ?? '' })} warning={t('products.deleteModal.warning')} confirmLabel={t('products.deleteModal.confirm')} isLoading={isDeleting} />
     </KeyboardAvoidingView>
   );
 }

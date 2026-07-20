@@ -12,9 +12,10 @@ interface SelectionActionsProps {
   onDelete: () => void;
   isAllPinned: boolean;
   hasAvailableLists: boolean;
+  isLoading?: boolean;
 }
 
-export default function SelectionActions({ selectedCount, onClose, onMove, onPin, onDelete, isAllPinned, hasAvailableLists }: SelectionActionsProps) {
+export default function SelectionActions({ selectedCount, onClose, onMove, onPin, onDelete, isAllPinned, hasAvailableLists, isLoading }: SelectionActionsProps) {
   const { colors } = useTheme();
   const { t } = useI18n();
 
@@ -28,15 +29,15 @@ export default function SelectionActions({ selectedCount, onClose, onMove, onPin
       </View>
       <View style={styles.actions}>
         {hasAvailableLists && (
-          <Button onPress={onMove}>
+          <Button onPress={onMove} disabled={isLoading}>
             <Text style={[styles.actionText, { color: '#fff' }]}>{t('listDetail.moveSelected')}</Text>
           </Button>
         )}
-        <Button onPress={onPin}>
+        <Button onPress={onPin} isLoading={isLoading}>
           <MaterialCommunityIcons name={isAllPinned ? 'pin-off' : 'pin'} size={16} color="#fff" />
           <Text style={[styles.actionText, { color: '#fff' }]}>{t(isAllPinned ? 'listDetail.unpinSelected' : 'listDetail.pinSelected')}</Text>
         </Button>
-        <Button variant="destructive" style={styles.deleteButton} onPress={onDelete}>
+        <Button variant="destructive" style={styles.deleteButton} onPress={onDelete} disabled={isLoading}>
           <Text style={[styles.actionText, { color: colors.destructiveBorder }]}>{t('listDetail.removeConfirm')} ({selectedCount})</Text>
         </Button>
       </View>

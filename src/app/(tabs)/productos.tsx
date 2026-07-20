@@ -31,6 +31,7 @@ export default function ProductosScreen() {
   const [searchQuery, setSearchQuery] = useState('');
   const { isSelectionMode, setIsSelectionMode, selectedIds: selectedProductIds, setSelectedIds: setSelectedProductIds, resetSelection, toggleSelection, handlePress, exitSelectionMode } = useSelectionMode();
   const [isDeleteSelectedSheetOpen, setIsDeleteSelectedSheetOpen] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
   const debouncedSearch = useDebounce(searchQuery, 300);
   const toast = useToast();
   const { refreshVersion } = useDataSource();
@@ -88,13 +89,21 @@ export default function ProductosScreen() {
   }
 
   async function handleConfirmDeleteSelected() {
+    if (isDeleting) return;
     const ids = Array.from(selectedProductIds);
-    setIsDeleteSelectedSheetOpen(false);
-    setIsSelectionMode(false);
-    setSelectedProductIds(new Set());
-    await deleteProducts(ids);
-    toast.show({ message: t('toast.productsDeleted'), type: 'success' });
-    await loadData();
+    setIsDeleting(true);
+    try {
+      await deleteProducts(ids);
+      setIsDeleteSelectedSheetOpen(false);
+      setIsSelectionMode(false);
+      setSelectedProductIds(new Set());
+      toast.show({ message: t('toast.productsDeleted'), type: 'success' });
+      await loadData();
+    } catch (error) {
+      console.error("Failed to delete products:", error);
+    } finally {
+      setIsDeleting(false);
+    }
   }
 
   const filteredProducts: ProductListData[] = useMemo(() => {
@@ -154,7 +163,7 @@ export default function ProductosScreen() {
         </View>
       )}
 
-      <ConfirmDeleteSheet isOpen={isDeleteSelectedSheetOpen} onClose={() => setIsDeleteSelectedSheetOpen(false)} onConfirm={handleConfirmDeleteSelected} title={t('products.deleteSelected.title')} message={t('products.deleteSelected.confirmMessage', { count: selectedProductIds.size })} warning={t('products.deleteSelected.warning')} confirmLabel={t('products.deleteSelected.confirm')} />
+      <ConfirmDeleteSheet isOpen={isDeleteSelectedSheetOpen} onClose={() => setIsDeleteSelectedSheetOpen(false)} onConfirm={handleConfirmDeleteSelected} title={t('products.deleteSelected.title')} message={t('products.deleteSelected.confirmMessage', { count: selectedProductIds.size })} warning={t('products.deleteSelected.warning')} confirmLabel={t('products.deleteSelected.confirm')} isLoading={isDeleting} />
     </View>
   );
 }

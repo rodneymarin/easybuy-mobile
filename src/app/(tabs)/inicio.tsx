@@ -31,7 +31,9 @@ export default function InicioScreen() {
   const [lists, setLists] = useState<ShoppingListData[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
   const [isTitleSheetOpen, setIsTitleSheetOpen] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
   const [isDeleteSheetOpen, setIsDeleteSheetOpen] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
   const [listToDelete, setListToDelete] = useState<{ id: string; title: string } | null>(null);
   const debouncedSearch = useDebounce(searchQuery, 300);
   const toast = useToast();
@@ -76,12 +78,19 @@ export default function InicioScreen() {
   }
 
   async function handleCreateList(title: string) {
-    const newId = generateUUID();
-    await createShoppingList(newId, title);
-    closeTitleSheet();
-    toast.show({ message: t('toast.listCreated'), type: 'success' });
-    await loadLists();
-    navigation.navigate('ShoppingListDetail', { shoppingListId: newId });
+    if (isSaving) return;
+    setIsSaving(true);
+    try {
+      const newId = generateUUID();
+      await createShoppingList(newId, title);
+      closeTitleSheet();
+      toast.show({ message: t('toast.listCreated'), type: 'success' });
+      await loadLists();
+      navigation.navigate('ShoppingListDetail', { shoppingListId: newId });
+    } catch (error) {
+      console.error("Failed to create list:", error);
+      setIsSaving(false);
+    }
   }
 
   function openDetail(listId: string) {
@@ -96,12 +105,18 @@ export default function InicioScreen() {
   }
 
   async function handleConfirmDelete() {
-    if (!listToDelete) return;
-    await deleteShoppingList(listToDelete.id);
-    setIsDeleteSheetOpen(false);
-    setListToDelete(null);
-    toast.show({ message: t('toast.listDeleted'), type: 'success' });
-    loadLists();
+    if (!listToDelete || isDeleting) return;
+    setIsDeleting(true);
+    try {
+      await deleteShoppingList(listToDelete.id);
+      setIsDeleteSheetOpen(false);
+      setListToDelete(null);
+      toast.show({ message: t('toast.listDeleted'), type: 'success' });
+      loadLists();
+    } catch (error) {
+      console.error("Failed to delete list:", error);
+      setIsDeleting(false);
+    }
   }
 
   function handleCancelDelete() {
@@ -149,9 +164,9 @@ export default function InicioScreen() {
         </View>
       )}
 
-      <ListTitleFormSheet isOpen={isTitleSheetOpen} onSave={handleCreateList} onClose={closeTitleSheet} />
+      <ListTitleFormSheet isOpen={isTitleSheetOpen} onSave={handleCreateList} onClose={closeTitleSheet} isLoading={isSaving} />
 
-      <ConfirmDeleteSheet isOpen={isDeleteSheetOpen} onClose={handleCancelDelete} onConfirm={handleConfirmDelete} title={t('lists.deleteModal.title')} message={t('lists.deleteModal.confirmMessage', { list: listToDelete?.title ?? '' })} warning={t('lists.deleteModal.warning')} confirmLabel={t('lists.deleteModal.confirm')} />
+      <ConfirmDeleteSheet isOpen={isDeleteSheetOpen} onClose={handleCancelDelete} onConfirm={handleConfirmDelete} title={t('lists.deleteModal.title')} message={t('lists.deleteModal.confirmMessage', { list: listToDelete?.title ?? '' })} warning={t('lists.deleteModal.warning')} confirmLabel={t('lists.deleteModal.confirm')} isLoading={isDeleting} />
     </View>
   );
 }

@@ -26,6 +26,7 @@ export default function TiendasScreen() {
   const [searchQuery, setSearchQuery] = useState('');
   const { isSelectionMode, setIsSelectionMode, selectedIds: selectedStoreIds, setSelectedIds: setSelectedStoreIds, resetSelection, toggleSelection, handlePress, exitSelectionMode } = useSelectionMode();
   const [isDeleteSelectedSheetOpen, setIsDeleteSelectedSheetOpen] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
   const debouncedSearch = useDebounce(searchQuery, 300);
   const toast = useToast();
   const { refreshVersion } = useDataSource();
@@ -87,12 +88,20 @@ export default function TiendasScreen() {
   }
 
   async function handleConfirmDeleteSelected() {
+    if (isDeleting) return;
     const ids = Array.from(selectedStoreIds);
-    setIsDeleteSelectedSheetOpen(false);
-    resetSelection();
-    await deleteStores(ids);
-    toast.show({ message: t('toast.storesDeleted'), type: 'success' });
-    await loadStores();
+    setIsDeleting(true);
+    try {
+      await deleteStores(ids);
+      setIsDeleteSelectedSheetOpen(false);
+      resetSelection();
+      toast.show({ message: t('toast.storesDeleted'), type: 'success' });
+      await loadStores();
+    } catch (error) {
+      console.error("Failed to delete stores:", error);
+    } finally {
+      setIsDeleting(false);
+    }
   }
 
   const filteredStores = useMemo(() => {
@@ -147,7 +156,7 @@ export default function TiendasScreen() {
         </View>
       )}
 
-      <ConfirmDeleteSheet isOpen={isDeleteSelectedSheetOpen} onClose={() => setIsDeleteSelectedSheetOpen(false)} onConfirm={handleConfirmDeleteSelected} title={t('stores.deleteSelected.title')} message={t('stores.deleteSelected.confirmMessage', { count: selectedStoreIds.size })} warning={t('stores.deleteSelected.warning')} confirmLabel={t('stores.deleteSelected.confirm')} />
+      <ConfirmDeleteSheet isOpen={isDeleteSelectedSheetOpen} onClose={() => setIsDeleteSelectedSheetOpen(false)} onConfirm={handleConfirmDeleteSelected} title={t('stores.deleteSelected.title')} message={t('stores.deleteSelected.confirmMessage', { count: selectedStoreIds.size })} warning={t('stores.deleteSelected.warning')} confirmLabel={t('stores.deleteSelected.confirm')} isLoading={isDeleting} />
     </View>
   );
 }

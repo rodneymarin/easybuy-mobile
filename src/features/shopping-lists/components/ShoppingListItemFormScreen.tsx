@@ -29,10 +29,14 @@ export default function ShoppingListItemFormScreen() {
 	const [selectedProductId, setSelectedProductId] = useState<string | null>(null);
 	const [selectedStoreId, setSelectedStoreId] = useState<string | null>(null);
 	const [quantityText, setQuantityText] = useState('1');
-	const [isDeleteSheetOpen, setIsDeleteSheetOpen] = useState(false);
-	const [isProductSheetOpen, setIsProductSheetOpen] = useState(false);
-	const [isProductEditSheetOpen, setIsProductEditSheetOpen] = useState(false);
-	const [keyboardHeight, setKeyboardHeight] = useState(0);
+  const [isDeleteSheetOpen, setIsDeleteSheetOpen] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
+  const [isProductSheetOpen, setIsProductSheetOpen] = useState(false);
+  const [isProductEditSheetOpen, setIsProductEditSheetOpen] = useState(false);
+  const [isCreatingProduct, setIsCreatingProduct] = useState(false);
+  const [isEditingProduct, setIsEditingProduct] = useState(false);
+  const [keyboardHeight, setKeyboardHeight] = useState(0);
 	const [localProducts, setLocalProducts] = useState<Product[]>(initialProducts);
 	const toast = useToast();
 
@@ -96,33 +100,45 @@ export default function ShoppingListItemFormScreen() {
 		}
 	}
 
-	async function handleSave() {
-		Keyboard.dismiss();
-		if (!isFormValid || !selectedProductId) return;
-		const qty = parseFloat(quantityText);
-		if (item) {
-			await updateItemInList(item.rowId, selectedProductId, qty, selectedStoreId ?? undefined);
-			toast.show({ message: t('toast.itemUpdated'), type: 'success' });
-		} else {
-			await addItemToList(shoppingListId, { productId: selectedProductId, quantity: qty, storeId: selectedStoreId ?? undefined });
-			toast.show({ message: t('toast.itemAdded'), type: 'success' });
-		}
-		navigation.goBack();
-	}
+  async function handleSave() {
+    Keyboard.dismiss();
+    if (!isFormValid || !selectedProductId || isSaving) return;
+    setIsSaving(true);
+    try {
+      const qty = parseFloat(quantityText);
+      if (item) {
+        await updateItemInList(item.rowId, selectedProductId, qty, selectedStoreId ?? undefined);
+        toast.show({ message: t('toast.itemUpdated'), type: 'success' });
+      } else {
+        await addItemToList(shoppingListId, { productId: selectedProductId, quantity: qty, storeId: selectedStoreId ?? undefined });
+        toast.show({ message: t('toast.itemAdded'), type: 'success' });
+      }
+      navigation.goBack();
+    } catch (error) {
+      console.error("Failed to save item:", error);
+      setIsSaving(false);
+    }
+  }
 
-	function handleDeletePress() {
-		Keyboard.dismiss();
-		setIsDeleteSheetOpen(true);
-	}
+  function handleDeletePress() {
+    Keyboard.dismiss();
+    setIsDeleteSheetOpen(true);
+  }
 
-	async function handleConfirmDelete() {
-		Keyboard.dismiss();
-		if (!item) return;
-		await removeItemFromList(item.rowId);
-		setIsDeleteSheetOpen(false);
-		toast.show({ message: t('toast.itemDeleted'), type: 'success' });
-		navigation.goBack();
-	}
+  async function handleConfirmDelete() {
+    Keyboard.dismiss();
+    if (!item || isDeleting) return;
+    setIsDeleting(true);
+    try {
+      await removeItemFromList(item.rowId);
+      setIsDeleteSheetOpen(false);
+      toast.show({ message: t('toast.itemDeleted'), type: 'success' });
+      navigation.goBack();
+    } catch (error) {
+      console.error("Failed to delete item:", error);
+      setIsDeleting(false);
+    }
+  }
 
 	function handleGoBack() {
 		Keyboard.dismiss();
@@ -134,44 +150,53 @@ export default function ShoppingListItemFormScreen() {
 		setIsProductEditSheetOpen(true);
 	}
 
-	async function handleCreateProduct(productName: string, unitOfMeasurement: string, prices: { storeId: string; value: number; }[]) {
-		const existing = await getProductByName(productName);
-		if (existing) {
-			toast.show({ message: t('toast.productNameExists'), type: 'error' });
-			return;
-		}
-		const id = generateUUID();
-		try {
-			await createProduct(id, productName, unitOfMeasurement, prices);
-			const newProduct: Product = { id, productName, unitOfMeasurement, prices };
-			setLocalProducts((prev) => [...prev, newProduct].sort((a, b) => a.productName.localeCompare(b.productName)));
-			setSelectedProductId(id);
-			setIsProductSheetOpen(false);
-		} catch (error) {
-			console.error("Failed to create product:", error);
-		}
-	}
+  async function handleCreateProduct(productName: string, unitOfMeasurement: string, prices: { storeId: string; value: number; }[]) {
+    if (isCreatingProduct) return;
+    setIsCreatingProduct(true);
+    const existing = await getProductByName(productName);
+    if (existing) {
+      toast.show({ message: t('toast.productNameExists'), type: 'error' });
+      setIsCreatingProduct(false);
+      return;
+    }
+    try {
+      const id = generateUUID();
+      await createProduct(id, productName, unitOfMeasurement, prices);
+      const newProduct: Product = { id, productName, unitOfMeasurement, prices };
+      setLocalProducts((prev) => [...prev, newProduct].sort((a, b) => a.productName.localeCompare(b.productName)));
+      setSelectedProductId(id);
+      setIsProductSheetOpen(false);
+    } catch (error) {
+      console.error("Failed to create product:", error);
+    } finally {
+      setIsCreatingProduct(false);
+    }
+  }
 
-	async function handleEditProduct(productName: string, unitOfMeasurement: string, prices: Price[], productId?: string) {
-		if (!productId) return;
-		const existing = await getProductByName(productName, productId);
-		if (existing) {
-			toast.show({ message: t('toast.productNameExists'), type: 'error' });
-			return;
-		}
-		try {
-			await updateProduct(productId, productName, unitOfMeasurement, prices);
-			setLocalProducts((prev) =>
-				prev.map((p) =>
-					p.id === productId ? { ...p, productName, unitOfMeasurement, prices } : p
-				)
-			);
-			setIsProductEditSheetOpen(false);
-			toast.show({ message: t('toast.productUpdated'), type: 'success' });
-		} catch (error) {
-			console.error("Failed to update product:", error);
-		}
-	}
+  async function handleEditProduct(productName: string, unitOfMeasurement: string, prices: Price[], productId?: string) {
+    if (!productId || isEditingProduct) return;
+    setIsEditingProduct(true);
+    const existing = await getProductByName(productName, productId);
+    if (existing) {
+      toast.show({ message: t('toast.productNameExists'), type: 'error' });
+      setIsEditingProduct(false);
+      return;
+    }
+    try {
+      await updateProduct(productId, productName, unitOfMeasurement, prices);
+      setLocalProducts((prev) =>
+        prev.map((p) =>
+          p.id === productId ? { ...p, productName, unitOfMeasurement, prices } : p
+        )
+      );
+      setIsProductEditSheetOpen(false);
+      toast.show({ message: t('toast.productUpdated'), type: 'success' });
+    } catch (error) {
+      console.error("Failed to update product:", error);
+    } finally {
+      setIsEditingProduct(false);
+    }
+  }
 
 	return (
 		<KeyboardAvoidingView style={[styles.container, { backgroundColor: colors.background }]} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
@@ -233,15 +258,15 @@ export default function ShoppingListItemFormScreen() {
 						<Text style={[styles.buttonTextSecondary, { color: colors.text }]}>{t('listItem.cancel')}</Text>
 					</Button>
 				</View>
-				<Button variant="primary" style={styles.actionButton} onPress={handleSave} disabled={!isFormValid}>
-					<Text style={styles.buttonTextPrimary}>{t('listItem.save')}</Text>
-				</Button>
-			</View>
+        <Button variant="primary" style={styles.actionButton} onPress={handleSave} disabled={!isFormValid} isLoading={isSaving}>
+          <Text style={styles.buttonTextPrimary}>{t('listItem.save')}</Text>
+        </Button>
+      </View>
 
-			<ConfirmDeleteSheet isOpen={isDeleteSheetOpen} onClose={() => setIsDeleteSheetOpen(false)} onConfirm={handleConfirmDelete} title={t('listItem.deleteModal.title')} message={t('listItem.deleteModal.confirmMessage')} confirmLabel={t('listItem.deleteModal.confirm')} />
+      <ConfirmDeleteSheet isOpen={isDeleteSheetOpen} onClose={() => setIsDeleteSheetOpen(false)} onConfirm={handleConfirmDelete} title={t('listItem.deleteModal.title')} message={t('listItem.deleteModal.confirmMessage')} confirmLabel={t('listItem.deleteModal.confirm')} isLoading={isDeleting} />
 
-			<ProductFormSheet isOpen={isProductSheetOpen} stores={stores} onSave={handleCreateProduct} onClose={() => setIsProductSheetOpen(false)} />
-			<ProductFormSheet isOpen={isProductEditSheetOpen} stores={stores} onSave={handleEditProduct} initialProduct={selectedProduct} onClose={() => setIsProductEditSheetOpen(false)} />
+      <ProductFormSheet isOpen={isProductSheetOpen} stores={stores} onSave={handleCreateProduct} onClose={() => setIsProductSheetOpen(false)} isLoading={isCreatingProduct} />
+      <ProductFormSheet isOpen={isProductEditSheetOpen} stores={stores} onSave={handleEditProduct} initialProduct={selectedProduct} onClose={() => setIsProductEditSheetOpen(false)} isLoading={isEditingProduct} />
 		</KeyboardAvoidingView>
 	);
 }
