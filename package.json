@@ -1,6 +1,6 @@
 {
 	"name": "easybuy-mobile",
-	"version": "0.1.0-beta.11",
+	"version": "0.1.0-beta.12",
 	"main": "expo/AppEntry.js",
 	"scripts": {
 		"start": "expo start",
