@@ -122,11 +122,12 @@ function MainMenu({ onOpenAbout }: MainMenuProps) {
       </Animated.View>
 
       <Animated.View {...panResponder.panHandlers} style={[styles.panel, { transform: [{ translateX }] }, { backgroundColor: colors.panelBackground }]}>
-        <View style={styles.panelHeader}>
-          <Text style={[styles.panelTitle, { color: colors.panelText }]}>EasyBuy</Text>
-        </View>
+        <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
+          <View style={styles.panelHeader}>
+            <Text style={[styles.panelTitle, { color: colors.panelText }]}>EasyBuy</Text>
+          </View>
 
-        <Text style={[styles.sectionLabel, { color: colors.textSecondary }]}>{t('menu.theme')}</Text>
+          <Text style={[styles.sectionLabel, { color: colors.textSecondary }]}>{t('menu.theme')}</Text>
 
         {themeOptions.map((option) => {
           const isSelected = option.mode === themeMode;
@@ -202,6 +203,7 @@ function MainMenu({ onOpenAbout }: MainMenuProps) {
             <Ionicons name="cloud-upload-outline" size={22} color={colors.panelText} />
             <Text style={[styles.menuItemText, { color: colors.panelText }]}>{t('menu.importData')}</Text>
           </Pressable> */}
+        </ScrollView>
       </Animated.View>
 
       <AuthSheet isOpen={isAuthSheetOpen} onClose={() => setIsAuthSheetOpen(false)} onAuthenticated={handleAuthenticated} />
@@ -234,10 +236,13 @@ const styles = StyleSheet.create({
     right: 0,
     bottom: 0,
     width: PANEL_WIDTH,
-    paddingTop: 60,
-    paddingHorizontal: 20,
     borderTopLeftRadius: 16,
     borderBottomLeftRadius: 16,
+  },
+  scrollContent: {
+    paddingTop: 60,
+    paddingHorizontal: 20,
+    paddingBottom: 40,
   },
   panelHeader: {
     flexDirection: 'row',
