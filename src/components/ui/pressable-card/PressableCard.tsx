@@ -1,6 +1,6 @@
 import { type ReactNode, useRef } from 'react';
 import { Animated, type GestureResponderEvent, Pressable, type PressableProps, type StyleProp, type ViewStyle } from 'react-native';
-import { darkenColor, useTheme } from '@lib/theme';
+import { useTheme } from '@lib/theme';
 
 const AnimatedPressable = Animated.createAnimatedComponent(Pressable);
 
@@ -11,13 +11,13 @@ interface PressableCardProps extends Omit<PressableProps, 'style'> {
 }
 
 export default function PressableCard({ children, onPressIn, onPressOut, bgColor, style: styleProp, ...otherProps }: PressableCardProps) {
-  const { colors } = useTheme();
+  const { isDark } = useTheme();
   const darkAnim = useRef(new Animated.Value(0)).current;
-  const baseColor = bgColor ?? colors.surface;
+  const baseColor = bgColor ?? 'transparent';
 
   const backgroundColor = darkAnim.interpolate({
     inputRange: [0, 1],
-    outputRange: [baseColor, darkenColor(baseColor, 0.1)],
+    outputRange: [baseColor, isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.06)'],
   });
 
   function handlePressIn(event: GestureResponderEvent) {

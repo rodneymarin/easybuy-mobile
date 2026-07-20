@@ -65,9 +65,9 @@ export default function ProductFormSheet({ isOpen, stores, onSave, onClose, init
   }
 
   return (
-    <BottomSheet isOpen={isOpen} onClose={handleClose} percentage={0.75}>
+    <BottomSheet isOpen={isOpen} onClose={handleClose} percentage={0.9}>
       <Text style={[styles.title, { color: colors.text }]}>{isEditMode ? t('products.editTitle') : t('products.addTitle')}</Text>
-      <ProductFormContent ref={pricesRef} productName={productName} unitOfMeasurement={unitOfMeasurement} prices={prices} stores={stores} noPadding onProductNameChange={setProductName} onUnitOfMeasurementChange={setUnitOfMeasurement} onPricesChange={handlePricesChange} style={styles.content} />
+      <ProductFormContent ref={pricesRef} productName={productName} unitOfMeasurement={unitOfMeasurement} prices={prices} stores={stores} noPadding onProductNameChange={setProductName} onUnitOfMeasurementChange={setUnitOfMeasurement} onPricesChange={handlePricesChange} />
       <Button variant="primary" style={styles.saveButton} onPress={handleSave} disabled={!isFormValid} isLoading={isLoading}>
         <Text style={styles.buttonTextPrimary}>{t('products.addModal.save')}</Text>
       </Button>
@@ -81,9 +81,6 @@ const styles = StyleSheet.create({
     fontWeight: '700',
     marginBottom: 12,
     textAlign: 'center',
-  },
-  content: {
-    height: 320,
   },
   saveButton: {
     justifyContent: 'center',
