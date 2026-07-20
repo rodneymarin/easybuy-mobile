@@ -13,7 +13,7 @@ interface PressableCardProps extends Omit<PressableProps, 'style'> {
 export default function PressableCard({ children, onPressIn, onPressOut, bgColor, style: styleProp, ...otherProps }: PressableCardProps) {
   const { colors } = useTheme();
   const darkAnim = useRef(new Animated.Value(0)).current;
-  const baseColor = bgColor ?? 'transparent';
+  const baseColor = bgColor ?? colors.surface;
 
   const backgroundColor = darkAnim.interpolate({
     inputRange: [0, 1],
