@@ -1,4 +1,5 @@
 import { getSetting, setSetting } from '@lib/repositories/settings';
+import { resetDatabase } from '@lib/database';
 
 const DATA_SOURCE_SETTING_KEY = 'data_source';
 
@@ -37,6 +38,13 @@ export async function setDataSource(source: DataSourceType): Promise<void> {
 
 export function getRefreshVersion(): number {
   return _refreshVersion;
+}
+
+export async function resetLocalData(): Promise<void> {
+  if (_dataSource !== 'local') return;
+  await resetDatabase();
+  _refreshVersion++;
+  _listeners.forEach((fn) => fn());
 }
 
 export function subscribeToDataSourceChange(listener: () => void): () => void {

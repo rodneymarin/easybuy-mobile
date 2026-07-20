@@ -42,12 +42,14 @@ function MainMenu({ onOpenAbout }: MainMenuProps) {
 	const { isDrawerOpen, closeDrawer } = useDrawer();
 	const { themeMode, colors, setThemeMode } = useTheme();
 	const { language, setLanguage, t } = useI18n();
-	const { dataSource, setDataSource } = useDataSource();
+	const { dataSource, setDataSource, resetLocalData } = useDataSource();
 	const { isAuthenticated, user, signOut } = useAuth();
 	const toast = useToast();
 	const [isAuthSheetOpen, setIsAuthSheetOpen] = useState(false);
 	const [isSessionExpired, setIsSessionExpired] = useState(false);
 	const [isLogoutSheetOpen, setIsLogoutSheetOpen] = useState(false);
+	const [isResetSheetOpen, setIsResetSheetOpen] = useState(false);
+	const [isResetting, setIsResetting] = useState(false);
 
 	const translateX = useRef(new Animated.Value(PANEL_WIDTH)).current;
 	const backdropOpacity = useRef(new Animated.Value(0)).current;
@@ -138,6 +140,15 @@ function MainMenu({ onOpenAbout }: MainMenuProps) {
 		closeDrawer();
 	}
 
+	async function handleResetData() {
+		setIsResetSheetOpen(false);
+		setIsResetting(true);
+		await resetLocalData();
+		setIsResetting(false);
+		toast.show({ message: t('toast.dataReset'), type: 'info' });
+		closeDrawer();
+	}
+
 	return (
 		<View style={styles.overlay} pointerEvents={isDrawerOpen ? 'box-none' : 'none'}>
 			<Animated.View style={[styles.backdrop, { opacity: backdropOpacity }]}>
@@ -210,6 +221,16 @@ function MainMenu({ onOpenAbout }: MainMenuProps) {
 
 					<View style={[styles.divider, { backgroundColor: colors.panelBorder }]} />
 
+					{dataSource === 'local' && (
+						<>
+							<Pressable style={styles.menuItem} onPress={() => setIsResetSheetOpen(true)}>
+								<Ionicons name="refresh-outline" style={styles.menuItemIcon} color={colors.destructiveBorder} />
+								<Text style={[styles.menuItemText, { color: colors.destructiveBorder }]}>{t('menu.resetToDefaults')}</Text>
+							</Pressable>
+							<View style={[styles.divider, { backgroundColor: colors.panelBorder }]} />
+						</>
+					)}
+
 					<Pressable style={styles.menuItem} onPress={() => { onOpenAbout(); closeDrawer(); }}>
 						<Ionicons name="information-circle-outline" style={styles.menuItemIcon} color={colors.panelText} />
 						<Text style={[styles.menuItemText, { color: colors.panelText }]}>{t('menu.about')}</Text>
@@ -239,6 +260,17 @@ function MainMenu({ onOpenAbout }: MainMenuProps) {
 				message={t('menu.signOutMessage')}
 				warning={t('menu.signOutWarning')}
 				confirmLabel={t('menu.signOut')}
+			/>
+
+			<ConfirmDeleteSheet
+				isOpen={isResetSheetOpen}
+				onClose={() => setIsResetSheetOpen(false)}
+				onConfirm={handleResetData}
+				title={t('menu.resetToDefaultsTitle')}
+				message={t('menu.resetToDefaultsMessage')}
+				warning={t('menu.resetToDefaultsWarning')}
+				confirmLabel={t('menu.reset')}
+				isLoading={isResetting}
 			/>
 		</View>
 	);

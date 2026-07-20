@@ -77,3 +77,15 @@ async function runMigrations(database: SQLiteDatabase): Promise<void> {
     // Column already exists — ignore
   }
 }
+
+export async function resetDatabase(): Promise<void> {
+  const database = await getDatabase();
+  await database.execAsync(`
+    DELETE FROM shopping_list_items;
+    DELETE FROM shopping_lists;
+    DELETE FROM product_prices;
+    DELETE FROM products;
+    DELETE FROM stores;
+  `);
+  await seedIfEmpty(database);
+}
