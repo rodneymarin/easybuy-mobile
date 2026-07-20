@@ -31,7 +31,7 @@ const styles = StyleSheet.create({
 		justifyContent: 'center',
 	},
 	input: {
-		height: 40,
+		height: 45,
 		borderRadius: 8,
 		paddingHorizontal: 11,
 		fontSize: 14,
