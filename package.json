@@ -7,7 +7,7 @@
 		"android": "expo run:android",
 		"ios": "expo run:ios",
 		"web": "expo start --web",
-		"build:local": "scripts\\build-local.cmd",
+		"build:apk": "scripts\\build-local.cmd",
 		"build:remote": "eas build --platform android --profile preview --non-interactive",
 		"build:web": "npx expo export --platform web",
 		"release": "node scripts/bump-beta.js"
