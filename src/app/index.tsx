@@ -3,36 +3,63 @@ import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { Platform, StyleSheet, View, Text } from 'react-native';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { useTheme, ThemeProvider } from '@lib/theme';
-import { DrawerProvider } from '@lib/drawer';
-import { I18nProvider } from '@lib/i18n';
-import { DataSourceProvider } from '@lib/data-source';
-import { AuthProvider } from '@lib/auth';
-import { MainMenu, About, ToastProvider } from '@components/ui';
+import { DrawerProvider, useDrawer } from '@lib/drawer';
+import { I18nProvider, useI18n } from '@lib/i18n';
+import { DataSourceProvider, useDataSource } from '@lib/data-source';
+import { AuthProvider, subscribeToAuthError } from '@lib/auth';
+import { MainMenu, About, AuthSheet, ToastProvider, useToast } from '@components/ui';
 import { StatusBar } from 'expo-status-bar';
 import { getDatabase } from '@lib/database';
 import { TabNavigator } from './navigation';
 
 function AppContent() {
   const { isDark, colors } = useTheme();
+  const { t } = useI18n();
+  const { setDataSource } = useDataSource();
+  const { closeDrawer } = useDrawer();
+  const toast = useToast();
   const [isAboutOpen, setIsAboutOpen] = useState(false);
+  const [isAuthSheetOpen, setIsAuthSheetOpen] = useState(false);
+  const [isSessionExpired, setIsSessionExpired] = useState(false);
+
+  useEffect(() => {
+    const unsubscribe = subscribeToAuthError(() => {
+      setIsSessionExpired(true);
+      setIsAuthSheetOpen(true);
+    });
+    return unsubscribe;
+  }, []);
+
+  function handleAuthenticated() {
+    setIsSessionExpired(false);
+    setDataSource('cloud');
+    closeDrawer();
+    setIsAuthSheetOpen(false);
+  }
+
+  function handleUseLocalData() {
+    setIsSessionExpired(false);
+    setIsAuthSheetOpen(false);
+    setDataSource('local');
+    toast.show({ message: t('toast.switchedToLocal'), type: 'info' });
+    closeDrawer();
+  }
+
+  function handleCloseAuthSheet() {
+    setIsAuthSheetOpen(false);
+    setIsSessionExpired(false);
+  }
 
   const content = (
-    <AuthProvider>
-      <DataSourceProvider>
-        <DrawerProvider>
-          <GestureHandlerRootView style={styles.gestureRoot}>
-            <SafeAreaProvider>
-              <ToastProvider>
-                <StatusBar style={isDark ? 'light' : 'dark'} />
-                <TabNavigator />
-                <MainMenu onOpenAbout={() => setIsAboutOpen(true)} />
-                <About isOpen={isAboutOpen} onClose={() => setIsAboutOpen(false)} />
-              </ToastProvider>
-            </SafeAreaProvider>
-          </GestureHandlerRootView>
-        </DrawerProvider>
-      </DataSourceProvider>
-    </AuthProvider>
+    <GestureHandlerRootView style={styles.gestureRoot}>
+      <SafeAreaProvider>
+        <StatusBar style={isDark ? 'light' : 'dark'} />
+        <TabNavigator />
+        <MainMenu onOpenAbout={() => setIsAboutOpen(true)} onOpenAuth={() => setIsAuthSheetOpen(true)} />
+        <About isOpen={isAboutOpen} onClose={() => setIsAboutOpen(false)} />
+        <AuthSheet isOpen={isAuthSheetOpen} onClose={handleCloseAuthSheet} onAuthenticated={handleAuthenticated} sessionExpired={isSessionExpired} onUseLocalData={handleUseLocalData} />
+      </SafeAreaProvider>
+    </GestureHandlerRootView>
   );
 
   if (Platform.OS === 'web') {
@@ -70,7 +97,15 @@ export default function App() {
   return (
     <I18nProvider>
       <ThemeProvider>
-        <AppContent />
+        <AuthProvider>
+          <DataSourceProvider>
+            <DrawerProvider>
+              <ToastProvider>
+                <AppContent />
+              </ToastProvider>
+            </DrawerProvider>
+          </DataSourceProvider>
+        </AuthProvider>
       </ThemeProvider>
     </I18nProvider>
   );

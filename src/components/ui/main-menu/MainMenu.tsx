@@ -1,14 +1,13 @@
-import { useState, useEffect, useCallback, useRef } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Animated, Easing, PanResponder, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useDrawer } from '@lib/drawer';
 import { useI18n, type Language } from '@lib/i18n';
 import { useTheme, type ThemeMode } from '@lib/theme';
 import { useDataSource, type DataSourceType } from '@lib/data-source';
-import { useAuth, subscribeToAuthError } from '@lib/auth';
+import { useAuth } from '@lib/auth';
 import { useToast } from '../toast';
 import { ConfirmDeleteSheet } from '../confirm-delete-sheet';
-import AuthSheet from '../auth-sheet/AuthSheet';
 
 const PANEL_WIDTH = 280;
 
@@ -36,17 +35,16 @@ const dataSourceOptions: { source: DataSourceType; icon: string; labelKey: strin
 
 interface MainMenuProps {
 	onOpenAbout: () => void;
+	onOpenAuth: () => void;
 }
 
-function MainMenu({ onOpenAbout }: MainMenuProps) {
+function MainMenu({ onOpenAbout, onOpenAuth }: MainMenuProps) {
 	const { isDrawerOpen, closeDrawer } = useDrawer();
 	const { themeMode, colors, setThemeMode } = useTheme();
 	const { language, setLanguage, t } = useI18n();
 	const { dataSource, setDataSource, resetLocalData } = useDataSource();
 	const { isAuthenticated, user, signOut } = useAuth();
 	const toast = useToast();
-	const [isAuthSheetOpen, setIsAuthSheetOpen] = useState(false);
-	const [isSessionExpired, setIsSessionExpired] = useState(false);
 	const [isLogoutSheetOpen, setIsLogoutSheetOpen] = useState(false);
 	const [isResetSheetOpen, setIsResetSheetOpen] = useState(false);
 	const [isResetting, setIsResetting] = useState(false);
@@ -55,14 +53,6 @@ function MainMenu({ onOpenAbout }: MainMenuProps) {
 	const backdropOpacity = useRef(new Animated.Value(0)).current;
 	const closeDrawerRef = useRef(closeDrawer);
 	closeDrawerRef.current = closeDrawer;
-
-	useEffect(() => {
-		const unsubscribe = subscribeToAuthError(() => {
-			setIsSessionExpired(true);
-			setIsAuthSheetOpen(true);
-		});
-		return unsubscribe;
-	}, []);
 
 	useEffect(() => {
 		const toValue = isDrawerOpen ? 0 : PANEL_WIDTH;
@@ -106,30 +96,11 @@ function MainMenu({ onOpenAbout }: MainMenuProps) {
 	async function handleSelectDataSource(source: DataSourceType) {
 		if (source === dataSource) return;
 		if (source === 'cloud' && !isAuthenticated) {
-			setIsAuthSheetOpen(true);
+			onOpenAuth();
 			return;
 		}
 		await setDataSource(source);
 		closeDrawer();
-	}
-
-	function handleAuthenticated() {
-		setIsSessionExpired(false);
-		setDataSource('cloud');
-		closeDrawer();
-	}
-
-	function handleUseLocalData() {
-		setIsSessionExpired(false);
-		setIsAuthSheetOpen(false);
-		setDataSource('local');
-		toast.show({ message: t('toast.switchedToLocal'), type: 'info' });
-		closeDrawer();
-	}
-
-	function handleCloseAuthSheet() {
-		setIsAuthSheetOpen(false);
-		setIsSessionExpired(false);
 	}
 
 	async function handleLogout() {
@@ -249,8 +220,6 @@ function MainMenu({ onOpenAbout }: MainMenuProps) {
           </Pressable> */}
 				</ScrollView>
 			</Animated.View>
-
-			<AuthSheet isOpen={isAuthSheetOpen} onClose={handleCloseAuthSheet} onAuthenticated={handleAuthenticated} sessionExpired={isSessionExpired} onUseLocalData={handleUseLocalData} />
 
 			<ConfirmDeleteSheet
 				isOpen={isLogoutSheetOpen}
