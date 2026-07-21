@@ -152,8 +152,7 @@ CREATE INDEX idx_shopping_items_by_product ON public.shopping_list_items (produc
 -- inquilinos dentro de la misma base de datos.
 --
 -- Diseño de Políticas:
--- - SELECT: Acceso permitido si el registro pertenece al usuario activo (auth.uid())
---           O si el registro es una plantilla global compartida (user_id IS NULL).
+-- - SELECT: Acceso permitido únicamente si el registro pertenece al usuario activo (auth.uid()).
 -- - INSERT/UPDATE/DELETE: Permitido únicamente si pertenece al propietario (user_id = auth.uid()).
 
 ALTER TABLE public.stores ENABLE ROW LEVEL SECURITY;
@@ -165,7 +164,7 @@ ALTER TABLE public.settings ENABLE ROW LEVEL SECURITY;
 
 -- Políticas para: stores
 CREATE POLICY "Select Stores" ON public.stores
-    FOR SELECT USING (user_id IS NULL OR user_id = auth.uid());
+    FOR SELECT USING (user_id = auth.uid());
 
 CREATE POLICY "Insert Stores" ON public.stores
     FOR INSERT WITH CHECK (user_id = auth.uid());
@@ -178,7 +177,7 @@ CREATE POLICY "Delete Stores" ON public.stores
 
 -- Políticas para: products
 CREATE POLICY "Select Products" ON public.products
-    FOR SELECT USING (user_id IS NULL OR user_id = auth.uid());
+    FOR SELECT USING (user_id = auth.uid());
 
 CREATE POLICY "Insert Products" ON public.products
     FOR INSERT WITH CHECK (user_id = auth.uid());
@@ -191,7 +190,7 @@ CREATE POLICY "Delete Products" ON public.products
 
 -- Políticas para: product_prices
 CREATE POLICY "Select Product Prices" ON public.product_prices
-    FOR SELECT USING (user_id IS NULL OR user_id = auth.uid());
+    FOR SELECT USING (user_id = auth.uid());
 
 CREATE POLICY "Insert Product Prices" ON public.product_prices
     FOR INSERT WITH CHECK (user_id = auth.uid());
@@ -204,7 +203,7 @@ CREATE POLICY "Delete Product Prices" ON public.product_prices
 
 -- Políticas para: shopping_lists
 CREATE POLICY "Select Shopping Lists" ON public.shopping_lists
-    FOR SELECT USING (user_id IS NULL OR user_id = auth.uid());
+    FOR SELECT USING (user_id = auth.uid());
 
 CREATE POLICY "Insert Shopping Lists" ON public.shopping_lists
     FOR INSERT WITH CHECK (user_id = auth.uid());
@@ -217,7 +216,7 @@ CREATE POLICY "Delete Shopping Lists" ON public.shopping_lists
 
 -- Políticas para: shopping_list_items
 CREATE POLICY "Select Shopping List Items" ON public.shopping_list_items
-    FOR SELECT USING (user_id IS NULL OR user_id = auth.uid());
+    FOR SELECT USING (user_id = auth.uid());
 
 CREATE POLICY "Insert Shopping List Items" ON public.shopping_list_items
     FOR INSERT WITH CHECK (user_id = auth.uid());
@@ -319,23 +318,15 @@ INSERT INTO public.shopping_list_items (shopping_list_id, product_id, store_id, 
 ('a0000000-0000-0000-0000-000000000003', 'f0000000-0000-0000-0000-000000000010', 'd0c7da28-89c5-41ee-9669-7988365dc67e', 1.000, false, false, NULL);
 
 
--- =============================================================================
--- UTILIDAD / NOTA PARA EL DESARROLLADOR: PROPIEDAD TOTAL DE LOS DATOS DEMO
--- =============================================================================
--- Al insertarse con 'user_id = NULL', estos registros actúan como plantillas globales.
--- Esto significa que cualquier usuario autenticado en la app móvil podrá LEER las tiendas,
--- productos y listas provistas, pero de acuerdo a las políticas de RLS anteriores, NO
--- podrá editarlas, marcarlas como listas hechas, borrarlas ni agregarles productos a nivel global.
+-- Diseño de Políticas:
+-- - SELECT: Acceso permitido únicamente si el registro pertenece al usuario activo (auth.uid()).
+-- - INSERT/UPDATE/DELETE: Permitido únicamente si pertenece al propietario (user_id = auth.uid()).
 --
--- Si deseas hacer que todos estos registros sean de tu propiedad exclusiva (para modificarlos,
--- borrarlos, o interactuar completamente con ellos en el simulador o dispositivo móvil):
--- 1. Inicia sesión en tu aplicación con tu usuario final.
--- 2. Obtén el UUID de tu usuario (desde la consola de Supabase Auth o el token JWT).
--- 3. Reemplaza 'TU-UUID-AQUÍ' por dicho identificador y ejecuta el siguiente bloque SQL:
+-- NOTA: Los seed data insertados con user_id = NULL no serán visibles para ningún usuario
+-- hasta que se les asigne un user_id válido. Para reclamar los datos demo, ejecuta:
 --
 -- UPDATE public.stores SET user_id = 'TU-UUID-AQUÍ'::uuid WHERE user_id IS NULL;
 -- UPDATE public.products SET user_id = 'TU-UUID-AQUÍ'::uuid WHERE user_id IS NULL;
 -- UPDATE public.product_prices SET user_id = 'TU-UUID-AQUÍ'::uuid WHERE user_id IS NULL;
 -- UPDATE public.shopping_lists SET user_id = 'TU-UUID-AQUÍ'::uuid WHERE user_id IS NULL;
 -- UPDATE public.shopping_list_items SET user_id = 'TU-UUID-AQUÍ'::uuid WHERE user_id IS NULL;
--- =============================================================================
