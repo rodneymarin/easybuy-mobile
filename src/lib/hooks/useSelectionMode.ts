@@ -43,9 +43,7 @@ export function useSelectionMode() {
 
   return {
     isSelectionMode,
-    setIsSelectionMode,
     selectedIds,
-    setSelectedIds,
     resetSelection,
     startSelection,
     toggleSelection,

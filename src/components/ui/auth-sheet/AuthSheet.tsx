@@ -3,10 +3,10 @@ import { ActivityIndicator, KeyboardAvoidingView, Platform, StyleSheet, Text, Vi
 import { useTheme } from '@lib/theme';
 import { useI18n } from '@lib/i18n';
 import { useAuth } from '@lib/auth';
-import { useToast } from '../toast';
-import BottomSheet from '../bottom-sheet/BottomSheet';
-import Input from '../input/Input';
-import Button from '../button/Button';
+import { useToast } from '@components/ui/toast';
+import BottomSheet from '@components/ui/bottom-sheet/BottomSheet';
+import Input from '@components/ui/input/Input';
+import Button from '@components/ui/button/Button';
 
 interface AuthSheetProps {
   isOpen: boolean;

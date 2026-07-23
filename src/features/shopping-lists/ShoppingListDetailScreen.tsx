@@ -1,826 +1,235 @@
-import { useCallback, useMemo, useState } from 'react';
 import { ActivityIndicator, Pressable, StyleSheet, Text, View } from 'react-native';
-import * as Clipboard from 'expo-clipboard';
-import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
-import { useRoute, useNavigation, useFocusEffect } from '@react-navigation/native';
+import { Ionicons } from '@expo/vector-icons';
+import { useRoute, useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import { ActionBar, BottomSheet, Button, DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, ScreenTitle, ScrollableList, Tag, useToast } from '@components/ui';
-import { ListTitleFormSheet, SelectionActions, ShoppingListCheckCircle, ShoppingListItemCard, ShoppingListItemTitle, ShoppingListTotals, StoreFilterBar } from '@features/shopping-lists/components';
-import { getShoppingListById, getAllShoppingLists, toggleItemDone, removeItemsFromList, moveItemsToList, updateShoppingListTitle, pinItems } from '@lib/repositories/shopping-lists';
-import { getAllProducts } from '@lib/repositories/products';
-import { getAllStores } from '@lib/repositories/stores';
-import { tUnit, useI18n } from '@lib/i18n';
+import { ActionBar, DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, ScreenTitle, ScrollableList, useToast } from '@components/ui';
+import { DeleteSelectedSheet, ListTitleFormSheet, MoveItemsSheet, RemoveCompletedSheet, SelectionActions, ShoppingListDetailItemRow, type ItemDisplayData, ShoppingListTotals, StoreFilterBar } from '@features/shopping-lists/components';
+import { useItemSelection, useListDetailData, useStoreFilter } from '@features/shopping-lists/hooks';
+import { useI18n } from '@lib/i18n';
 import { useTheme } from '@lib/theme';
-import { useDataSource } from '@lib/data-source';
-import type { ShoppingList } from '@models/shopping-list.model';
 import type { Product } from '@models/product.model';
 import type { Store } from '@models/store.model';
 
-interface ItemDisplayData {
-	rowId: number;
-	productName: string;
-	quantity: number;
-	unitLabel: string;
-	storeId?: string;
-	storeDescription?: string;
-	storeColor?: number;
-	price: number;
-	isDone: boolean;
-	isPinned: boolean;
-}
-
 type ListsNavigationParamList = {
-	ShoppingListItemForm: { item?: { rowId: number; productId: string; quantity: number; storeId?: string; }; shoppingListId: string; products: Product[]; stores: Store[]; };
+  ShoppingListItemForm: { item?: { rowId: number; productId: string; quantity: number; storeId?: string }; shoppingListId: string; products: Product[]; stores: Store[] };
 };
 
 type DetailNavigationProp = NativeStackNavigationProp<ListsNavigationParamList>;
 
 export default function ShoppingListDetailScreen() {
-	const route = useRoute<{ key: string; name: string; params: { shoppingListId: string; }; }>();
-	const navigation = useNavigation<DetailNavigationProp>();
-	const { shoppingListId } = route.params;
-	const { colors, isDark } = useTheme();
-	const noStoreColor = isDark ? colors.placeholderText : colors.textSecondary;
-	const { t } = useI18n();
-	const [isLoading, setIsLoading] = useState(true);
-	const [shoppingList, setShoppingList] = useState<ShoppingList | null>(null);
-	const [products, setProducts] = useState<Product[]>([]);
-	const [stores, setStores] = useState<Store[]>([]);
-	const [activeStoreId, setActiveStoreId] = useState<string | null>(null);
-	const [isSelectionMode, setIsSelectionMode] = useState(false);
-	const [selectedItemRowIds, setSelectedItemRowIds] = useState<Set<number>>(new Set());
-	const [isDeleteSelectedSheetOpen, setIsDeleteSelectedSheetOpen] = useState(false);
-	const [isMoveSheetOpen, setIsMoveSheetOpen] = useState(false);
-	const [availableLists, setAvailableLists] = useState<{ id: string; title: string; }[]>([]);
-	const [isRemoveCompletedSheetOpen, setIsRemoveCompletedSheetOpen] = useState(false);
-  const [isTitleSheetOpen, setIsTitleSheetOpen] = useState(false);
-  const [isSavingTitle, setIsSavingTitle] = useState(false);
-  const [isDeletingSelected, setIsDeletingSelected] = useState(false);
-  const [isMovingSelected, setIsMovingSelected] = useState(false);
-  const [isRemovingCompleted, setIsRemovingCompleted] = useState(false);
-  const [isPinning, setIsPinning] = useState(false);
-  const { refreshVersion } = useDataSource();
+  const route = useRoute<{ key: string; name: string; params: { shoppingListId: string } }>();
+  const navigation = useNavigation<DetailNavigationProp>();
+  const { shoppingListId } = route.params;
+  const { colors } = useTheme();
+  const { t } = useI18n();
   const toast = useToast();
 
-	const loadData = useCallback(async () => {
-		try {
-			const [list, allProducts, allStores] = await Promise.all([
-				getShoppingListById(shoppingListId),
-				getAllProducts(),
-				getAllStores(),
-			]);
-			setShoppingList(list);
-			setProducts(allProducts);
-			setStores(allStores);
-		} catch (error) {
-			console.error("Failed to load shopping list detail:", error);
-		} finally {
-			setIsLoading(false);
-		}
-	}, [shoppingListId, refreshVersion]);
+  const {
+    isLoading,
+    shoppingList,
+    setShoppingList,
+    products,
+    stores,
+    items,
+    globalTotal,
+    cartTotal,
+    isRemoveCompletedSheetOpen,
+    setIsRemoveCompletedSheetOpen,
+    isTitleSheetOpen,
+    isSavingTitle,
+    isRemovingCompleted,
+    setIsTitleSheetOpen,
+    handleToggleDone,
+    handleTitlePress,
+    handleSaveTitle,
+    handleUncheckAll,
+    handleCopyList,
+    handleConfirmRemoveCompleted,
+  } = useListDetailData({ shoppingListId, toastShow: (message) => toast.show({ message, type: 'success' }), toastMessage: t });
 
-	useFocusEffect(
-		useCallback(() => {
-			loadData();
-		}, [loadData])
-	);
+  const {
+    activeStoreId,
+    setActiveStoreId,
+    shouldShowFilters,
+    visibleStores,
+    hiddenStores,
+    filteredItems,
+    pendingItems,
+    doneItems,
+    handleFilterBarLayout,
+    handleSelectStore,
+  } = useStoreFilter({ items, stores, t });
 
-	const storeMap = useMemo(() => {
-		const map = new Map<string, string>();
-		for (const store of stores) {
-			map.set(store.id, store.description);
-		}
-		return map;
-	}, [stores]);
+  const {
+    isSelectionMode,
+    selectedItemRowIds,
+    isDeleteSelectedSheetOpen,
+    isMoveSheetOpen,
+    availableLists,
+    isDeletingSelected,
+    isMovingSelected,
+    isPinning,
+    allSelectedPinned,
+    resetSelection,
+    toggleItemSelection,
+    handleItemLongPress,
+    handleMoveSelectedPress,
+    handleConfirmMoveItems,
+    handleDeleteSelectedPress,
+    handleConfirmDeleteSelected,
+    handlePinSelectedPress,
+    closeDeleteSheet: closeDeleteSelectedSheet,
+    closeMoveSheet: closeMoveSelectedSheet,
+  } = useItemSelection({
+    shoppingListId,
+    items,
+    setShoppingList: (updater) => setShoppingList(updater),
+    setActiveStoreId,
+    activeStoreId,
+    toastShow: (message) => toast.show({ message, type: 'success' }),
+    toastMessage: t,
+  });
 
-	const productMap = useMemo(() => {
-		const map = new Map<string, Product>();
-		for (const product of products) {
-			map.set(product.id, product);
-		}
-		return map;
-	}, [products]);
+  function handleEditPress(item: ItemDisplayData) {
+    if (!shoppingList) return;
+    const listItem = shoppingList.items.find((i) => i.rowId === item.rowId);
+    if (!listItem) return;
+    navigation.navigate('ShoppingListItemForm', { item: { rowId: listItem.rowId, productId: listItem.productId, quantity: listItem.quantity, storeId: listItem.storeId }, shoppingListId, products, stores });
+  }
 
-	const storeColorMap = useMemo(() => {
-		const map = new Map<string, number>();
-		for (const store of stores) {
-			map.set(store.id, store.color);
-		}
-		return map;
-	}, [stores]);
-
-	const items: ItemDisplayData[] = useMemo(() => {
-		if (!shoppingList) return [];
-		return shoppingList.items.map((item) => {
-			const product = productMap.get(item.productId);
-			const storeDesc = item.storeId ? storeMap.get(item.storeId) : undefined;
-			const price = product?.prices?.find((p) => p.storeId === item.storeId)?.value ?? 0;
-			const unitLabel = !product ? '' : tUnit(t, product.unitOfMeasurement, item.quantity);
-			return {
-				rowId: item.rowId,
-				productName: product?.productName ?? t('common.unknown'),
-				quantity: item.quantity,
-				unitLabel,
-				storeId: item.storeId,
-				storeDescription: storeDesc,
-				storeColor: item.storeId ? storeColorMap.get(item.storeId) : undefined,
-				price,
-				isDone: item.done ?? false,
-				isPinned: item.pinned ?? false,
-			};
-		});
-	}, [shoppingList, productMap, storeMap, storeColorMap, t]);
-
-	const hasStorelessItems = useMemo(() => items.some((item) => !item.storeId), [items]);
-	const hasStoredItems = useMemo(() => items.some((item) => item.storeId), [items]);
-
-	const uniqueStores = useMemo(() => {
-		const storeIds = new Set<string>();
-		for (const item of items) {
-			if (item.storeId) storeIds.add(item.storeId);
-		}
-		return stores.filter((s) => storeIds.has(s.id));
-	}, [items, stores]);
-
-	const shouldShowFilters = uniqueStores.length > 1 || (hasStorelessItems && hasStoredItems);
-
-	const allSelectedPinned = useMemo(() => {
-		if (selectedItemRowIds.size === 0) return false;
-		return Array.from(selectedItemRowIds).every((id) => items.find((item) => item.rowId === id)?.isPinned);
-	}, [selectedItemRowIds, items]);
-
-	const [filterBarWidth, setFilterBarWidth] = useState(0);
-
-	const EST_CHAR_WIDTH = 8.5;
-	const MORE_TOGGLE_WIDTH = 40;
-
-	const sortedStores = useMemo(() => {
-		return [...uniqueStores].sort((a, b) => a.description.localeCompare(b.description));
-	}, [uniqueStores]);
-
-	const { visibleStores, hiddenStores } = useMemo(() => {
-		if (!filterBarWidth || sortedStores.length === 0) {
-			return { visibleStores: sortedStores, hiddenStores: [] as typeof sortedStores };
-		}
-		const allLabel = t('listDetail.allStores');
-		const allWidth = 28 + allLabel.length * EST_CHAR_WIDTH;
-		let remaining = filterBarWidth - 16 - allWidth - 6;
-		const visible: typeof sortedStores = [];
-		const hidden: typeof sortedStores = [];
-
-		for (const store of sortedStores) {
-			const w = 28 + store.description.length * EST_CHAR_WIDTH;
-			if (w + MORE_TOGGLE_WIDTH + 6 <= remaining) {
-				visible.push(store);
-				remaining -= w + 6;
-			} else {
-				hidden.push(store);
-			}
-		}
-
-		if (activeStoreId && hidden.some((s) => s.id === activeStoreId)) {
-			const promoted = hidden.find((s) => s.id === activeStoreId)!;
-			const newHidden = hidden.filter((s) => s.id !== activeStoreId);
-			const promotedWidth = 28 + promoted.description.length * EST_CHAR_WIDTH;
-
-			let visRemaining = filterBarWidth - 16 - allWidth - 6 - promotedWidth - 6;
-			const wouldFit: typeof sortedStores = [promoted];
-			for (const s of visible) {
-				const w = 28 + s.description.length * EST_CHAR_WIDTH;
-				if (w + MORE_TOGGLE_WIDTH + 6 <= visRemaining) {
-					wouldFit.push(s);
-					visRemaining -= w + 6;
-				} else {
-					newHidden.push(s);
-				}
-			}
-			return { visibleStores: wouldFit, hiddenStores: newHidden };
-		}
-
-		return { visibleStores: visible, hiddenStores: hidden };
-	}, [sortedStores, filterBarWidth, activeStoreId, t]);
-
-	function handleFilterBarLayout(e: { nativeEvent: { layout: { width: number; }; }; }) {
-		setFilterBarWidth(e.nativeEvent.layout.width);
-	}
-
-	const filteredItems = useMemo(() => {
-		if (!activeStoreId) return items;
-		return items.filter((item) => item.storeId === activeStoreId);
-	}, [items, activeStoreId]);
-
-	const pendingItems = useMemo(() => filteredItems.filter((item) => !item.isDone).sort((a, b) => {
-		if (a.isPinned !== b.isPinned) return a.isPinned ? -1 : 1;
-		return a.productName.localeCompare(b.productName);
-	}), [filteredItems]);
-	const doneItems = useMemo(() => filteredItems.filter((item) => item.isDone).sort((a, b) => a.productName.localeCompare(b.productName)), [filteredItems]);
-
-	const globalTotal = useMemo(() => {
-		return items.reduce((sum, item) => sum + item.price * item.quantity, 0);
-	}, [items]);
-
-	const cartTotal = useMemo(() => {
-		return items.filter((item) => item.isDone).reduce((sum, item) => sum + item.price * item.quantity, 0);
-	}, [items]);
-
-	function handleSelectStore(storeId: string | null) {
-		setActiveStoreId(storeId);
-	}
-
-	async function handleToggleDone(rowId: number) {
-		setShoppingList((prev) => {
-			if (!prev) return prev;
-			return {
-				...prev,
-				items: prev.items.map((item) =>
-					item.rowId === rowId ? { ...item, done: !item.done } : item
-				),
-			};
-		});
-		try {
-			await toggleItemDone(rowId);
-		} catch (error) {
-			console.error("Failed to toggle item done:", error);
-		}
-	}
-
-	function handleTitlePress() {
-		setIsTitleSheetOpen(true);
-	}
-
-  async function handleSaveTitle(title: string) {
-    if (isSavingTitle) return;
-    setIsSavingTitle(true);
-    try {
-      await updateShoppingListTitle(shoppingListId, title);
-      setShoppingList((prev) => prev ? { ...prev, title } : prev);
-      setIsTitleSheetOpen(false);
-      toast.show({ message: t('toast.listRenamed'), type: 'success' });
-    } catch (error) {
-      console.error("Failed to save title:", error);
-    } finally {
-      setIsSavingTitle(false);
+  function handleItemPress(item: ItemDisplayData) {
+    if (isSelectionMode) {
+      toggleItemSelection(item.rowId);
+    } else {
+      handleEditPress(item);
     }
   }
 
-	function resetSelection() {
-		setIsSelectionMode(false);
-		setSelectedItemRowIds(new Set());
-		setAvailableLists([]);
-	}
-
-	function handleEditPress(item: ItemDisplayData) {
-		if (!shoppingList) return;
-		const listItem = shoppingList.items.find((i) => i.rowId === item.rowId);
-		if (!listItem) return;
-		navigation.navigate('ShoppingListItemForm', { item: { rowId: listItem.rowId, productId: listItem.productId, quantity: listItem.quantity, storeId: listItem.storeId }, shoppingListId, products, stores });
-	}
-
-	function handleItemPress(item: ItemDisplayData) {
-		if (isSelectionMode) {
-			toggleItemSelection(item.rowId);
-		} else {
-			handleEditPress(item);
-		}
-	}
-
-	function handleItemLongPress(item: ItemDisplayData) {
-		if (!isSelectionMode) {
-			setIsSelectionMode(true);
-			setSelectedItemRowIds(new Set([item.rowId]));
-			getAllShoppingLists()
-				.then((allLists) => {
-					setAvailableLists(allLists.filter((l) => l.id !== shoppingListId));
-				})
-				.catch((error) => {
-					console.error("Failed to load lists for move:", error);
-				});
-		}
-	}
-
-	function toggleItemSelection(rowId: number) {
-		setSelectedItemRowIds((prev) => {
-			const next = new Set(prev);
-			if (next.has(rowId)) {
-				next.delete(rowId);
-				if (next.size === 0) {
-					setIsSelectionMode(false);
-				}
-			} else {
-				next.add(rowId);
-			}
-			return next;
-		});
-	}
-
-	function handleMoveSelectedPress() {
-		setIsMoveSheetOpen(true);
-	}
-
-  async function handleConfirmMoveItems(targetListId: string) {
-    if (isMovingSelected) return;
-    const rowIds = Array.from(selectedItemRowIds);
-    setIsMovingSelected(true);
-    try {
-      await moveItemsToList(rowIds, targetListId);
-      setShoppingList((prev) => {
-        if (!prev) return prev;
-        return {
-          ...prev,
-          items: prev.items.filter((item) => !rowIds.includes(item.rowId)),
-        };
-      });
-      if (activeStoreId) {
-        const remainingAfterMove = items.filter((item) => !rowIds.includes(item.rowId));
-        if (!remainingAfterMove.some((item) => item.storeId === activeStoreId)) {
-          setActiveStoreId(null);
-        }
-      }
-      resetSelection();
-      setIsMoveSheetOpen(false);
-      toast.show({ message: t('toast.itemsMoved'), type: 'success' });
-    } catch (error) {
-      console.error("Failed to move items:", error);
-    } finally {
-      setIsMovingSelected(false);
-    }
+  function handleRemoveCompletedPress() {
+    setIsRemoveCompletedSheetOpen(true);
   }
 
-	function handleDeleteSelectedPress() {
-		setIsDeleteSelectedSheetOpen(true);
-	}
-
-  async function handleConfirmDeleteSelected() {
-    if (isDeletingSelected) return;
-    const rowIds = Array.from(selectedItemRowIds);
-    setIsDeletingSelected(true);
-    try {
-      await removeItemsFromList(rowIds);
-      setShoppingList((prev) => {
-        if (!prev) return prev;
-        return {
-          ...prev,
-          items: prev.items.filter((item) => !rowIds.includes(item.rowId)),
-        };
-      });
-      if (activeStoreId) {
-        const remainingAfterDelete = items.filter((item) => !rowIds.includes(item.rowId));
-        if (!remainingAfterDelete.some((item) => item.storeId === activeStoreId)) {
-          setActiveStoreId(null);
-        }
-      }
-      resetSelection();
-      setIsDeleteSelectedSheetOpen(false);
-      toast.show({ message: t('toast.itemsDeleted'), type: 'success' });
-    } catch (error) {
-      console.error("Failed to delete items:", error);
-    } finally {
-      setIsDeletingSelected(false);
-    }
+  function handleAddPress() {
+    navigation.navigate('ShoppingListItemForm', { item: undefined, shoppingListId, products, stores });
   }
 
-  async function handlePinSelectedPress() {
-    if (isPinning) return;
-    const rowIds = Array.from(selectedItemRowIds);
-    const allPinned = rowIds.every((id) => items.find((item) => item.rowId === id)?.isPinned);
-    const newPinned = !allPinned;
-    setIsPinning(true);
-    try {
-      await pinItems(rowIds, newPinned);
-      setShoppingList((prev) => {
-        if (!prev) return prev;
-        return {
-          ...prev,
-          items: prev.items.map((item) =>
-            rowIds.includes(item.rowId) ? { ...item, pinned: newPinned } : item
-          ),
-        };
-      });
-      resetSelection();
-    } catch (error) {
-      console.error("Failed to pin items:", error);
-    } finally {
-      setIsPinning(false);
-    }
+  if (isLoading) {
+    return (
+      <View style={[styles.container, { backgroundColor: colors.background }]}>
+        <View style={styles.headerWrapper}>
+          <ScreenTitle>{t('common.loading')}</ScreenTitle>
+          <Pressable onPress={navigation.goBack} style={styles.backButton} hitSlop={8}>
+            <Ionicons name="arrow-back" size={24} color={colors.text} />
+          </Pressable>
+        </View>
+        <ActivityIndicator size="large" color={colors.text} style={styles.loader} />
+      </View>
+    );
   }
 
-	function handleRemoveCompletedPress() {
-		setIsRemoveCompletedSheetOpen(true);
-	}
-
-	async function handleUncheckAll() {
-		const doneItemsList = shoppingList?.items.filter((item) => item.done) ?? [];
-		setShoppingList((prev) => {
-			if (!prev) return prev;
-			return {
-				...prev,
-				items: prev.items.map((item) => ({ ...item, done: false })),
-			};
-		});
-		for (const item of doneItemsList) {
-			await toggleItemDone(item.rowId);
-		}
-		toast.show({ message: t('toast.listUnchecked'), type: 'success' });
-	}
-
-  async function handleConfirmRemoveCompleted() {
-    if (isRemovingCompleted) return;
-    const doneRowIds = doneItems.map((item) => item.rowId);
-    setIsRemovingCompleted(true);
-    try {
-      await removeItemsFromList(doneRowIds);
-      setShoppingList((prev) => {
-        if (!prev) return prev;
-        return {
-          ...prev,
-          items: prev.items.filter((item) => !item.done),
-        };
-      });
-      if (activeStoreId) {
-        const remainingAfterRemove = items.filter((item) => !item.isDone && !doneRowIds.includes(item.rowId));
-        if (!remainingAfterRemove.some((item) => item.storeId === activeStoreId)) {
-          setActiveStoreId(null);
-        }
-      }
-      setIsRemoveCompletedSheetOpen(false);
-      toast.show({ message: t('toast.completedDeleted'), type: 'success' });
-    } catch (error) {
-      console.error("Failed to remove completed items:", error);
-    } finally {
-      setIsRemovingCompleted(false);
-    }
+  if (!shoppingList) {
+    return (
+      <View style={[styles.container, { backgroundColor: colors.background }]}>
+        <View style={styles.headerWrapper}>
+          <ScreenTitle>{t('common.error')}</ScreenTitle>
+          <Pressable onPress={navigation.goBack} style={styles.backButton} hitSlop={8}>
+            <Ionicons name="arrow-back" size={24} color={colors.text} />
+          </Pressable>
+        </View>
+        <Text style={[styles.errorText, { color: colors.textSecondary }]}>{t('listDetail.notFound')}</Text>
+      </View>
+    );
   }
 
-	function handleAddPress() {
-		navigation.navigate('ShoppingListItemForm', { item: undefined, shoppingListId, products, stores });
-	}
+  return (
+    <View style={[styles.container, { backgroundColor: colors.background }]}>
+      <View style={styles.headerWrapper}>
+        <Pressable onPress={handleTitlePress}>
+          <ScreenTitle>{shoppingList.title}</ScreenTitle>
+        </Pressable>
+        <Pressable onPress={navigation.goBack} style={styles.backButton} hitSlop={8}>
+          <Ionicons name="arrow-back" size={24} color={colors.text} />
+        </Pressable>
+      </View>
 
-	async function handleCopyList() {
-		if (!shoppingList) return;
-		const lines: string[] = filteredItems.map((item) => `${item.productName} ... ${item.quantity} ${item.unitLabel}`);
-		const text = lines.join('\n');
-		await Clipboard.setStringAsync(text);
-		toast.show({ message: t('toast.listCopied'), type: 'success' });
-	}
-
-	if (isLoading) {
-		return (
-			<View style={[styles.container, { backgroundColor: colors.background }]}>
-				<View style={styles.headerWrapper}>
-					<ScreenTitle>{t('common.loading')}</ScreenTitle>
-					<Pressable onPress={navigation.goBack} style={styles.backButton} hitSlop={8}>
-						<Ionicons name="arrow-back" size={24} color={colors.text} />
-					</Pressable>
-				</View>
-				<ActivityIndicator size="large" color={colors.text} style={styles.loader} />
-			</View>
-		);
-	}
-
-	if (!shoppingList) {
-		return (
-			<View style={[styles.container, { backgroundColor: colors.background }]}>
-				<View style={styles.headerWrapper}>
-					<ScreenTitle>{t('common.error')}</ScreenTitle>
-					<Pressable onPress={navigation.goBack} style={styles.backButton} hitSlop={8}>
-						<Ionicons name="arrow-back" size={24} color={colors.text} />
-					</Pressable>
-				</View>
-				<Text style={[styles.errorText, { color: colors.textSecondary }]}>{t('listDetail.notFound')}</Text>
-			</View>
-		);
-	}
-
-	return (
-		<View style={[styles.container, { backgroundColor: colors.background }]}>
-			<View style={styles.headerWrapper}>
-				<Pressable onPress={handleTitlePress}>
-					<ScreenTitle>{shoppingList.title}</ScreenTitle>
-				</Pressable>
-				<Pressable onPress={navigation.goBack} style={styles.backButton} hitSlop={8}>
-					<Ionicons name="arrow-back" size={24} color={colors.text} />
-				</Pressable>
-			</View>
-
-			<ActionBar>
-				{isSelectionMode ? (
+      <ActionBar>
+        {isSelectionMode ? (
           <SelectionActions selectedCount={selectedItemRowIds.size} onClose={resetSelection} onMove={handleMoveSelectedPress} onPin={handlePinSelectedPress} onDelete={handleDeleteSelectedPress} isAllPinned={allSelectedPinned} hasAvailableLists={availableLists.length > 0} isLoading={isPinning} />
-				) : (
-					<>
-						<View style={styles.totalsRow}>
-							<View style={styles.totalsFlex}>
-								<ShoppingListTotals globalTotal={globalTotal} cartTotal={cartTotal} onAddPress={handleAddPress} />
-							</View>
-							<DropdownMenu>
-								<DropdownMenuTrigger disabled={items.length === 0} hitSlop={8} style={styles.menuButton}>
-									<Ionicons name="ellipsis-vertical" size={20} color={items.length === 0 ? colors.textSecondary : colors.text} />
-								</DropdownMenuTrigger>
-								<DropdownMenuContent cardStyle={{ minWidth: 200 }}>
-									<DropdownMenuItem label={t('listDetail.copyList')} onSelect={handleCopyList} />
-									<DropdownMenuItem label={t('listDetail.menuUncheckAll')} onSelect={handleUncheckAll} disabled={doneItems.length === 0} />
-									<DropdownMenuItem label={t('listDetail.removeCompleted')} onSelect={handleRemoveCompletedPress} disabled={doneItems.length === 0} />
-								</DropdownMenuContent>
-							</DropdownMenu>
-						</View>
-						{shouldShowFilters && <View style={styles.filterRow}><StoreFilterBar visibleStores={visibleStores} hiddenStores={hiddenStores} activeStoreId={activeStoreId} onSelectStore={handleSelectStore} onLayout={handleFilterBarLayout} /></View>}
-					</>
-				)}
-			</ActionBar>
+        ) : (
+          <>
+            <View style={styles.totalsRow}>
+              <View style={styles.totalsFlex}>
+                <ShoppingListTotals globalTotal={globalTotal} cartTotal={cartTotal} onAddPress={handleAddPress} />
+              </View>
+              <DropdownMenu>
+                <DropdownMenuTrigger disabled={items.length === 0} hitSlop={8} style={styles.menuButton}>
+                  <Ionicons name="ellipsis-vertical" size={20} color={items.length === 0 ? colors.textSecondary : colors.text} />
+                </DropdownMenuTrigger>
+                <DropdownMenuContent cardStyle={{ minWidth: 200 }}>
+                  <DropdownMenuItem label={t('listDetail.copyList')} onSelect={() => handleCopyList(filteredItems)} />
+                  <DropdownMenuItem label={t('listDetail.menuUncheckAll')} onSelect={handleUncheckAll} disabled={doneItems.length === 0} />
+                  <DropdownMenuItem label={t('listDetail.removeCompleted')} onSelect={handleRemoveCompletedPress} disabled={doneItems.length === 0} />
+                </DropdownMenuContent>
+              </DropdownMenu>
+            </View>
+            {shouldShowFilters && <View style={styles.filterRow}><StoreFilterBar visibleStores={visibleStores} hiddenStores={hiddenStores} activeStoreId={activeStoreId} onSelectStore={handleSelectStore} onLayout={handleFilterBarLayout} /></View>}
+          </>
+        )}
+      </ActionBar>
 
-			<ScrollableList data={pendingItems} keyExtractor={(item) => String(item.rowId)}
-				renderItem={({ item }) => (
-					<ShoppingListItemCard onPress={() => handleItemPress(item)} onLongPress={() => handleItemLongPress(item)}>
-						{item.isPinned && <MaterialCommunityIcons name="pin" size={14} color={colors.primary} style={styles.pinIconAbsolute} />}
-						<View style={styles.itemRow}>
-							{isSelectionMode && (
-								selectedItemRowIds.has(item.rowId) ? (
-									<View style={[styles.circleFilled, { backgroundColor: colors.primary }]}>
-										<Ionicons name="checkmark" size={14} color="#fff" />
-									</View>
-								) : (
-									<View style={[styles.circleEmpty, { borderColor: colors.textSecondary }]} />
-								)
-							)}
-							<View style={styles.itemContent}>
-								<ShoppingListItemTitle name={item.productName} isDone={false} />
-								<View style={styles.itemTags}>
-									{item.storeDescription ? (
-										<Tag size="sm" label={item.storeDescription} colorIndex={item.storeColor} />
-									) : (
-										<Text style={[styles.noStoreTag, { color: noStoreColor, borderColor: colors.border }]}>{t('listDetail.noStore')}</Text>
-									)}
-									<View style={styles.itemTagsRight}>
-										{item.price * item.quantity > 0 ? (
-											<Tag size="sm" label={`$${(item.price * item.quantity).toFixed(2)}`} />
-										) : null}
-										<Tag size="sm" label={`${item.quantity} ${item.unitLabel}`} />
-									</View>
-								</View>
-							</View>
-							{!isSelectionMode && <ShoppingListCheckCircle isDone={false} onToggle={() => handleToggleDone(item.rowId)} />}
-						</View>
-					</ShoppingListItemCard>
-				)}
-				ListEmptyComponent={
-					items.length === 0 ? (
-						<Text style={[styles.emptyText, { color: colors.textSecondary }]}>{t('listDetail.empty')}</Text>
-					) : filteredItems.length === 0 ? (
-						<Text style={[styles.emptyText, { color: colors.textSecondary }]}>{t('listDetail.noFilterMatch')}</Text>
-					) : null
-				}
-			>
-				<View>
-					{doneItems.length > 0 && (
-						<View style={styles.doneSection}>
-							<Text style={[styles.doneSectionTitle, { color: colors.textSecondary }]}>{t('listDetail.doneSection')}</Text>
-							<View style={[styles.doneDivider, { backgroundColor: colors.border }]} />
-							{doneItems.map((item) => (
-								<ShoppingListItemCard key={item.rowId} onPress={() => handleItemPress(item)} onLongPress={() => handleItemLongPress(item)}>
-									<View style={styles.itemRow}>
-										{isSelectionMode && (
-											selectedItemRowIds.has(item.rowId) ? (
-												<View style={[styles.circleFilled, { backgroundColor: colors.primary }]}>
-													<Ionicons name="checkmark" size={14} color="#fff" />
-												</View>
-											) : (
-												<View style={[styles.circleEmpty, { borderColor: colors.textSecondary }]} />
-											)
-										)}
-										<View style={styles.itemContent}>
-											<ShoppingListItemTitle name={item.productName} isDone={true} />
-											<View style={styles.itemTags}>
-												{item.storeDescription ? (
-													<Tag size="sm" label={item.storeDescription} colorIndex={item.storeColor} />
-												) : (
-													<Text style={[styles.noStoreTag, { color: noStoreColor, borderColor: colors.border }]}>{t('listDetail.noStore')}</Text>
-												)}
-												<View style={styles.itemTagsRight}>
-													{item.price * item.quantity > 0 ? (
-														<Tag size="sm" label={`$${(item.price * item.quantity).toFixed(2)}`} />
-													) : null}
-													<Tag size="sm" label={`${item.quantity} ${item.unitLabel}`} />
-												</View>
-											</View>
-										</View>
-										{!isSelectionMode && <ShoppingListCheckCircle isDone={true} onToggle={() => handleToggleDone(item.rowId)} />}
-									</View>
-								</ShoppingListItemCard>
-							))}
-						</View>
-					)}
-					{filteredItems.length > 0 && (
-						<Text style={[styles.countLabel, { color: colors.textSecondary }]}>{t('list.items', { completed: doneItems.length, count: filteredItems.length })}</Text>
-					)}
-				</View>
-			</ScrollableList>
+      <ScrollableList data={pendingItems} keyExtractor={(item) => String(item.rowId)}
+        renderItem={({ item }) => (
+          <ShoppingListDetailItemRow item={item} isSelectionMode={isSelectionMode} isSelected={selectedItemRowIds.has(item.rowId)} onPress={() => handleItemPress(item)} onLongPress={() => handleItemLongPress(item)} onToggleDone={() => handleToggleDone(item.rowId)} />
+        )}
+        ListEmptyComponent={
+          items.length === 0 ? (
+            <Text style={[styles.emptyText, { color: colors.textSecondary }]}>{t('listDetail.empty')}</Text>
+          ) : filteredItems.length === 0 ? (
+            <Text style={[styles.emptyText, { color: colors.textSecondary }]}>{t('listDetail.noFilterMatch')}</Text>
+          ) : null
+        }
+      >
+        <View>
+          {doneItems.length > 0 && (
+            <View style={styles.doneSection}>
+              <Text style={[styles.doneSectionTitle, { color: colors.textSecondary }]}>{t('listDetail.doneSection')}</Text>
+              <View style={[styles.doneDivider, { backgroundColor: colors.border }]} />
+              {doneItems.map((item) => (
+                <ShoppingListDetailItemRow key={item.rowId} item={item} isSelectionMode={isSelectionMode} isSelected={selectedItemRowIds.has(item.rowId)} onPress={() => handleItemPress(item)} onLongPress={() => handleItemLongPress(item)} onToggleDone={() => handleToggleDone(item.rowId)} />
+              ))}
+            </View>
+          )}
+          {filteredItems.length > 0 && (
+            <Text style={[styles.countLabel, { color: colors.textSecondary }]}>{t('list.items', { completed: doneItems.length, count: filteredItems.length })}</Text>
+          )}
+        </View>
+      </ScrollableList>
 
       <ListTitleFormSheet isOpen={isTitleSheetOpen} initialTitle={shoppingList.title} onSave={handleSaveTitle} onClose={() => setIsTitleSheetOpen(false)} isLoading={isSavingTitle} />
 
-          <BottomSheet isOpen={isRemoveCompletedSheetOpen} onClose={() => setIsRemoveCompletedSheetOpen(false)}>
-            <Text style={[styles.sheetTitle, { color: colors.text }]}>{t('listDetail.removeCompleted')}</Text>
-            <Text style={[styles.sheetMessage, { color: colors.textSecondary }]}>
-              {t('listDetail.removeCompletedConfirmMessage')}
-            </Text>
-            <View style={styles.sheetActions}>
-              <Button variant="destructive" style={styles.sheetButton} onPress={handleConfirmRemoveCompleted} isLoading={isRemovingCompleted}>
-                <Text style={[styles.sheetButtonText, { color: colors.destructiveBorder }]}>{t('listDetail.removeConfirm')}</Text>
-              </Button>
-              <Button variant="secondary" style={styles.sheetButton} onPress={() => setIsRemoveCompletedSheetOpen(false)} disabled={isRemovingCompleted}>
-                <Text style={[styles.sheetButtonText, { color: colors.text }]}>{t('products.addModal.cancel')}</Text>
-              </Button>
-            </View>
-          </BottomSheet>
+      <RemoveCompletedSheet isOpen={isRemoveCompletedSheetOpen} onClose={() => setIsRemoveCompletedSheetOpen(false)} isLoading={isRemovingCompleted} onConfirm={() => handleConfirmRemoveCompleted(doneItems, items, activeStoreId, setActiveStoreId)} />
 
-          <BottomSheet isOpen={isMoveSheetOpen} onClose={() => setIsMoveSheetOpen(false)}>
-            <Text style={[styles.sheetTitle, { color: colors.text }]}>{t('listDetail.moveSelectedTitle')}</Text>
-            {availableLists.length === 0 ? (
-              <Text style={[styles.sheetMessage, { color: colors.textSecondary }]}>{t('listDetail.moveNoLists')}</Text>
-            ) : (
-              <View style={styles.moveListContainer}>
-                {isMovingSelected ? (
-                  <ActivityIndicator size="large" color={colors.text} style={styles.moveLoader} />
-                ) : (
-                  availableLists.map((list) => (
-                    <Pressable key={list.id} style={[styles.moveListItem, { borderColor: colors.border }]} onPress={() => handleConfirmMoveItems(list.id)}>
-                      <Text style={[styles.moveListItemText, { color: colors.text }]}>{list.title}</Text>
-                      <Ionicons name="chevron-forward" size={18} color={colors.textSecondary} />
-                    </Pressable>
-                  ))
-                )}
-              </View>
-            )}
-          </BottomSheet>
+      <MoveItemsSheet isOpen={isMoveSheetOpen} onClose={closeMoveSelectedSheet} availableLists={availableLists} isMoving={isMovingSelected} onMoveToList={handleConfirmMoveItems} />
 
-          <BottomSheet isOpen={isDeleteSelectedSheetOpen} onClose={() => setIsDeleteSelectedSheetOpen(false)}>
-            <Text style={[styles.sheetTitle, { color: colors.text }]}>{t('listDetail.confirmDeleteSelected')}</Text>
-            <Text style={[styles.sheetMessage, { color: colors.textSecondary }]}>
-              {t('listDetail.confirmDeleteSelectedMessage', { count: selectedItemRowIds.size })}
-            </Text>
-            <Button variant="destructive" style={styles.sheetButton} onPress={handleConfirmDeleteSelected} isLoading={isDeletingSelected}>
-              <Text style={[styles.sheetButtonText, { color: colors.destructiveBorder }]}>{t('listDetail.removeConfirm')}</Text>
-            </Button>
-          </BottomSheet>
+      <DeleteSelectedSheet isOpen={isDeleteSelectedSheetOpen} onClose={closeDeleteSelectedSheet} onConfirm={handleConfirmDeleteSelected} selectedCount={selectedItemRowIds.size} isLoading={isDeletingSelected} />
 
-		</View>
-	);
+    </View>
+  );
 }
 
 const styles = StyleSheet.create({
-	container: {
-		flex: 1,
-		paddingTop: 60,
-	},
-	headerWrapper: {
-		position: 'relative',
-	},
-	filterRow: {
-		marginTop: 6,
-	},
-	backButton: {
-		position: 'absolute',
-		left: 16,
-		top: -6,
-		width: 36,
-		height: 36,
-		borderRadius: 18,
-		justifyContent: 'center',
-		alignItems: 'center',
-		zIndex: 1,
-	},
-	loader: {
-		marginTop: 40,
-	},
-	errorText: {
-		textAlign: 'center',
-		fontSize: 16,
-		marginTop: 40,
-	},
-	emptyText: {
-		textAlign: 'center',
-		fontSize: 16,
-		marginTop: 40,
-	},
-	doneSection: {
-		marginTop: 8,
-	},
-	doneSectionTitle: {
-		fontSize: 13,
-		fontWeight: '600',
-		marginHorizontal: 16,
-		marginBottom: 12,
-		textTransform: 'uppercase',
-		letterSpacing: 1,
-	},
-	doneDivider: {
-		height: 1,
-		marginBottom: 12,
-	},
-	itemRow: {
-		flexDirection: 'row',
-		alignItems: 'center',
-	},
-	itemContent: {
-		flex: 1,
-		marginRight: 8,
-		paddingLeft: 8,
-	},
-	circleEmpty: {
-		width: 24,
-		height: 24,
-		borderRadius: 12,
-		borderWidth: 2,
-		marginRight: 10,
-	},
-	circleFilled: {
-		width: 24,
-		height: 24,
-		borderRadius: 12,
-		justifyContent: 'center',
-		alignItems: 'center',
-		marginRight: 10,
-	},
-	pinIconAbsolute: {
-		position: 'absolute',
-		top: 2,
-		left: 18,
-		zIndex: 1,
-	},
-	itemTags: {
-		flexDirection: 'row',
-		gap: 6,
-	},
-	itemTagsRight: {
-		flexDirection: 'row',
-		gap: 6,
-		marginLeft: 'auto',
-	},
-	noStoreTag: {
-		fontSize: 11,
-		paddingHorizontal: 8,
-		paddingVertical: 3,
-		borderRadius: 999,
-		fontStyle: 'italic',
-		alignSelf: 'flex-start',
-		borderWidth: 1,
-		backgroundColor: 'transparent',
-	},
-	totalsRow: {
-		flexDirection: 'row',
-		alignItems: 'center',
-	},
-	totalsFlex: {
-		flex: 1,
-	},
-	menuButton: {
-		padding: 8,
-		marginRight: 12,
-	},
-	sheetTitle: {
-		fontSize: 17,
-		fontWeight: '700',
-		marginBottom: 8,
-		textAlign: 'center',
-	},
-	sheetMessage: {
-		fontSize: 15,
-		textAlign: 'center',
-		marginBottom: 24,
-	},
-	sheetActions: {
-		gap: 8,
-	},
-	sheetButton: {
-		borderRadius: 10,
-		paddingVertical: 12,
-		alignItems: 'center',
-		justifyContent: 'center',
-	},
-	sheetButtonText: {
-		fontSize: 15,
-		fontWeight: '600',
-	},
-	moveListContainer: {
-		gap: 4,
-	},
-  moveListItem: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    borderWidth: 1,
-    borderRadius: 10,
-    padding: 14,
-    marginBottom: 4,
-  },
-  moveLoader: {
-    paddingVertical: 20,
-  },
-	moveListItemText: {
-		fontSize: 16,
-		fontWeight: '500',
-	},
-	countLabel: {
-		fontSize: 13,
-		textAlign: 'center',
-		paddingVertical: 8,
-	},
+  container: { flex: 1, paddingTop: 60 },
+  headerWrapper: { position: 'relative' },
+  filterRow: { marginTop: 6 },
+  backButton: { position: 'absolute', left: 16, top: -6, width: 36, height: 36, borderRadius: 18, justifyContent: 'center', alignItems: 'center', zIndex: 1 },
+  loader: { marginTop: 40 },
+  errorText: { textAlign: 'center', fontSize: 16, marginTop: 40 },
+  emptyText: { textAlign: 'center', fontSize: 16, marginTop: 40 },
+  doneSection: { marginTop: 8 },
+  doneSectionTitle: { fontSize: 13, fontWeight: '600', marginHorizontal: 16, marginBottom: 12, textTransform: 'uppercase', letterSpacing: 1 },
+  doneDivider: { height: 1, marginBottom: 12 },
+  totalsRow: { flexDirection: 'row', alignItems: 'center' },
+  totalsFlex: { flex: 1 },
+  menuButton: { padding: 8, marginRight: 12 },
+  countLabel: { fontSize: 13, textAlign: 'center', paddingVertical: 8 },
 });

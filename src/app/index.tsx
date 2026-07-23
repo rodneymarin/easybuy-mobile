@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
-import { Platform, StyleSheet, View, Text } from 'react-native';
+import { Platform, StyleSheet, View, Text, Pressable } from 'react-native';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { useTheme, ThemeProvider } from '@lib/theme';
 import { DrawerProvider, useDrawer } from '@lib/drawer';
@@ -97,12 +97,45 @@ function LoadingScreen() {
   );
 }
 
+function DatabaseErrorScreen({ onRetry }: { onRetry: () => void }) {
+  const [isRetrying, setIsRetrying] = useState(false);
+
+  function handleRetry() {
+    setIsRetrying(true);
+    onRetry();
+  }
+
+  return (
+    <View style={[styles.loadingContainer, { backgroundColor: '#fff' }]}>
+      <Text style={[styles.loadingText, { color: '#E05555', marginBottom: 16 }]}>Unable to initialize the database.</Text>
+      <Pressable onPress={handleRetry} disabled={isRetrying} style={styles.retryButton}>
+        <Text style={styles.retryText}>{isRetrying ? 'Retrying...' : 'Retry'}</Text>
+      </Pressable>
+    </View>
+  );
+}
+
 export default function App() {
   const [isReady, setIsReady] = useState(false);
+  const [hasDbError, setHasDbError] = useState(false);
+
+  function initDatabase() {
+    setHasDbError(false);
+    setIsReady(false);
+    getDatabase().then(() => setIsReady(true)).catch((error) => {
+      console.error('Database initialization failed:', error);
+      setHasDbError(true);
+      setIsReady(true);
+    });
+  }
 
   useEffect(() => {
-    getDatabase().then(() => setIsReady(true)).catch(() => setIsReady(true));
+    initDatabase();
   }, []);
+
+  if (hasDbError) {
+    return <DatabaseErrorScreen onRetry={initDatabase} />;
+  }
 
   if (!isReady) {
     return <LoadingScreen />;
@@ -138,6 +171,17 @@ const styles = StyleSheet.create({
   loadingText: {
     fontSize: 16,
     color: '#666',
+  },
+  retryButton: {
+    paddingHorizontal: 20,
+    paddingVertical: 12,
+    borderRadius: 8,
+    backgroundColor: '#4A5DF9',
+  },
+  retryText: {
+    fontSize: 16,
+    color: '#fff',
+    fontWeight: '600',
   },
   webContainer: {
     flex: 1,

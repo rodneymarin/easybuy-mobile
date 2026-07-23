@@ -24,7 +24,7 @@ export default function TiendasScreen() {
   const [isLoading, setIsLoading] = useState(true);
   const [stores, setStores] = useState<StoreListData[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
-  const { isSelectionMode, setIsSelectionMode, selectedIds: selectedStoreIds, setSelectedIds: setSelectedStoreIds, resetSelection, toggleSelection, handlePress, exitSelectionMode } = useSelectionMode();
+  const { isSelectionMode, selectedIds: selectedStoreIds, resetSelection, startSelection, toggleSelection, handlePress, exitSelectionMode } = useSelectionMode();
   const [isDeleteSelectedSheetOpen, setIsDeleteSelectedSheetOpen] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
   const debouncedSearch = useDebounce(searchQuery, 300);
@@ -78,8 +78,7 @@ export default function TiendasScreen() {
 
   function handleStoreLongPress(storeId: string) {
     if (!isSelectionMode) {
-      setIsSelectionMode(true);
-      setSelectedStoreIds(new Set([storeId]));
+      startSelection(storeId);
     }
   }
 

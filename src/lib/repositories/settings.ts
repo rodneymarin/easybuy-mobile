@@ -1,15 +1,11 @@
-import { getDatabase } from '@lib/database';
+import { cloudCall } from '@lib/data-source';
+import * as local from './local/settings';
+import * as remote from './remote/settings';
 
 export async function getSetting(key: string): Promise<string | null> {
-  const db = await getDatabase();
-  const row = await db.getFirstAsync<{ value: string }>("SELECT value FROM settings WHERE key = ?", [key]);
-  return row?.value ?? null;
+  return cloudCall(() => local.getSetting(key), () => remote.getSetting(key));
 }
 
 export async function setSetting(key: string, value: string): Promise<void> {
-  const db = await getDatabase();
-  await db.runAsync(
-    "INSERT INTO settings (key, value) VALUES (?, ?) ON CONFLICT(key) DO UPDATE SET value = excluded.value",
-    [key, value]
-  );
+  return cloudCall(() => local.setSetting(key, value), () => remote.setSetting(key, value));
 }

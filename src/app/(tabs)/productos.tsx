@@ -29,7 +29,7 @@ export default function ProductosScreen() {
   const [products, setProducts] = useState<Product[]>([]);
   const [stores, setStores] = useState<StoreListData[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
-  const { isSelectionMode, setIsSelectionMode, selectedIds: selectedProductIds, setSelectedIds: setSelectedProductIds, resetSelection, toggleSelection, handlePress, exitSelectionMode } = useSelectionMode();
+  const { isSelectionMode, selectedIds: selectedProductIds, resetSelection, startSelection, toggleSelection, handlePress, exitSelectionMode } = useSelectionMode();
   const [isDeleteSelectedSheetOpen, setIsDeleteSelectedSheetOpen] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
   const debouncedSearch = useDebounce(searchQuery, 300);
@@ -79,8 +79,7 @@ export default function ProductosScreen() {
 
   function handleProductLongPress(productId: string) {
     if (!isSelectionMode) {
-      setIsSelectionMode(true);
-      setSelectedProductIds(new Set([productId]));
+      startSelection(productId);
     }
   }
 
@@ -95,8 +94,7 @@ export default function ProductosScreen() {
     try {
       await deleteProducts(ids);
       setIsDeleteSelectedSheetOpen(false);
-      setIsSelectionMode(false);
-      setSelectedProductIds(new Set());
+      resetSelection();
       toast.show({ message: t('toast.productsDeleted'), type: 'success' });
       await loadData();
     } catch (error) {

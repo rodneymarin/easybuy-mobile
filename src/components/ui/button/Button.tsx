@@ -27,8 +27,6 @@ export default function Button({ children, onPressIn, onPressOut, style, variant
     : variant === 'secondary' ? colors.border
     : colors.destructiveBorder;
 
-  const borderWidth = 0;
-
   const backgroundColor = darkAnim.interpolate({
     inputRange: [0, 1],
     outputRange: [bgColor, darkenColor(bgColor, 0.15)],
@@ -53,7 +51,7 @@ export default function Button({ children, onPressIn, onPressOut, style, variant
     : colors.text;
 
   return (
-    <AnimatedPressable onPressIn={handlePressIn} onPressOut={handlePressOut} disabled={isDisabled} {...props} style={[styles.button, size === 'icon' && styles.icon, { backgroundColor, borderColor, borderWidth, opacity: isDisabled ? 0.35 : 1 }, style]}>
+    <AnimatedPressable onPressIn={handlePressIn} onPressOut={handlePressOut} disabled={isDisabled} {...props} style={[styles.button, size === 'icon' && styles.icon, { backgroundColor, borderColor, borderWidth: 0, opacity: isDisabled ? 0.35 : 1 }, style]}>
       {isLoading ? <ActivityIndicator color={spinnerColor} size="small" /> : children}
     </AnimatedPressable>
   );

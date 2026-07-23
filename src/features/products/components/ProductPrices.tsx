@@ -88,11 +88,8 @@ export default forwardRef<ProductPricesHandle, ProductPricesProps>(function Prod
 		setNewStoreId(storeId);
 	}
 
-	const canConfirm = (() => {
-		if (!newStoreId || !newPriceText.trim()) return false;
-		const value = parseFloat(newPriceText.trim());
-		return !isNaN(value) && value >= 0;
-	})();
+	const newPriceValue = parseFloat(newPriceText.trim());
+	const canConfirm = newStoreId !== '' && newPriceText.trim() !== '' && !isNaN(newPriceValue) && newPriceValue >= 0;
 
 	useImperativeHandle(ref, () => ({
 		confirmPendingPrice() {

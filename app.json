@@ -2,7 +2,7 @@
   "expo": {
     "name": "EasyBuy",
     "slug": "easybuy-mobile",
-    "version": "0.1.0",
+    "version": "0.1.14",
     "orientation": "portrait",
     "icon": "./src/assets/icon.png",
     "userInterfaceStyle": "automatic",
@@ -10,7 +10,7 @@
     "ios": {
       "supportsTablet": true,
       "bundleIdentifier": "com.easybuy.mobile",
-      "buildNumber": "13",
+      "buildNumber": "14",
       "infoPlist": {
         "UIUserInterfaceStyle": "Automatic"
       }
@@ -21,7 +21,7 @@
         "backgroundColor": "#d9006f"
       },
       "package": "com.easybuy.mobile",
-      "versionCode": 13,
+      "versionCode": 14,
       "softwareKeyboardLayoutMode": "adjustResize"
     },
     "web": {

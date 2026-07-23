@@ -6,8 +6,8 @@ import { useI18n, type Language } from '@lib/i18n';
 import { useTheme, type ThemeMode } from '@lib/theme';
 import { useDataSource, type DataSourceType } from '@lib/data-source';
 import { useAuth } from '@lib/auth';
-import { useToast } from '../toast';
-import { ConfirmDeleteSheet } from '../confirm-delete-sheet';
+import { useToast } from '@components/ui/toast';
+import { ConfirmDeleteSheet } from '@components/ui/confirm-delete-sheet';
 
 const PANEL_WIDTH = 280;
 
@@ -206,18 +206,6 @@ function MainMenu({ onOpenAbout, onOpenAuth }: MainMenuProps) {
 						<Ionicons name="information-circle-outline" style={styles.menuItemIcon} color={colors.panelText} />
 						<Text style={[styles.menuItemText, { color: colors.panelText }]}>{t('menu.about')}</Text>
 					</Pressable>
-
-					{/* <View style={[styles.divider, { backgroundColor: colors.panelBorder }]} />
-
-          <Pressable style={styles.menuItem} onPress={closeDrawer}>
-            <Ionicons name="download-outline" style={styles.menuItemIcon} color={colors.panelText} />
-            <Text style={[styles.menuItemText, { color: colors.panelText }]}>{t('menu.exportData')}</Text>
-          </Pressable>
-
-          <Pressable style={styles.menuItem} onPress={closeDrawer}>
-            <Ionicons name="cloud-upload-outline" style={styles.menuItemIcon} color={colors.panelText} />
-            <Text style={[styles.menuItemText, { color: colors.panelText }]}>{t('menu.importData')}</Text>
-          </Pressable> */}
 				</ScrollView>
 			</Animated.View>
 

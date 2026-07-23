@@ -20,7 +20,8 @@ function About({ isOpen, onClose }: AboutProps) {
         <Image source={require('@assets/logo.png')} style={[styles.logo, { width: 100, height: 100 }]} />
         <Text style={[styles.title, { color: colors.text }]}>EasyBuy</Text>
         <Text style={[styles.subtitle, { color: colors.textSecondary }]}>{t('about.developedBy')}</Text>
-        <Text style={[styles.version, { color: colors.placeholderText }]}>{t('about.version')}{appVersion}</Text>
+        <Text style={[styles.versionLabel, { color: colors.placeholderText }]}>{t('about.version')}</Text>
+        <Text style={[styles.version, { color: colors.placeholderText }]}>beta {appVersion}</Text>
       </View>
     </BottomSheet>
   );
@@ -43,9 +44,12 @@ const styles = StyleSheet.create({
     fontSize: 16,
     marginBottom: 4,
   },
-  version: {
+  versionLabel: {
     fontSize: 14,
     marginTop: 4,
+  },
+  version: {
+    fontSize: 14,
   },
 });
 

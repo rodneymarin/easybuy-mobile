@@ -20,4 +20,5 @@ export { ActionBar } from './action-bar';
 export { ScrollableList } from './scrollable-list';
 export { CardTitle } from './card-title';
 export { AuthSheet } from './auth-sheet';
+export { default as SelectionIndicator } from './selection-indicator';
 

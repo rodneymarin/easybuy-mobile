@@ -195,7 +195,7 @@ export const translations: Record<Language, TranslationMap> = {
 		'menu.reset': 'Reset',
 		'toast.dataReset': 'Data reset to defaults',
 		'about.developedBy': 'Developed by Rodney Marín',
-		'about.version': 'V',
+		'about.version': 'Version',
 	},
 	es: {
 		'tab.lists': 'Listas',
@@ -389,6 +389,6 @@ export const translations: Record<Language, TranslationMap> = {
 		'menu.reset': 'Restablecer',
 		'toast.dataReset': 'Datos restablecidos a valores de fábrica',
 		'about.developedBy': 'Desarrollado por Rodney Marín',
-		'about.version': 'V',
+		'about.version': 'Versión',
 	},
 };
