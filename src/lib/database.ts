@@ -10,10 +10,15 @@ export async function getDatabase(): Promise<SQLiteDatabase> {
   if (initPromise) return initPromise;
 
   initPromise = (async () => {
-    db = await SQLite.openDatabaseAsync('easybuy.db');
-    await runMigrations(db);
-    await seedIfEmpty(db);
-    return db;
+    try {
+      db = await SQLite.openDatabaseAsync('easybuy.db');
+      await runMigrations(db);
+      await seedIfEmpty(db);
+      return db;
+    } catch (err) {
+      initPromise = null;
+      throw err;
+    }
   })();
 
   return initPromise;

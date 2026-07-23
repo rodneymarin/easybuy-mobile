@@ -123,39 +123,41 @@ export async function seedIfEmpty(database: SQLiteDatabase): Promise<void> {
   );
   if (row && row.count > 0) return;
 
-  for (const store of STORES) {
-    await database.runAsync("INSERT INTO stores (id, description, color) VALUES (?, ?, ?)", [
-      store.id,
-      store.description,
-      store.color,
-    ]);
-  }
-
-  for (const product of PRODUCTS) {
-    await database.runAsync(
-      "INSERT INTO products (id, product_name, unit_of_measurement) VALUES (?, ?, ?)",
-      [product.id, product.productName, product.unitOfMeasurement]
-    );
-
-    for (const price of product.prices) {
-      await database.runAsync(
-        "INSERT INTO product_prices (product_id, store_id, value) VALUES (?, ?, ?)",
-        [product.id, price.storeId, price.value]
-      );
+  await database.withTransactionAsync(async () => {
+    for (const store of STORES) {
+      await database.runAsync("INSERT INTO stores (id, description, color) VALUES (?, ?, ?)", [
+        store.id,
+        store.description,
+        store.color,
+      ]);
     }
-  }
 
-  for (const list of SHOPPING_LISTS) {
-    await database.runAsync("INSERT INTO shopping_lists (id, title) VALUES (?, ?)", [
-      list.id,
-      list.title,
-    ]);
-
-    for (const item of list.items) {
+    for (const product of PRODUCTS) {
       await database.runAsync(
-        "INSERT INTO shopping_list_items (shopping_list_id, product_id, store_id, quantity, done) VALUES (?, ?, ?, ?, ?)",
-        [list.id, item.productId, item.storeId ?? null, item.quantity, item.done ? 1 : 0]
+        "INSERT INTO products (id, product_name, unit_of_measurement) VALUES (?, ?, ?)",
+        [product.id, product.productName, product.unitOfMeasurement]
       );
+
+      for (const price of product.prices) {
+        await database.runAsync(
+          "INSERT INTO product_prices (product_id, store_id, value) VALUES (?, ?, ?)",
+          [product.id, price.storeId, price.value]
+        );
+      }
     }
-  }
+
+    for (const list of SHOPPING_LISTS) {
+      await database.runAsync("INSERT INTO shopping_lists (id, title) VALUES (?, ?)", [
+        list.id,
+        list.title,
+      ]);
+
+      for (const item of list.items) {
+        await database.runAsync(
+          "INSERT INTO shopping_list_items (shopping_list_id, product_id, store_id, quantity, done) VALUES (?, ?, ?, ?, ?)",
+          [list.id, item.productId, item.storeId ?? null, item.quantity, item.done ? 1 : 0]
+        );
+      }
+    }
+  });
 }

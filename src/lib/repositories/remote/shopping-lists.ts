@@ -50,11 +50,12 @@ export async function getAllShoppingLists(): Promise<ShoppingList[]> {
 
 export async function getShoppingListById(id: string): Promise<ShoppingList | null> {
   const supabase = getSupabaseClient();
-  const { data: list, error: listError } = await supabase.from('shopping_lists').select('id, title').eq('id', id).single();
+  const { data: list, error: listError } = await supabase.from('shopping_lists').select('id, title').eq('id', id).maybeSingle();
   if (listError) {
     if (listError.code === 'PGRST116') return null;
     throw listError;
   }
+  if (!list) return null;
 
   const { data: items, error: itemsError } = await supabase.from('shopping_list_items').select('*').eq('shopping_list_id', id);
   if (itemsError) throw itemsError;

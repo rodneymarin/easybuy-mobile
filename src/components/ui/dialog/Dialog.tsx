@@ -1,5 +1,5 @@
-import { createContext, useContext } from 'react';
-import { Modal as RNModal, type ReactNode } from 'react-native';
+import { createContext, useContext, type ReactNode } from 'react';
+import { Modal as RNModal } from 'react-native';
 
 interface DialogContextValue {
   isOpen: boolean;

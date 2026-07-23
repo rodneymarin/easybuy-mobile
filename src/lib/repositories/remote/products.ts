@@ -39,15 +39,18 @@ export async function getAllProducts(): Promise<Product[]> {
 
 export async function getProductByName(productName: string, excludeId?: string): Promise<Product | null> {
   const supabase = getSupabaseClient();
-  let query = supabase.from('products').select('id, product_name, unit_of_measurement').ilike('product_name', productName);
+  // Escape wildcards for exact match (ilike treats % and _ as wildcards)
+  const escaped = productName.replace(/%/g, '\\%').replace(/_/g, '\\_');
+  let query = supabase.from('products').select('id, product_name, unit_of_measurement').ilike('product_name', escaped);
   if (excludeId) {
     query = query.neq('id', excludeId);
   }
-  const { data, error } = await query.single();
+  const { data, error } = await query.limit(1).maybeSingle();
   if (error) {
     if (error.code === 'PGRST116') return null;
     throw error;
   }
+  if (!data) return null;
   const row = data as ProductRow;
   return { id: row.id, productName: row.product_name, unitOfMeasurement: row.unit_of_measurement };
 }

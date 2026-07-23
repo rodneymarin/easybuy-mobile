@@ -1,5 +1,5 @@
-import { useEffect, useRef, useState } from 'react';
-import { Animated, Dimensions, Modal as RNModal, Pressable, StyleSheet, type ReactNode, type StyleProp, type ViewStyle } from 'react-native';
+import { useEffect, useRef, useState, type ReactNode } from 'react';
+import { Animated, Dimensions, Modal as RNModal, Pressable, StyleSheet, type StyleProp, type ViewStyle } from 'react-native';
 import { useTheme } from '@lib/theme';
 import { useDropdownMenuContext } from './DropdownMenu';
 

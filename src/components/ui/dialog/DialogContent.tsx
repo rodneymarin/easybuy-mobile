@@ -1,5 +1,5 @@
-import { useCallback, useState } from 'react';
-import { LayoutChangeEvent, Platform, Pressable, StyleSheet, View, type ReactNode, type StyleProp, type ViewStyle } from 'react-native';
+import { useCallback, useState, type ReactNode } from 'react';
+import { LayoutChangeEvent, Platform, Pressable, StyleSheet, View, type StyleProp, type ViewStyle } from 'react-native';
 import { FadeIn } from '@components/ui/fade-in';
 import { useTheme } from '@lib/theme';
 import { useDialogContext } from './Dialog';

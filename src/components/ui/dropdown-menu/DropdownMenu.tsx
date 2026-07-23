@@ -5,7 +5,7 @@ interface DropdownMenuContextValue {
   isOpen: boolean;
   open: () => void;
   close: () => void;
-  triggerRef: React.RefObject<View>;
+  triggerRef: React.RefObject<View | null>;
 }
 
 const DropdownMenuContext = createContext<DropdownMenuContextValue | null>(null);

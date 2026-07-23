@@ -2,3 +2,22 @@
 /.expo/
 *.log
 .env
+
+# Build outputs
+/android/.gradle/
+/android/build/
+/android/app/build/
+/android/app/release/
+/android/local.properties
+/ios/Pods/
+/ios/build/
+/web-build/
+/dist/
+
+# Secrets - NEVER commit
+*.jks
+*.keystore
+*.p12
+google-services.json
+GoogleService-Info.plist
+.env.local

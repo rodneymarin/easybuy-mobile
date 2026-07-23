@@ -94,7 +94,7 @@ function CustomBottomBar({ currentIndex, onTabPress }: CustomBottomBarProps) {
   const insets = useSafeAreaInsets();
 
   return (
-    <View style={[styles.tabBar, { backgroundColor: colors.background, borderTopColor: colors.border }, { paddingBottom: insets.bottom }]}>
+    <View style={[styles.tabBar, { backgroundColor: colors.background, borderTopColor: colors.border, paddingBottom: insets.bottom + 24 }]}>
       {TAB_ICONS.map((icons, index) => {
         const isFocused = index === currentIndex;
         return (

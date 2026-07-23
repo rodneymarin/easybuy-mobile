@@ -7,7 +7,7 @@ export async function cloudCall<T>(localFn: () => Promise<T>, remoteFn: () => Pr
     return await remoteFn();
   } catch (error) {
     if (isAuthError(error)) {
-      setTimeout(() => reportAuthError(), 0);
+      reportAuthError();
     }
     throw error;
   }

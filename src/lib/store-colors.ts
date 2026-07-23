@@ -19,14 +19,19 @@ export type StoreColorIndex = 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8;
 
 export function getStoreColor(index: number, isDark: boolean): string {
   const entry = STORE_COLORS[index];
-  if (!entry) return STORE_COLORS[0].light;
+  if (!entry) return isDark ? STORE_COLORS[0].dark : STORE_COLORS[0].light;
   return isDark ? entry.dark : entry.light;
 }
 
 export function hexToRgba(hex: string, alpha: number): string {
-  const r = parseInt(hex.slice(1, 3), 16);
-  const g = parseInt(hex.slice(3, 5), 16);
-  const b = parseInt(hex.slice(5, 7), 16);
+  let normalized = hex.replace('#', '');
+  if (normalized.length === 3) {
+    normalized = normalized.split('').map(c => c + c).join('');
+  }
+  const r = parseInt(normalized.slice(0, 2), 16);
+  const g = parseInt(normalized.slice(2, 4), 16);
+  const b = parseInt(normalized.slice(4, 6), 16);
+  if ([r, g, b].some(Number.isNaN)) return hex;
   return `rgba(${r}, ${g}, ${b}, ${alpha})`;
 }
 

@@ -8,24 +8,27 @@ const pkg = JSON.parse(fs.readFileSync(pkgPath, 'utf8'));
 const appJson = JSON.parse(fs.readFileSync(appJsonPath, 'utf8'));
 
 const currentVersion = pkg.version;
-const match = currentVersion.match(/^(\d+\.\d+\.\d+)-beta\.(\d+)$/);
+const match = currentVersion.match(/^(\d+\.\d+\.\d+)$/);
 
 if (!match) {
   console.error(
-    `Error: la versi\u00f3n actual "${currentVersion}" no sigue el formato beta (X.Y.Z-beta.N).\n` +
-    'Ejemplo v\u00e1lido: 0.1.0-beta.1'
+    `Error: la versión actual "${currentVersion}" no sigue el formato X.Y.Z.\n` +
+    'Ejemplo válido: 0.1.0'
   );
   process.exit(1);
 }
 
-const baseVersion = match[1];
-const betaNum = parseInt(match[2], 10);
-const newVersion = `${baseVersion}-beta.${betaNum + 1}`;
+const currentBuildNumber = parseInt(appJson.expo.ios?.buildNumber ?? '0', 10);
+const currentVersionCode = appJson.expo.android?.versionCode ?? 0;
+const newBuildNumber = currentBuildNumber + 1;
+const newVersionCode = currentVersionCode + 1;
 
-pkg.version = newVersion;
-appJson.expo.version = newVersion;
+appJson.expo.ios = appJson.expo.ios || {};
+appJson.expo.ios.buildNumber = String(newBuildNumber);
+appJson.expo.android = appJson.expo.android || {};
+appJson.expo.android.versionCode = newVersionCode;
 
 fs.writeFileSync(pkgPath, JSON.stringify(pkg, null, '\t') + '\n');
 fs.writeFileSync(appJsonPath, JSON.stringify(appJson, null, 2) + '\n');
 
-console.log(`\u2714 Versi\u00f3n actualizada: ${currentVersion} \u2192 ${newVersion}`);
+console.log(`✔ Build incrementado: buildNumber ${currentBuildNumber} → ${newBuildNumber}, versionCode ${currentVersionCode} → ${newVersionCode} (versión ${currentVersion})`);
