@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { Platform, StyleSheet, View, Text } from 'react-native';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
@@ -6,7 +6,7 @@ import { useTheme, ThemeProvider } from '@lib/theme';
 import { DrawerProvider, useDrawer } from '@lib/drawer';
 import { I18nProvider, useI18n } from '@lib/i18n';
 import { DataSourceProvider, useDataSource } from '@lib/data-source';
-import { AuthProvider, subscribeToAuthError } from '@lib/auth';
+import { AuthProvider, subscribeToAuthError, useAuth } from '@lib/auth';
 import { MainMenu, About, AuthSheet, ToastProvider, useToast } from '@components/ui';
 import { StatusBar } from 'expo-status-bar';
 import { getDatabase } from '@lib/database';
@@ -15,12 +15,14 @@ import { TabNavigator } from './navigation';
 function AppContent() {
   const { isDark, colors } = useTheme();
   const { t } = useI18n();
-  const { setDataSource } = useDataSource();
+  const { dataSource, setDataSource, refresh } = useDataSource();
+  const { isAuthenticated, isLoading: isAuthLoading } = useAuth();
   const { closeDrawer } = useDrawer();
   const toast = useToast();
   const [isAboutOpen, setIsAboutOpen] = useState(false);
   const [isAuthSheetOpen, setIsAuthSheetOpen] = useState(false);
   const [isSessionExpired, setIsSessionExpired] = useState(false);
+  const hasCheckedInitialSession = useRef(false);
 
   useEffect(() => {
     const unsubscribe = subscribeToAuthError(() => {
@@ -30,11 +32,23 @@ function AppContent() {
     return unsubscribe;
   }, []);
 
+  useEffect(() => {
+    if (hasCheckedInitialSession.current) return;
+    if (isAuthLoading) return;
+    hasCheckedInitialSession.current = true;
+    if (dataSource === 'cloud' && !isAuthenticated) {
+      setIsSessionExpired(true);
+      setIsAuthSheetOpen(true);
+    }
+  }, [dataSource, isAuthenticated, isAuthLoading]);
+
   function handleAuthenticated() {
+    const wasExpired = isSessionExpired;
     setIsSessionExpired(false);
     setDataSource('cloud');
     closeDrawer();
     setIsAuthSheetOpen(false);
+    if (wasExpired) refresh();
   }
 
   function handleUseLocalData() {

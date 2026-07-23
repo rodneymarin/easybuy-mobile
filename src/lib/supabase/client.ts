@@ -1,6 +1,6 @@
 import { createClient, type SupabaseClient } from '@supabase/supabase-js';
 import { Platform } from 'react-native';
-import { storage } from './storage';
+import { namespacedStorage } from './namespaced-storage';
 import { SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY } from './config';
 
 let client: SupabaseClient | null = null;
@@ -10,7 +10,7 @@ export function getSupabaseClient(): SupabaseClient {
 
   client = createClient(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY, {
     auth: {
-      storage,
+      storage: namespacedStorage,
       autoRefreshToken: true,
       persistSession: true,
       detectSessionInUrl: Platform.OS === 'web',

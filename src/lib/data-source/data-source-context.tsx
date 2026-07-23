@@ -1,11 +1,12 @@
 import { createContext, useCallback, useContext, useEffect, useState, type PropsWithChildren } from 'react';
-import { initDataSource, setDataSource as persistDataSource, getRefreshVersion, subscribeToDataSourceChange, resetLocalData as persistResetLocalData, type DataSourceType } from './data-source';
+import { initDataSource, setDataSource as persistDataSource, getRefreshVersion, subscribeToDataSourceChange, bumpRefreshVersion, resetLocalData as persistResetLocalData, type DataSourceType } from './data-source';
 
 interface DataSourceContextValue {
   dataSource: DataSourceType;
   isReady: boolean;
   refreshVersion: number;
   setDataSource: (source: DataSourceType) => Promise<void>;
+  refresh: () => void;
   resetLocalData: () => Promise<void>;
 }
 
@@ -42,12 +43,17 @@ function DataSourceProvider({ children }: PropsWithChildren) {
     setRefreshVersion(getRefreshVersion());
   }, []);
 
+  const handleRefresh = useCallback(() => {
+    bumpRefreshVersion();
+    setRefreshVersion(getRefreshVersion());
+  }, []);
+
   if (!isReady) {
     return null;
   }
 
   return (
-    <DataSourceContext.Provider value={{ dataSource, isReady, refreshVersion, setDataSource: handleSetDataSource, resetLocalData: handleResetLocalData }}>
+    <DataSourceContext.Provider value={{ dataSource, isReady, refreshVersion, setDataSource: handleSetDataSource, refresh: handleRefresh, resetLocalData: handleResetLocalData }}>
       {children}
     </DataSourceContext.Provider>
   );
